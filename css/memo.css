@@ -79,6 +79,8 @@
 .memo-species-item.found {
     color: var(--ink-ghost);
     text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--red-dark);
     opacity: 0.5;
 }
 
@@ -175,4 +177,91 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+
+/* ============================================================
+   Всплывающее фото найденного вида (Мемо)
+   ============================================================ */
+
+.memo-match-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* не мешает кликам по игре */
+    z-index: 2500;         /* выше модалки мемо (2000) */
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.memo-match-overlay.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.memo-match-card {
+    background: var(--parchment-light);
+    border: 3px solid var(--gold-deep);
+    border-radius: 6px;
+    box-shadow: 0 0 40px rgba(212, 180, 90, 0.8), var(--shadow-deep);
+    padding: 15px;
+    text-align: center;
+    max-width: 320px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    clip-path: var(--torn-edge);
+}
+
+.memo-match-card img {
+    max-width: 280px;
+    max-height: 40vh;
+    object-fit: contain;
+    border: 1px solid var(--parchment-deep);
+    background: #fff;
+    border-radius: 2px;
+}
+
+.memo-match-name {
+    margin-top: 12px;
+    font-family: 'Georgia', serif;
+    font-size: 17px;
+    font-weight: bold;
+    color: var(--dark-green);
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+    padding: 0 10px;
+}
+
+
+/* Полёт карточки: transform — плавно, opacity — резко */
+.memo-match-overlay.flying-out {
+    transition: opacity 0.18s ease;
+}
+
+.memo-match-overlay.flying-out .memo-match-card {
+    transition:
+        transform 0.55s cubic-bezier(0.3, 0.0, 0.15, 1),
+        opacity 0.18s ease;
+    transform-origin: center center;
+}
+
+/* Вспышка строки в момент прилёта карточки */
+.memo-species-item.just-found {
+    animation: memoFoundFlash 1.2s ease;
+    border-radius: 3px;
+}
+
+@keyframes memoFoundFlash {
+    0%   { background: rgba(212, 180, 90, 0);    color: var(--ink); }
+    15%  { background: rgba(212, 180, 90, 0.95); color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.9); transform: scale(1.04); }
+    60%  { background: rgba(212, 180, 90, 0.55); color: #fff; }
+    100% { background: rgba(212, 180, 90, 0);    color: var(--ink-ghost); transform: scale(1); }
 }
