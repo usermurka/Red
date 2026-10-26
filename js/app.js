@@ -1323,6 +1323,15 @@ const App = {
     window.addEventListener('mousemove', (e) => this.onPanMove(e));
     window.addEventListener('mouseup', () => this.onPanEnd());
 
+    // --- Тач: панорамирование и pinch-зум (мобильные устройства) ---
+    this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+    this.container.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+    this.container.addEventListener('touchend', (e) => this.onTouchEnd(e));
+    this.container.addEventListener('touchcancel', (e) => this.onTouchEnd(e));
+
+    // --- Мобильный интерфейс: панель-меню, зум-кнопки, затемнение ---
+    this.bindMobileControls();
+
       // ============================================================
     // ПЕРЕТАСКИВАНИЕ ТУЛТИПА МЫШЬЮ
     // ============================================================
@@ -1414,8 +1423,111 @@ const App = {
   },
 
   // ============================================================
-  // Панорамирование (перетаскивание карты)
+  // Панорамирование (перетаскивание карты) — мышь + тач
   // ============================================================
+
+  // --- Тач: панорамирование одним пальцем, pinch-зум двумя ---
+  onTouchStart(e) {
+    // Не мешаем работе внутри тултипа / подменю / панели
+    if (e.target.closest('#tooltip') || e.target.closest('.layer-submenu')) return;
+
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+
+      // тап по маркеру или клик по SVG-области обрабатывается штатно
+      if (t.target.classList && t.target.classList.contains('marker')) return;
+
+      this.isPanning = true;
+      this.pinchActive = false;
+      this.panStartX = t.clientX;
+      this.panStartY = t.clientY;
+      this.panStartPanX = this.panX;
+      this.panStartPanY = this.panY;
+      this._touchMoved = false;
+      this.container.classList.add('panning');
+    } else if (e.touches.length === 2) {
+      // Вторая рука — переключаемся в режим pinch
+      this.isPanning = false;
+      this.pinchActive = true;
+      this.container.classList.remove('panning');
+      this.pinchStartDist = this.getTouchDistance(e.touches);
+      this.pinchStartZoom = this.zoom;
+      const rect = this.container.getBoundingClientRect();
+      this.pinchCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      this.pinchCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      e.preventDefault();
+    }
+  },
+
+  getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  },
+
+  onTouchMove(e) {
+    if (this.pinchActive && e.touches.length >= 2) {
+      e.preventDefault();
+
+      const dist = this.getTouchDistance(e.touches);
+      if (!this.pinchStartDist || this.pinchStartDist === 0) return;
+
+      let newZoom = this.pinchStartZoom * (dist / this.pinchStartDist);
+      newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, newZoom));
+
+      // точка под центром щипка остаётся на месте
+      const oldZoom = this.zoom;
+      if (newZoom !== oldZoom) {
+        const mx = this.pinchCenterX;
+        const my = this.pinchCenterY;
+        this.panX = mx - (mx - this.panX) * (newZoom / oldZoom);
+        this.panY = my - (my - this.panY) * (newZoom / oldZoom);
+        this.zoom = newZoom;
+        this.applyTransform();
+      }
+      this._touchMoved = true;
+      return;
+    }
+
+    if (this.isPanning && e.touches.length === 1) {
+      const t = e.touches[0];
+      const dx = t.clientX - this.panStartX;
+      const dy = t.clientY - this.panStartY;
+
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) this._touchMoved = true;
+
+      // на мобильных при движении не даём браузеру скроллить страницу
+      if (this._touchMoved) e.preventDefault();
+
+      this.panX = this.panStartPanX + dx;
+      this.panY = this.panStartPanY + dy;
+      this.applyTransform();
+    }
+  },
+
+  onTouchEnd(e) {
+    if (e.touches.length === 0) {
+      this.isPanning = false;
+      this.pinchActive = false;
+      this.container.classList.remove('panning');
+
+      // если это был свайп, а не тап — гасим следующий за ним click,
+      // чтобы не поставить случайный маркер/не показать лишний тултип
+      if (this._touchMoved) {
+        this._suppressClickUntil = Date.now() + 350;
+      }
+    } else if (e.touches.length === 1) {
+      // pinch завершился, остался один палец — продолжаем панорамирование
+      this.pinchActive = false;
+      const t = e.touches[0];
+      this.isPanning = true;
+      this.panStartX = t.clientX;
+      this.panStartY = t.clientY;
+      this.panStartPanX = this.panX;
+      this.panStartPanY = this.panY;
+    }
+  },
+
   onPanStart(e) {
     // Только левая кнопка мыши
     if (e.button !== 0) return;
@@ -1470,6 +1582,95 @@ const App = {
     requestAnimationFrame(() => {
       this._rafPending = false;
       this.updateMarkerPositions();
+    });
+  },
+
+  // ============================================================
+  // Мобильный интерфейс: кнопка-меню, шторка панели, зум-кнопки
+  // ============================================================
+  isMobileLayout() {
+    return window.matchMedia('(max-width: 820px)').matches;
+  },
+
+  bindMobileControls() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const btnToggle = document.getElementById('btn-sidebar-toggle');
+    const btnClose = document.getElementById('btn-sidebar-close');
+
+    const openSidebar = () => {
+      if (!sidebar) return;
+      sidebar.classList.add('open');
+      if (backdrop) backdrop.classList.add('visible');
+      document.body.classList.add('sidebar-open');
+    };
+
+    const closeSidebar = () => {
+      if (!sidebar) return;
+      sidebar.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('visible');
+      document.body.classList.remove('sidebar-open');
+    };
+
+    if (btnToggle) btnToggle.addEventListener('click', openSidebar);
+    if (btnClose) btnClose.addEventListener('click', closeSidebar);
+    if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+    // Закрытие панели по клику на пункте меню (чтобы сразу видеть результат)
+    if (sidebar) {
+      sidebar.addEventListener('click', (e) => {
+        if (!this.isMobileLayout()) return;
+        const clickedButton = e.target.closest('#games-menu button, #btn-open-list, .map-option, #map-switcher button');
+        if (clickedButton) {
+          // небольшая задержка, чтобы обработчик кнопки отработал
+          setTimeout(closeSidebar, 150);
+        }
+      });
+    }
+
+    // Escape тоже закрывает панель
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSidebar();
+    });
+
+    // При смене размера окна — если вернулись на десктоп, снимаем состояние «открыто»
+    window.addEventListener('resize', () => {
+      if (!this.isMobileLayout()) closeSidebar();
+    });
+
+    // --- Кнопки зума на карте ---
+    const zoomIn = document.getElementById('btn-zoom-in');
+    const zoomOut = document.getElementById('btn-zoom-out');
+    const zoomReset = document.getElementById('btn-zoom-reset');
+
+    const stepZoom = (factor) => {
+      const rect = this.container.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const oldZoom = this.zoom;
+      let newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, oldZoom * factor));
+      if (newZoom === oldZoom) return;
+
+      this.panX = centerX - (centerX - this.panX) * (newZoom / oldZoom);
+      this.panY = centerY - (centerY - this.panY) * (newZoom / oldZoom);
+      this.zoom = newZoom;
+
+      if (this.zoom <= this.minZoom) {
+        this.zoom = this.minZoom;
+        this.panX = 0;
+        this.panY = 0;
+      }
+      this.applyTransform();
+    };
+
+    if (zoomIn) zoomIn.addEventListener('click', () => stepZoom(1.35));
+    if (zoomOut) zoomOut.addEventListener('click', () => stepZoom(1 / 1.35));
+    if (zoomReset) zoomReset.addEventListener('click', () => {
+      this.zoom = this.minZoom;
+      this.panX = 0;
+      this.panY = 0;
+      this.applyTransform();
     });
   },
 
@@ -3260,6 +3461,9 @@ const App = {
   // ============================================================
 
   onMapClick(e) {
+    // После свайпа по карте браузер может «доиграть» click — игнорируем его
+    if (this._suppressClickUntil && Date.now() < this._suppressClickUntil) return;
+
     if (!this.developerMode) return;
     if (e.target.classList.contains('marker')) return;
 
