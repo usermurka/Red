@@ -1,0 +1,127 @@
+#match-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(36, 53, 42, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#match-modal.hidden {
+    display: none;
+}
+
+.match-scroll {
+    background: var(--parchment-light);
+    width: 96vw;
+    max-width: 1200px;
+    /* Ограничили максимальную ширину для аккуратности */
+    height: 94vh;
+    border: 2px solid var(--gold-deep);
+    box-shadow: var(--shadow-deep);
+    border-radius: 2px;
+    clip-path: var(--torn-edge);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+}
+
+#match-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    /* 4 колонки */
+    grid-template-rows: repeat(4, 1fr);
+    /* 5 строк */
+    gap: 10px;
+    padding: 10px 15px;
+    overflow: visible;
+    flex: 1;
+    align-content: center;
+}
+
+.match-card {
+    background: var(--parchment);
+    border: 2px solid var(--gold-deep);
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    max-width: 140px;
+        /* Жестко ограничиваем ширину */
+        max-height: 140px;
+        /* Жестко ограничиваем высоту */
+    justify-self: center;
+    /* Центрируем в ячейке */
+    align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+        /* Плавный переход для всего */
+        overflow: visible;
+        /* Позволяем карточке вылезать при увеличении */
+        position: relative;
+        z-index: 1;
+    }
+
+.match-card:hover {
+    border-color: #FBC02D;
+    box-shadow: 0 0 15px rgba(251, 192, 45, 0.8);
+    transform: scale(2);
+    /* Увеличиваем всю карточку */
+    z-index: 10;
+    /* Поднимаем над остальными */
+}
+
+.match-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+    padding: 2px;
+    transition: transform 0.3s ease;
+    }
+
+.match-card:hover img {
+    transform: scale(1.1);
+    /* Увеличивается только фото внутри карточки */
+}
+
+.match-card span {
+    font-family: 'Georgia', serif;
+    font-size: clamp(10px, 1vw, 14px);
+    /* Чуть уменьшили, чтобы влезало */
+    text-align: center;
+    padding: 2px 4px;
+    color: var(--ink);
+    line-height: 1.2;
+    word-break: normal;
+    /* Отменяем жесткую ломку */
+    overflow-wrap: normal;
+    hyphens: auto;
+    /* Включаем умные переносы по слогам */
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.match-card.selected {
+    border-color: #FBC02D;
+    box-shadow: 0 0 0 3px rgba(251, 192, 45, 0.5);
+}
+
+.match-card.matched {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}

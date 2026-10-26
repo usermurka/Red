@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Склейка JSON</title>
+</head>
+<body>
+  <h1>Идет склейка... Пожалуйста, подождите.</h1>
+  <div id="status"></div>
+  <script>
+    // Это скрипт, который читает файлы из папки data/species
+    async function mergeFiles() {
+      const status = document.getElementById('status');
+      try {
+        // 1. Получаем список всех файлов из list.txt
+        const listResponse = await fetch('list.txt');
+        const listText = await listResponse.text();
+        
+        // Разбиваем текст на массив имен (убираем пустые строки и \r)
+        const fileNames = listText.split('\n').map(f => f.trim().replace('\r', '')).filter(f => f.endsWith('.json'));
+        
+        status.innerHTML = `Найдено файлов: ${fileNames.length}. Начинаю загрузку...`;
+        
+        const allData = {};
+        
+        // 2. Проходимся по каждому файлу
+        for (let i = 0; i < fileNames.length; i++) {
+          const fileName = fileNames[i].replace(/\\/g, '/'); // Фикс слешей для Windows
+          try {
+            // Загружаем файл
+            const res = await fetch('data/species/' + fileName);
+            if (res.ok) {
+              const json = await res.json();
+              // Берем ID из файла (или из имени файла, если ID нет)
+              const id = json.id || fileName.replace('.json', '');
+              allData[id] = json;
+            }
+          } catch (e) {
+            console.warn('Не удалось загрузить: ' + fileName);
+          }
+          
+          // Обновляем текст на экране
+          if (i % 10 === 0) status.innerHTML = `Обработано: ${i} из ${fileNames.length}...`;
+        }
+        
+        status.innerHTML = `<b>ГОТОВО! Найдено ${Object.keys(allData).length} видов.</b><br><br>`;
+        
+        // 3. Создаем кнопку для скачивания
+        const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "all_species_data.json"; // Имя файла
+        a.innerHTML = "СКАЧАТЬ ГОТОВЫЙ ФАЙЛ";
+        a.style.padding = "20px";
+        a.style.background = "green";
+        a.style.color = "white";
+        a.style.fontSize = "20px";
+        a.style.textDecoration = "none";
+        document.body.appendChild(a);
+        
+      } catch (err) {
+        status.innerHTML = `<span style="color:red">Ошибка: ${err.message}</span><br>Убедитесь, что вы запустили это через Live Server!`;
+      }
+    }
+    
+    mergeFiles();
+  </script>
+</body>
+</html>

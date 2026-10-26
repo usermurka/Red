@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Красная книга Омской области — интерактивная карта</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- Боковая панель -->
+        <aside id="sidebar">
+      <h1>Красная книга<br>Омской области</h1>
+
+      <div class="mode-switch">
+        <button id="btn-guest" class="active">Режим гостя</button>
+        <button id="btn-developer">Режим разработчика</button>
+      </div>
+
+<div id="games-menu" class="hidden" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+  <div style="display: flex; gap: 6px;">
+    <button id="btn-quiz"
+      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+      <span style="font-size: 24px; line-height: 1;">🎲</span> Викторина
+    </button>
+    <button id="btn-match"
+      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+      <span style="font-size: 24px; line-height: 1;">🧩</span> Найди пару
+    </button>
+    <button id="btn-memo"
+      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+      <span style="font-size: 24px; line-height: 1;">🃏</span> Мемо
+    </button>
+  </div>
+
+  <!-- НОВОЕ: Полевой дневник -->
+  <button id="btn-journal"
+    style="width: 100%; padding: 10px; margin-top: 4px; font-size: 12px; background: linear-gradient(180deg, var(--green-light), var(--green)); border-color: var(--gold-soft);">
+    📔 Полевой дневник
+  </button>
+</div>
+
+      <h2>Вид карты</h2>
+      <div id="map-switcher"></div>
+
+      <h2>Категории редкости</h2>
+      <div id="status-layers"></div>
+      
+      <h2>Слои</h2>
+      <div id="layers"></div>
+      <button id="btn-open-list">Справочник всех видов</button>
+
+      <h2>Отображение объектов</h2>
+      <div class="toggle-grid">
+        <label class="toggle-row">
+          <input type="checkbox" id="toggle-regions" checked>
+          Области
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggle-migrations" checked>
+          Миграции
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggle-badges" checked>
+          Редкость
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggle-icons" checked>
+          Категория
+        </label>
+        <label class="toggle-row">
+            <input type="checkbox" id="toggle-markers" checked>
+            Маркеры
+        </label>
+      </div>
+
+      <div id="developer-tools" class="hidden">
+        <h2>Инструменты</h2>
+      
+        <button id="btn-region-mode" type="button">Режим рисования: выкл</button>
+        <div class="sub-btn-group">
+          <button id="btn-region-finish" class="sub-btn collapsed" type="button">Завершить область</button>
+          <button id="btn-region-cancel" class="sub-btn collapsed" type="button">Отменить рисование</button>
+        </div>
+      
+        <button id="btn-migration-mode" type="button">Режим миграций: выкл</button>
+        <div class="sub-btn-group">
+          <button id="btn-migration-cancel" class="sub-btn collapsed" type="button">Отменить линию</button>
+        </div>
+      
+        <button id="btn-serial" type="button">Серийный режим: выкл</button>
+        <div class="sub-btn-group">
+          <button id="btn-serial-change-species" class="sub-btn collapsed" type="button">Задать вид для серии</button>
+          <button id="btn-hide-all" class="sub-btn collapsed" type="button">Скрыть объекты на карте</button>
+          <button id="btn-show-selected" class="sub-btn collapsed" type="button">Отобразить выбранный вид</button>
+        </div>
+      </div>
+
+      <h2>Действия</h2>
+      <div class="actions-row">
+        <button id="btn-export" title="Скачать JSON">💾 JSON</button>
+        <button id="btn-import" title="Загрузить JSON">📂 JSON</button>
+        <button id="btn-clear" class="danger" title="Очистить всё">🗑</button>
+      </div>
+      <input type="file" id="file-input" accept=".json" hidden>
+
+      <div id="stats-panel">
+        <h2>Статистика</h2>
+        <div class="stat-row">
+          <span>Всего видов в базе</span>
+          <strong id="stat-total">0</strong>
+        </div>
+        <div class="stat-row">
+          <span>Отмечено видов</span>
+          <strong id="stat-marked">0</strong>
+        </div>
+        <div class="stat-row">
+          <span>Маркеров на карте</span>
+          <strong id="stat-markers">0</strong>
+        </div>
+        <div class="stat-row">
+          <span>Областей обитания</span>
+          <strong id="stat-regions">0</strong>
+        </div>
+      
+        <div class="stat-row" id="stat-nearby-row">
+          <span>Радиус зоны «поблизости», км</span>
+          <span id="nearby-radius-display" title="Двойной клик — изменить">
+            <span id="nearby-radius-value">10</span>
+          </span>
+          <input type="number" id="nearby-radius-input" class="hidden" min="1" max="100" step="1" value="10">
+        </div>
+      </div>
+
+      <div id="copyright">
+        © Файт А. М., 2026. Омск.<br>
+        <span>По данным Красной книги Омской области <br>
+        2-е изд., 2015 г.</span>
+      </div>
+
+    </aside>
+
+    <div id="sidebar-gold-line"></div>
+    
+    <!-- Карта -->
+    <main id="map-container">
+      <div id="map-wrapper">
+        <img id="map" src="img/map.png" alt="Карта Омской области" draggable="false">
+      </div>
+      <svg id="regions-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="markers-layer"></div>
+      <div id="tooltip">
+        <div id="tooltip-content"></div>
+        <div id="tooltip-actions">
+          <button id="btn-edit-marker" title="Редактировать">✏️ Редактировать</button>
+          <button id="btn-delete-marker" class="danger" title="Удалить">🗑 Удалить</button>
+        </div>
+      </div>
+
+      <div id="hint">
+        <span id="hint-text"></span>
+        <button id="hint-show-btn" class="hidden" onclick="App.showSelectedSpecies()">Показать на карте</button>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Модальное окно для ввода данных -->
+  <div id="modal" class="hidden">
+    <div class="modal-content">
+      <h3 id="modal-title">Новый маркер</h3>
+
+      <label>Вид:
+        <div class="species-picker">
+          <input type="text" id="input-species" placeholder="Нажмите, чтобы выбрать вид" readonly>
+          <input type="hidden" id="input-species-id">
+          <input type="hidden" id="input-name">
+        </div>
+      </label>
+
+      <input type="hidden" id="input-category">
+
+      <div class="category-info-row">
+        Категория: <strong id="category-info">—</strong>
+      </div>
+
+      <label>Формат маркера:
+        <div id="marker-type-select"></div>
+      </label>
+
+      <label>Категория редкости:
+        <div id="status-scale"></div>
+        <div id="status-label" class="status-label"></div>
+      </label>
+
+      <input type="hidden" id="input-id">
+      <div class="modal-actions">
+        <button id="btn-cancel">Отмена</button>
+        <button id="btn-save" class="primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Панель справочника видов -->
+  <aside id="species-panel" class="hidden">
+    <div id="species-header">
+      <h3>Справочник видов</h3>
+      <button id="btn-species-close">✕</button>
+    </div>
+    <div id="species-search-wrap">
+      <input type="text" id="species-search" placeholder="Поиск по названию или латыни...">
+    </div>
+    <div class="view-switch">
+      <button id="btn-species-view-tree" class="active">🌳 Иерархия</button>
+      <button id="btn-species-view-alpha">🔤 Алфавит</button>
+    </div>
+  
+    <!-- Полоса управления выделением — видна только в режиме «просмотр» -->
+    <div id="species-browse-controls" class="hidden">
+      <div id="species-browse-actions">
+        <button id="btn-species-toggle-all">Снять выделение</button>
+        <button id="btn-species-toggle-expand" data-state="0">Развернуть всё</button>
+      </div>
+      <div id="species-browse-counter"></div>
+    </div>
+  
+    <div id="species-tree"></div>
+  </aside>
+
+  <!-- Модальное окно области обитания -->
+  <div id="region-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Область обитания</h3>
+
+      <label>Вид:
+        <div class="species-picker">
+          <input type="text" id="region-species" placeholder="Нажмите, чтобы выбрать вид" readonly>
+          <input type="hidden" id="region-species-id">
+          <input type="hidden" id="region-name">
+        </div>
+      </label>
+
+      <div class="category-info-row">
+        Категория: <strong id="region-category-info">—</strong>
+      </div>
+
+      <label>Интенсивность:
+        <div id="region-intensity">
+          <button type="button" class="intensity-btn" data-intensity="strong">
+            <span class="intensity-sample strong"></span>
+            Постоянное обитание
+          </button>
+          <button type="button" class="intensity-btn" data-intensity="weak">
+            <span class="intensity-sample weak"></span>
+            Непостоянное обитание
+          </button>
+        </div>
+      </label>
+
+      <div class="modal-actions">
+        <button id="btn-region-cancel-modal">Отмена</button>
+        <button id="btn-region-save" class="primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно линии миграции -->
+  <div id="migration-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Линия миграции</h3>
+  
+      <label>Вид:
+        <div class="species-picker">
+          <input type="text" id="migration-species" placeholder="Нажмите, чтобы выбрать вид" readonly>
+          <input type="hidden" id="migration-species-id">
+          <input type="hidden" id="migration-name">
+        </div>
+      </label>
+  
+      <div class="category-info-row">
+        Категория: <strong id="migration-category-info">—</strong>
+      </div>
+  
+      <div class="modal-actions">
+        <button id="btn-migration-cancel-modal">Отмена</button>
+        <button id="btn-migration-save" class="primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для пароля -->
+  <div id="password-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Вход в режим разработчика</h3>
+      <label>Пароль:
+        <input type="password" id="password-input" placeholder="Год отметы крепостного права">
+      </label>
+      <div id="password-error" class="password-error"></div>
+      <div class="modal-actions">
+        <button id="btn-password-cancel">Отмена</button>
+        <button id="btn-password-ok" class="primary">Войти</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="species-scroll" class="hidden">
+    <div class="scroll-content">
+      <button id="scroll-close" type="button" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <line x1="5" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+          <line x1="19" y1="5" x2="5" y2="19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+      </button>
+      <div id="scroll-body">
+        <!-- Содержимое заполняется динамически -->
+      </div>
+    </div>
+  </div>
+
+    <!-- Модалка: Полевой дневник -->
+    <div id="journal-modal" class="hidden">
+      <div class="journal-scroll">
+    
+      <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+      <div class="journal-titlebar">
+        <h3>📔 Полевой дневник</h3>
+        <div class="journal-titlebar-actions">
+          <button id="journal-save-btn" title="Сохранить в файл">💾 Сохранить</button>
+          <button id="journal-load-btn" title="Загрузить из файла">📂 Загрузить</button>
+          <button id="journal-close" class="journal-close-btn">✕</button>
+      
+          <!-- Скрытое поле для выбора файла -->
+          <input type="file" id="journal-load-input" accept=".json" style="display: none;">
+        </div>
+      </div>
+    
+        <!-- КОНТЕНТ -->
+        <div class="journal-content">
+    
+        <!-- Левая часть: Карта -->
+        <div class="journal-map-wrap">
+          <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;">
+            <button id="journal-add-pin-btn"
+              style="padding: 8px 16px; font-family: 'Georgia', serif; font-size: 14px; cursor: pointer; background: var(--gold-soft); border: 1px solid var(--gold-deep); border-radius: 2px; color: var(--dark-green); font-weight: bold; transition: all 0.2s;">
+              📍 Поставить метку
+            </button>
+            <!-- Кнопка "Сохранить все точки" -->
+            <button id="journal-finish-pins-btn" class="hidden"
+              style="padding: 8px 16px; font-family: 'Georgia', serif; font-size: 14px; cursor: pointer; background: var(--red-dark); border: 1px solid #521414; border-radius: 2px; color: #fff; font-weight: bold; transition: all 0.2s;">
+              📝 Описать вид
+            </button>
+          </div>
+          <div id="journal-map-container">
+            <img id="journal-map-img" src="img/map3.png" alt="Карта для дневника" draggable="false">
+            <div id="journal-markers-layer"></div>
+          </div>
+        </div>
+    
+          <!-- Правая часть: Список записей -->
+          <div class="journal-sidebar">
+            <div class="journal-list" id="journal-list">
+              <div class="journal-empty">Пока нет записей. Поставьте метку на карте.</div>
+            </div>
+          </div>
+    
+        </div>
+      </div>
+    </div>
+    
+  
+  <!-- Модалка: Форма добавления записи в дневник -->
+  <div id="journal-form-modal" class="hidden">
+    <div class="modal-content">
+      <h3>Новое наблюдение</h3>
+  
+      <label>Предположительное название:
+        <input type="text" id="journal-species-name" placeholder="Начните вводить название...">
+      </label>
+  
+      <label>Комментарий:
+        <textarea id="journal-comment" rows="3" placeholder="Где и когда вы это видели?"></textarea>
+      </label>
+  
+      <label>Прикрепить фото (можно несколько):
+        <input type="file" id="journal-photo-input" accept="image/*" multiple>
+      </label>
+  
+      <div id="journal-photo-preview" class="journal-photo-preview"></div>
+  
+      <div class="modal-actions">
+        <!-- Кнопка "Отмена" на самом деле будет работать как "Пропустить", если меток много -->
+        <button id="journal-form-cancel">Пропустить</button>
+        <button id="journal-form-save" class="primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Модалка: Галерея фото -->
+  <div id="photo-gallery-modal" class="hidden">
+    <div class="photo-gallery-content">
+      <button id="gallery-close" class="gallery-close-btn">✕</button>
+      <button id="gallery-prev" class="gallery-nav-btn">❮</button>
+  
+      <div class="gallery-image-wrap">
+        <img id="gallery-current-img" src="" alt="Фото">
+        <div class="gallery-counter"><span id="gallery-current-num">1</span> / <span id="gallery-total-num">1</span></div>
+      </div>
+  
+      <button id="gallery-next" class="gallery-nav-btn">❯</button>
+    </div>
+  </div>
+
+
+<div id="quiz-modal" class="hidden">
+  <!-- Левая панель: Викторина -->
+  <div class="quiz-scroll">
+    <div class="quiz-top-controls">
+      <button id="quiz-restart-btn" title="Начать заново">↺</button>
+      <button id="quiz-close" title="Закрыть">✕</button>
+    </div>
+
+    <div class="quiz-header">
+      <h2>Викторина</h2>
+      <div class="quiz-stats">
+        <span class="stat-right">Верно: <strong id="quiz-score-right">0</strong></span>
+        <span class="stat-wrong">Неверно: <strong id="quiz-score-wrong">0</strong></span>
+        <span class="stat-streak" id="quiz-streak-block" style="opacity: 0.3;">🔥 Серия: <strong
+            id="quiz-score-streak">0</strong></span>
+      </div>
+      <div class="quiz-progress">Вопрос <strong id="quiz-q-num">1</strong> из 30</div>
+    
+      <!-- Таймер -->
+      <div class="quiz-timer-wrap">
+        <div class="quiz-timer-bar" id="quiz-timer-bar"></div>
+      </div>
+    </div>
+
+    <div id="quiz-content">
+      <div class="quiz-image-wrap">
+        <img id="quiz-image" src="" alt="Вид">
+      </div>
+      <div id="quiz-options"></div>
+      <div id="quiz-result" class="hidden"></div>
+    </div>
+
+    <!-- Экран победы/поражения -->
+    <div id="quiz-end-screen" class="hidden">
+      <h2 id="quiz-end-title"></h2>
+      <p id="quiz-end-desc"></p>
+      <button id="quiz-restart" class="quiz-next-btn">Играть снова</button>
+    </div>
+  </div>
+
+  <!-- Правая панель: Упрощенный свиток -->
+  <div id="quiz-info-panel" class="hidden">
+    <div class="quiz-info-scroll">
+      <h3 id="qi-name">Название</h3>
+      <div id="qi-latin" class="qi-latin">Latin</div>
+  
+      <div class="qi-status" id="qi-status">
+        <span class="qi-status-badge"></span>
+        <span class="qi-status-text"></span>
+      </div>
+  
+      <div class="qi-block open">
+        <div class="qi-block-title">Краткое описание</div>
+        <div id="qi-desc"></div>
+      </div>
+  
+      <button id="qi-open-full" class="quiz-next-btn" style="margin-top: 20px; width: 100%;">📖 Читать в свитке</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Модалка: Найди пару -->
+  <div id="match-modal" class="hidden">
+    <div class="match-scroll">
+      <div class="quiz-top-controls">
+        <button id="match-restart-btn" title="Начать заново">↺</button>
+        <button id="match-close" title="Закрыть">✕</button>
+      </div>
+      <div class="quiz-header">
+        <h2>Найди пару</h2>
+        <div class="quiz-progress">Соедините фото с названием</div>
+      </div>
+      <div id="match-grid"></div>
+      <div id="match-end-screen" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
+        <h2 id="match-end-title" style="color:var(--dark-green); font-family:Georgia; font-size: 28px; margin-bottom: 10px;">
+          🏆 Победа!</h2>
+        <p id="match-end-achieve"
+          style="font-family:Georgia; font-size: 16px; color: var(--gold-deep); font-weight: bold; margin-bottom: 15px;"></p>
+        <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Вы совершили <strong
+            id="match-final-moves">0</strong> ошибок.</p>
+        <button id="match-restart" class="quiz-next-btn" style="margin-top:15px; padding: 10px 25px; font-size: 15px;">Играть
+          снова</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Модалка: Мемо -->
+  <div id="memo-modal" class="hidden">
+    <div class="memo-scroll">
+      <div class="quiz-top-controls">
+        <button id="memo-restart-btn" title="Начать заново">↺</button>
+        <button id="memo-close" title="Закрыть">✕</button>
+      </div>
+      <div class="quiz-header">
+        <h2>Мемо</h2>
+        <!-- Режимы убраны -->
+        <div class="quiz-progress">Ходов: <strong id="memo-moves">0</strong></div>
+      </div>
+      <div id="memo-grid"></div>
+      <div id="memo-end-screen" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
+        <h2 id="memo-end-title" style="color:var(--dark-green); font-family:Georgia; font-size: 28px; margin-bottom: 10px;">🏆
+          Победа!</h2>
+        <p id="memo-end-achieve"
+          style="font-family:Georgia; font-size: 16px; color: var(--gold-deep); font-weight: bold; margin-bottom: 15px;"></p>
+        <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Вы нашли все пары за <strong
+            id="memo-final-moves">0</strong> ходов.</p>
+        <button id="memo-restart" class="quiz-next-btn" style="margin-top:15px; padding: 10px 25px; font-size: 15px;">Играть
+          снова</button>
+      </div>
+    </div>
+  
+    <!-- Свиток со списком имен -->
+    <div id="memo-info-panel" class="hidden">
+      <div class="quiz-info-scroll">
+        <h3>Виды на карточках</h3>
+        <ul id="memo-species-list"
+          style="list-style-type: none; padding: 0; margin: 10px 0; font-family: Georgia, serif; font-size: 14px; line-height: 1.8;">
+          <!-- Сюда будут добавляться элементы списка -->
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <link rel="stylesheet" href="css/quiz.css">
+  <link rel="stylesheet" href="css/match.css">
+  <link rel="stylesheet" href="css/memo.css">
+  
+  <script src="js/quiz.js"></script>
+  <script src="js/match.js"></script>
+  <script src="js/memo.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/species.js"></script>
+  <script src="js/species-data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/species-loader.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
