@@ -101,9 +101,22 @@
 
       <h2>Действия</h2>
       <div class="actions-row">
-        <button id="btn-export" title="Скачать JSON">💾 JSON</button>
-        <button id="btn-import" title="Загрузить JSON">📂 JSON</button>
-        <button id="btn-clear" class="danger" title="Очистить всё">🗑</button>
+        <button id="btn-export" title="Скачать JSON">
+          <span style="font-size: 16px; line-height: 1;">💾</span>
+          <span style="font-size: 9px; line-height: 1.1; margin-top: 4px;">JSON</span>
+        </button>
+        <button id="btn-export-geojson" title="Скачать GeoJSON">
+          <span style="font-size: 16px; line-height: 1;">🌍</span>
+          <span style="font-size: 9px; line-height: 1.1; margin-top: 4px;">GeoJSON</span>
+        </button>
+        <button id="btn-import" title="Загрузить JSON">
+          <span style="font-size: 16px; line-height: 1;">📂</span>
+          <span style="font-size: 9px; line-height: 1.1; margin-top: 4px;">Импорт</span>
+        </button>
+        <button id="btn-clear" class="danger" title="Очистить всё">
+          <span style="font-size: 16px; line-height: 1;">🗑</span>
+          <span style="font-size: 9px; line-height: 1.1; margin-top: 4px;">Очист.</span>
+        </button>
       </div>
       <input type="file" id="file-input" accept=".json" hidden>
 
