@@ -1,0 +1,1 @@
+window.SPECIES_DATA = {};

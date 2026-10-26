@@ -16,6 +16,15 @@ function escapeHtml(str) {
   });
 }
 
+// Пересчет координат из процентов (x, y) в реальные (широта, долгота)
+function xyToGeo(x, y) {
+  const b = CONFIG.mapGeoBounds;
+  // Линейная интерполяция: находим долю x и y между опорными точками
+  const lon = b.lon1 + (b.lon2 - b.lon1) * ((x - b.x1) / (b.x2 - b.x1));
+  const lat = b.lat1 + (b.lat2 - b.lat1) * ((y - b.y1) / (b.y2 - b.y1));
+  return { lat, lon };
+}
+
 const App = {
 
   markers: [],
@@ -754,6 +763,82 @@ const App = {
       Storage.exportAll(this.markers, this.regions, this.migrations);
     });
 
+    // Экспорт в GeoJSON
+    document.getElementById('btn-export-geojson').addEventListener('click', () => {
+      const features = [];
+
+      // 1. Маркеры (Point)
+      this.markers.forEach(m => {
+        const geo = xyToGeo(m.x, m.y);
+        features.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [geo.lon, geo.lat] },
+          properties: {
+            name: m.name,
+            speciesId: m.speciesId,
+            category: m.category,
+            status: m.status,
+            markerType: m.markerType
+          }
+        });
+      });
+
+      // 2. Области (Polygon)
+      this.regions.forEach(r => {
+        r.speciesList.forEach(sp => {
+          // Переводим все точки области в координаты
+          const coords = r.points.map(p => {
+            const geo = xyToGeo(p[0], p[1]);
+            return [geo.lon, geo.lat];
+          });
+          // GeoJSON требует, чтобы полигон был замкнут (первая точка = последняя)
+          coords.push(coords[0]);
+
+          features.push({
+            type: "Feature",
+            geometry: { type: "Polygon", coordinates: [coords] },
+            properties: {
+              speciesName: sp.speciesName,
+              speciesId: sp.speciesId,
+              intensity: sp.intensity || r.intensity
+            }
+          });
+        });
+      });
+
+      // 3. Миграции (LineString)
+      this.migrations.forEach(m => {
+        if (!m.points || m.points.length < 2) return;
+        const coords = m.points.map(p => {
+          const geo = xyToGeo(p[0], p[1]);
+          return [geo.lon, geo.lat];
+        });
+
+        features.push({
+          type: "Feature",
+          geometry: { type: "LineString", coordinates: coords },
+          properties: {
+            speciesName: m.speciesName,
+            speciesId: m.speciesId,
+            category: m.category
+          }
+        });
+      });
+
+      const geojson = {
+        type: "FeatureCollection",
+        features: features
+      };
+
+      const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/geo+json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'red-book-omsk.geojson';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
     document.getElementById('btn-import').addEventListener('click', () => {
       document.getElementById('file-input').click();
     });
@@ -1429,9 +1514,45 @@ const App = {
     }, 1200);
   },
 
-    // ============================================================
+  // ============================================================
   // СВИТОК О ВИДЕ
   // ============================================================
+
+  // Открывает полноэкранное окно с крупной мини-картой вида
+  openSpeciesMiniMapFull(speciesId) {
+    // 1. Создаём оверлей
+    const overlay = document.createElement('div');
+    overlay.id = 'species-map-fullscreen';
+    
+    // 2. Получаем HTML карты (используем уже написанный метод)
+    const mapHtml = this.renderSpeciesMiniMap(speciesId);
+    
+    // 3. Находим вид для заголовка
+    const sp = this.findSpeciesById(speciesId);
+    const name = sp ? sp.name : 'Карта';
+
+    overlay.innerHTML = `
+      <div class="fullscreen-map-content">
+        <div class="fullscreen-map-header">
+          <h3>${name}</h3>
+          <button class="fullscreen-map-close" title="Закрыть">✕</button>
+        </div>
+        <div class="fullscreen-map-body">
+          ${mapHtml}
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+
+    // 4. Навешиваем обработчики
+    const closeBtn = overlay.querySelector('.fullscreen-map-close');
+    closeBtn.addEventListener('click', () => overlay.remove());
+    
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  },
 
   openSpeciesScroll(speciesId, markerId = null) {
     const scroll = document.getElementById('species-scroll');
@@ -1458,6 +1579,15 @@ const App = {
       const scrollBody = body.querySelector('.scroll-body-scroll');
       if (scrollBody) scrollBody.scrollTop = 0;
 
+      // Клик по глобусу — открыть карту
+      const globeBtn = body.querySelector('#scroll-photo-globe-btn');
+      if (globeBtn) {
+        globeBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          this.openSpeciesMiniMapFull(data.id);
+        });
+      }
+
       // Обработчики клика по соседям — открываем их свитки
       body.querySelectorAll('.scroll-nearby-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -1468,17 +1598,119 @@ const App = {
     });
   },
 
+  // Рисует статичную мини-карту вида: img/map3.png + SVG-слой
+  // с маркерами, областями и миграциями ТОЛЬКО этого вида.
+  renderSpeciesMiniMap(speciesId) {
+    if (!speciesId) return '';
+
+    const myMarkers = this.markers.filter(m => m.speciesId === speciesId);
+    const myRegions = this.regions.filter(r =>
+      r.speciesList && r.speciesList.some(sp => sp.speciesId === speciesId)
+    );
+    const myMigrations = this.migrations.filter(m => {
+      if (m.speciesId === speciesId) return true;
+      if (m.speciesList && m.speciesList.some(sp => sp.speciesId === speciesId)) return true;
+      return false;
+    });
+
+    const hasMarkers = myMarkers.length > 0;
+    const hasRegions = myRegions.length > 0;
+    const hasMigrations = myMigrations.length > 0;
+
+    const emptyHint = (!hasMarkers && !hasRegions && !hasMigrations)
+      ? `<div class="scroll-photo-map-empty">На карте пока нет данных о виде</div>`
+      : '';
+
+    const markersHtml = myMarkers.map(m => {
+      const catConfig = CONFIG.categories.find(c => c.key === m.category);
+      const statusConfig = CONFIG.statuses.find(s => s.value === m.status);
+      const formatSet = (m.category === 'animals')
+        ? CONFIG.markers.animals
+        : CONFIG.markers.plants;
+      const fmt = formatSet.find(f => f.key === m.markerType);
+
+      const color = fmt ? fmt.color : (catConfig ? catConfig.color : '#999');
+      const symbol = fmt ? fmt.symbol : '●';
+
+      return `
+        <div class="scroll-photo-marker"
+             style="left:${m.x}%;top:${m.y}%;color:${color};">
+          ${symbol}
+          ${statusConfig ? `<span class="scroll-photo-marker-badge"
+              style="background:${statusConfig.color};">${statusConfig.value}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const regionPolygons = myRegions.map(r => {
+      const intensity = r.intensity || 'weak';
+      const pts = r.points.map(([x, y]) => `${x},${y}`).join(' ');
+      return `<polygon points="${pts}"
+                        class="scroll-photo-region ${intensity}" />`;
+    }).join('');
+
+    const arrowDefs = hasMigrations ? `
+      <defs>
+        <marker id="scroll-arrow-end" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="3" markerHeight="3" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a3a2e" />
+        </marker>
+        <marker id="scroll-arrow-start" viewBox="0 0 10 10" refX="1" refY="5"
+                markerWidth="3" markerHeight="3" orient="auto">
+          <path d="M 10 0 L 0 5 L 10 10 z" fill="#1a3a2e" />
+        </marker>
+      </defs>
+    ` : '';
+
+    const migrationLines = myMigrations.map(mig => {
+      if (!mig.points || mig.points.length < 2) return '';
+      const [p1, p2] = mig.points;
+      return `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}"
+                    class="scroll-photo-migration"
+                    marker-start="url(#scroll-arrow-start)"
+                    marker-end="url(#scroll-arrow-end)" />`;
+    }).join('');
+
+    return `
+      <div class="scroll-photo-map-wrap">
+        <!-- Обертка с точными пропорциями карты map3.png (1103 x 1600) -->
+        <div class="scroll-photo-map-inner">
+          <img src="img/map3.png" alt="Карта распространения" class="scroll-photo-map-img">
+          <svg class="scroll-photo-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            ${arrowDefs}
+            ${regionPolygons}
+            ${migrationLines}
+          </svg>
+          <div class="scroll-photo-map-markers">${markersHtml}</div>
+        </div>
+        ${emptyHint}
+        <div class="scroll-photo-map-legend">
+          ${hasMarkers    ? `<span>📍 ${myMarkers.length} марк.</span>` : ''}
+          ${hasRegions    ? `<span>🌍 ${myRegions.length} обл.</span>` : ''}
+          ${hasMigrations ? `<span>⇔ ${myMigrations.length} мигр.</span>` : ''}
+        </div>
+      </div>
+    `;
+  },
+
   // Рисует полный свиток по данным JSON
     renderSpeciesScroll(data, markerId = null) {
       const statusConfig = CONFIG.statuses.find(s => s.value === data.status);
 
-    // ---- Фотография ----
+    // ---- Фотография с кнопкой карты ----
     const photoHtml = `
-      <figure class="scroll-figure">
+      <figure class="scroll-figure scroll-figure-flip" style="position: relative;">
         <img class="scroll-photo"
              src="img/species/${data.id}.png"
              alt="${escapeHtml(data.name)}"
              onerror="this.parentNode.innerHTML='&lt;div class=\\'scroll-photo-placeholder\\'&gt;Фотография пока не добавлена&lt;/div&gt;'">
+        
+        <!-- Кнопка-глобус для открытия карты -->
+        <button type="button" class="scroll-photo-globe-btn"
+                id="scroll-photo-globe-btn" title="Показать карту распространения">
+          🌍
+        </button>
+        
         <figcaption class="scroll-caption">${escapeHtml(data.latin)}</figcaption>
       </figure>
     `;
@@ -3529,8 +3761,17 @@ const App = {
       ? `<span class="tooltip-goto" data-species-id="${marker.speciesId}" title="Изучить вид в справочнике">🔍</span>`
       : '';
 
+    // Считаем координаты
+    const geo = xyToGeo(marker.x, marker.y);
+    const coordStr = `${geo.lat.toFixed(4)}° N, ${geo.lon.toFixed(4)}° E`;
+
     document.getElementById('tooltip-content').innerHTML = `
       <div id="tooltip-header">
+        <!-- Компактные координаты над названием -->
+        <div style="font-size: 10px; color: #999; font-family: monospace; margin-bottom: 2px; letter-spacing: 0.5px; line-height: 1;">
+          ${coordStr}
+        </div>
+
         <div class="tooltip-drag-handle" style="cursor: move; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
           <div style="display: flex; align-items: center;">
             <b>${marker.name}</b>
@@ -3538,6 +3779,7 @@ const App = {
           </div>
           <span style="color: #999; font-size: 14px; user-select: none;">✥</span>
         </div>
+        
         <span class="status" style="color:${statusConfig ? statusConfig.color : '#666'}">${statusText}</span>
       </div>
       <div id="tooltip-body">
