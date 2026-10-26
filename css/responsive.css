@@ -1,0 +1,753 @@
+/* ============================================================
+   АДАПТИВНЫЙ ИНТЕРФЕЙС — css/responsive.css
+   Подключение: после style.css / quiz.css / match.css / memo.css
+   Брейкпоинты: 1024px (планшет альбом), 820px (планшет), 640px (мобильный)
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Базовые улучшения для всех размеров экранов
+   ------------------------------------------------------------ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* поддержка «чёлки» и безопасных зон на мобильных */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+#sidebar {
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+  background: rgba(184, 145, 47, 0.45);
+  border-radius: 3px;
+}
+
+/* элементы не должны вылезать за ширину колонки */
+#map-switcher,
+#status-layers,
+#layers,
+.toggle-grid,
+.actions-row,
+.mode-switch {
+  max-width: 100%;
+}
+
+/* крупный тач-таргет для чекбоксов слоёв */
+.toggle-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------
+   Служебные элементы мобильного интерфейса
+   (на десктопе скрыты)
+   ------------------------------------------------------------ */
+
+.sidebar-topbar {
+  display: none; /* появляется только на мобильных */
+}
+
+#sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 30, 24, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 900;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+#sidebar-backdrop.visible {
+  display: block;
+  opacity: 1;
+}
+
+#mobile-topbar {
+  display: none; /* появляется только на мобильных */
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 12px;
+  right: 12px;
+  z-index: 80;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none; /* климы проходят сквозь панель… */
+}
+
+#mobile-topbar > * {
+  pointer-events: auto; /* …но не сквозь кнопки */
+}
+
+#btn-sidebar-toggle {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-deep);
+  background: linear-gradient(180deg, var(--green-light), var(--dark-green));
+  color: var(--gold-soft);
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: var(--shadow-deep);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.2s;
+  margin: 0; /* отмена сайдбарных стилей не нужна — кнопка вне сайдбара */
+}
+
+#btn-sidebar-toggle:active {
+  transform: scale(0.92);
+}
+
+.mobile-zoom-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-zoom-controls button {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--gold-deep);
+  background: linear-gradient(180deg, rgba(248, 241, 224, 0.95), rgba(226, 211, 179, 0.95));
+  color: var(--dark-green);
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Georgia', serif;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.12s ease, background 0.2s;
+}
+
+.mobile-zoom-controls button:active {
+  transform: scale(0.9);
+  background: var(--gold-soft);
+}
+
+/* ============================================================
+   ПЛАНШЕТЫ И НИЗКИЕ ДЕСКТОПЫ (до 1024px)
+   -------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  #sidebar {
+    width: 250px;
+    padding: 22px 14px;
+  }
+
+  #sidebar h1 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  #species-panel {
+    width: 380px;
+  }
+
+  .scroll-columns {
+    grid-template-columns: 1fr 260px;
+    gap: 20px;
+    padding: 0 24px;
+  }
+}
+
+/* ============================================================
+   МАЛЕНЬКИЕ ПЛАНШЕТЫ / БОЛЬШИЕ ТЕЛЕФОНЫ В АЛЬБОМЕ (до 820px)
+   -------------------------------------------------------- */
+
+@media (max-width: 820px) {
+  :root {
+    --shadow-deep: 0 6px 18px rgba(43, 33, 24, 0.3);
+  }
+
+  body {
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  /* --- Сайдбар превращается в выезжающую панель --- */
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(86vw, 340px);
+    height: 100dvh;
+    z-index: 950;
+    padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+    transform: translateX(-105%);
+    transition: transform 0.28s ease;
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.5);
+    overscroll-behavior: contain;
+  }
+
+  #sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* золотая линия-переплёт больше не нужна в потоке */
+  #sidebar-gold-line {
+    display: none;
+  }
+
+  /* шапка панели с кнопкой закрытия */
+  .sidebar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .sidebar-topbar-title {
+    font-family: 'Georgia', serif;
+    font-size: 15px;
+    color: var(--gold-soft);
+    letter-spacing: 0.5px;
+  }
+
+  #btn-sidebar-close {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(184, 145, 47, 0.5);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--gold-soft);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+
+  #btn-sidebar-close:hover {
+    background: rgba(184, 145, 47, 0.25);
+    color: #fff;
+  }
+
+  #sidebar h1 {
+    font-size: 19px;
+    margin-top: 4px;
+  }
+
+  /* --- Карта занимает весь экран --- */
+  #map-container {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  #map-wrapper img {
+    max-height: 100dvh;
+  }
+
+  /* мобильная панель видима */
+  #mobile-topbar {
+    display: flex;
+  }
+
+  /* --- Подсказка снизу по всей ширине --- */
+  #hint {
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    max-width: none;
+    font-size: 12.5px;
+    padding: 12px 14px;
+  }
+
+  /* --- Тултип: почти на всю ширину экрана --- */
+  #tooltip {
+    max-width: min(92vw, 360px);
+    max-height: 45dvh;
+    font-size: 13.5px;
+  }
+
+  #tooltip-actions button {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  /* --- Модалки на всю ширину --- */
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 10px;
+    padding: 22px 18px;
+    max-height: 88dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #modal,
+  #region-modal,
+  #migration-modal,
+  #password-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  #modal .modal-content,
+  #region-modal .modal-content,
+  #migration-modal .modal-content,
+  #password-modal .modal-content {
+    border-radius: 10px 10px 0 0;
+    clip-path: none;
+    border-top: 5px solid var(--gold-deep);
+    animation: sheetUp 0.25s ease;
+  }
+
+  @keyframes sheetUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* крупные поля ввода под тач */
+  .modal-content input,
+  .modal-content select,
+  .modal-content textarea {
+    font-size: 16px; /* защита от автозума iOS */
+    padding: 12px;
+  }
+
+  .modal-actions button {
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  /* --- Справочник видов: полноэкранная шторка --- */
+  #species-panel {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  #species-search {
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+
+  /* --- Свиток вида: почти во весь экран --- */
+  #species-scroll {
+    padding: 0;
+  }
+
+  #species-scroll .scroll-content {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    clip-path: none;
+    border-radius: 0;
+  }
+
+  .scroll-columns {
+    grid-template-columns: 1fr;
+    padding: 0 18px calc(30px + env(safe-area-inset-bottom));
+    gap: 18px;
+  }
+
+  .scroll-col-right {
+    order: -1;
+    position: static;
+    max-height: none;
+  }
+
+  #scroll-close {
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+  }
+
+  /* --- Полевой дневник: вертикальная компоновка --- */
+  #journal-modal {
+    padding: 0;
+  }
+
+  .journal-scroll {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .journal-content {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .journal-map-wrap {
+    flex: 0 0 auto;
+    padding: 12px;
+    min-height: 45dvh;
+  }
+
+  .journal-sidebar {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+    border-left: none;
+    border-top: 2px solid var(--gold-deep);
+    max-height: 45dvh;
+    overflow-y: auto;
+  }
+
+  .journal-titlebar {
+    padding: 10px 12px calc(10px + env(safe-area-inset-top)) 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .journal-titlebar h3 {
+    font-size: 15px;
+  }
+
+  .journal-titlebar-actions {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .journal-titlebar-actions button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  /* --- Игры: полноэкранные, компактные --- */
+  #quiz-modal,
+  #match-modal,
+  #memo-modal {
+    padding: 0;
+    gap: 0;
+  }
+
+  .quiz-scroll,
+  .match-scroll,
+  .memo-scroll {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    clip-path: none;
+  }
+
+  #quiz-modal::before,
+  #quiz-modal::after {
+    display: none;
+  }
+
+  /* инфо-панели игр — поверх, снизу */
+  #quiz-info-panel,
+  #memo-info-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    max-height: 55dvh;
+    margin-left: 0;
+    padding-left: 0;
+    border-radius: 14px 14px 0 0;
+    clip-path: none;
+    z-index: 20;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  .quiz-header h2,
+  .match-scroll .quiz-header h2,
+  .memo-scroll .quiz-header h2 {
+    font-size: 20px;
+  }
+
+  .quiz-top-controls button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  #quiz-image {
+    max-height: 32dvh;
+  }
+
+  .quiz-option-btn,
+  #quiz-options button {
+    padding: 13px 14px;
+    font-size: 15px;
+  }
+
+  /* сетки карточек — компактнее */
+  #match-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .match-card {
+    max-width: none;
+    max-height: none;
+    font-size: clamp(9px, 2.6vw, 13px);
+  }
+
+  #memo-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 8px;
+  }
+
+  /* --- Галерея фото --- */
+  .photo-gallery-content {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  .gallery-nav-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  #gallery-prev { left: 8px; }
+  #gallery-next { right: 8px; }
+
+  .gallery-counter {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ============================================================
+   МОБИЛЬНЫЕ ТЕЛЕФОНЫ (до 640px)
+   -------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  #sidebar h1 {
+    font-size: 17px;
+  }
+
+  #sidebar h2 {
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin: 20px 0 8px;
+  }
+
+  /* переключатели режимов — в две строки, крупные тач-таргеты */
+  .mode-switch button {
+    padding: 12px 6px;
+    font-size: 12px;
+  }
+
+  /* меню игр — одна колонка вместо трёх мелких кнопок */
+  #games-menu > div:first-child {
+    flex-direction: column !important;
+  }
+
+  #games-menu button {
+    padding: 12px 10px !important;
+    font-size: 13px !important;
+  }
+
+  #games-menu button span:first-child {
+    font-size: 20px !important;
+  }
+
+  /* карта-переключатель — перенос строк */
+  #map-switcher {
+    flex-wrap: wrap;
+  }
+
+  #map-switcher .map-option {
+    flex: 1 1 45%;
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+
+  /* слои — крупные строки */
+  .layer-row {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
+
+  /* отображение объектов — одна колонка */
+  .toggle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toggle-grid .toggle-row {
+    justify-content: flex-start;
+    font-size: 13px;
+    padding: 10px 8px;
+    gap: 8px;
+  }
+
+  .toggle-grid .toggle-row:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  /* действия — крупные иконки */
+  .actions-row button {
+    padding: 10px 2px;
+  }
+
+  .stat-row {
+    font-size: 12.5px;
+    flex-wrap: wrap;
+  }
+
+  #copyright {
+    font-size: 10.5px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  /* инструменты разработчика — крупные кнопки */
+  #developer-tools button {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  /* подсказка над тултипом не конфликтует */
+  #hint {
+    font-size: 12px;
+  }
+
+  /* игры: сетки карточек плотнее */
+  #match-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  #memo-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .quiz-stats {
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .quiz-info-scroll {
+    padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  /* статус-шкала в модалке — крупные кнопки */
+  .status-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  #marker-type-select button {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+}
+
+/* ============================================================
+   ОЧЕНЬ МАЛЕНЬКИЕ ЭКРАНЫ (до 400px)
+   -------------------------------------------------------- */
+
+@media (max-width: 400px) {
+  #sidebar {
+    width: 100vw;
+  }
+
+  #match-grid,
+  #memo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #tooltip {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+/* ============================================================
+   АЛЬБОМНАЯ ОРИЕНТАЦИЯ НА ТЕЛЕФОНАХ (низкие экраны)
+   -------------------------------------------------------- */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  #sidebar {
+    width: min(70vw, 320px);
+  }
+
+  #tooltip {
+    max-height: 70dvh;
+  }
+
+  .journal-map-wrap {
+    min-height: auto;
+  }
+
+  .journal-sidebar {
+    max-height: 60dvh;
+  }
+}
+
+/* ============================================================
+   КРУПНЫЕ ДЕСКТОПЫ — мелкие штрихи новой типографики
+   -------------------------------------------------------- */
+
+@media (min-width: 1400px) {
+  #sidebar {
+    width: 310px;
+  }
+}
+
+/* ============================================================
+   Мелкие устройства ввода (pointer: coarse) — увеличенные таргеты
+   -------------------------------------------------------- */
+
+@media (pointer: coarse) {
+  #sidebar button:not(.sub-btn) {
+    min-height: 42px;
+  }
+
+  .map-option {
+    min-height: 40px;
+  }
+
+  .status-layer-btn {
+    min-height: 40px;
+  }
+
+  .marker {
+    /* маркеры остаются того же размера, но зона попадания больше */
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================================
+   Уважение к настройкам уменьшенного движения
+   -------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

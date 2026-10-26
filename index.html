@@ -2,10 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#24352a">
   <title>Красная книга Омской области — интерактивная карта</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 
@@ -13,6 +15,12 @@
 
     <!-- Боковая панель -->
         <aside id="sidebar">
+      <!-- Шапка панели: видна только на мобильных -->
+      <div class="sidebar-topbar">
+        <span class="sidebar-topbar-title">🌿 Красная книга</span>
+        <button id="btn-sidebar-close" type="button" aria-label="Закрыть панель">✕</button>
+      </div>
+
       <h1>Красная книга<br>Омской области</h1>
 
       <div class="mode-switch">
@@ -157,7 +165,10 @@
     </aside>
 
     <div id="sidebar-gold-line"></div>
-    
+
+    <!-- Затемнение фона под панелью (мобильные) -->
+    <div id="sidebar-backdrop"></div>
+
     <!-- Карта -->
     <main id="map-container">
       <div id="map-wrapper">
@@ -165,6 +176,16 @@
       </div>
       <svg id="regions-layer" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="markers-layer"></div>
+
+      <!-- Мобильная верхняя панель: меню + зум -->
+      <div id="mobile-topbar">
+        <button id="btn-sidebar-toggle" type="button" aria-label="Открыть панель управления">☰</button>
+        <div class="mobile-zoom-controls">
+          <button id="btn-zoom-in" type="button" aria-label="Приблизить">＋</button>
+          <button id="btn-zoom-out" type="button" aria-label="Отдалить">－</button>
+          <button id="btn-zoom-reset" type="button" aria-label="Сбросить масштаб">⤢</button>
+        </div>
+      </div>
       <div id="tooltip">
         <div id="tooltip-content"></div>
         <div id="tooltip-actions">
