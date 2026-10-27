@@ -1592,14 +1592,23 @@ const App = {
 
     wrapper.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
 
-    // Маркеры вне wrapper'а — пересчитываем их позиции через rAF,
-    // чтобы не дёргать layout на каждый пиксель движения мыши.
-    if (this._rafPending) return;
-    this._rafPending = true;
-    requestAnimationFrame(() => {
-      this._rafPending = false;
-      this.updateMarkerPositions();
-    });
+    // Маркеры и слой областей лежат ВНУТРИ #map-wrapper — их позиции
+    // наследуют transform карты автоматически (синхронно, без «догоняния»).
+    // Компенсация масштаба (--marker-zoom) нужна ТОЛЬКО при изменении zoom:
+    // при панорамировании (zoom не меняется) её трогать нельзя — это
+    // сбрасывает GPU-слой и вызывает «догоняние» маркеров.
+    if (this._lastCompensatedZoom !== this.zoom && this.markersLayer) {
+      this._lastCompensatedZoom = this.zoom;
+      // Дожидаемся кадра, чтобы браузер применил transform слоя одним
+      // пакетом вместе с трансформом wrapper'а (один общий reflow).
+      if (this._markerZoomRaf) cancelAnimationFrame(this._markerZoomRaf);
+      this._markerZoomRaf = requestAnimationFrame(() => {
+        this._markerZoomRaf = null;
+        if (this.markersLayer) {
+          this.markersLayer.style.setProperty('--marker-zoom', this.zoom);
+        }
+      });
+    }
   },
 
   // ============================================================
@@ -2340,65 +2349,44 @@ const App = {
 
     const img = document.getElementById('map');
     if (!img || !img.naturalWidth) return;
-    const mapRect = img.getBoundingClientRect();
-    const containerRect = this.container.getBoundingClientRect();
 
-    const left = mapRect.left - containerRect.left;
-    const top = mapRect.top - containerRect.top;
+    // Маркеры и SVG-слой областей теперь лежат ВНУТРИ #map-wrapper:
+    // их координаты задаются относительно самой картинки карты и
+    // наследуют pan/зум через transform wrapper'а. Поэтому при
+    // панорамировании здесь ничего пересчитывать не нужно — метод
+    // вызывается только когда меняются РЕАЛЬНЫЕ размеры карты
+    // (resize окна, загрузка новой подложки, открытие панели).
 
-    // --- ОПТИМИЗАЦИЯ SVG ---
+    // Собственные (незамасштабированные) размеры карты в CSS-пикселях
+    const mapW = img.clientWidth;
+    const mapH = img.clientHeight;
+
+    // --- СЛОЙ ОБЛАСТЕЙ (SVG) ---
+    // Растягиваем svg ровно поверх картинки внутри wrapper'а;
+    // viewBox уже равен naturalWidth/naturalHeight (см. renderRegions).
     const svg = document.getElementById('regions-layer');
     if (svg) {
-      // Вместо left/top используем transform — он не вызывает перерисовку внутренностей SVG
       svg.style.left = '0px';
       svg.style.top = '0px';
-
-      // Задаем размеры контейнера (если они не изменились, браузер просто проигнорирует)
-      svg.style.width = mapRect.width + 'px';
-      svg.style.height = mapRect.height + 'px';
-
-      // Двигаем весь SVG слой через GPU
-      svg.style.transform = `translate(${left}px, ${top}px)`;
+      svg.style.width = mapW + 'px';
+      svg.style.height = mapH + 'px';
+      svg.style.transform = 'none';
     }
 
-    // --- ОПТИМИЗАЦИЯ МАРКЕРОВ ---
-    // Кэш элементов маркеров по id — собираем один раз за вызов
+    // --- МАРКЕРЫ ---
     const elMap = new Map();
     this.markersLayer.querySelectorAll('.marker').forEach(el => {
       const id = el.dataset.id;
       if (id) elMap.set(Number(id), el);
     });
 
-    // Получаем размеры видимой области экрана
-    const containerW = this.container.clientWidth;
-    const containerH = this.container.clientHeight;
-    const pad = 100; // Запас за краями экрана
-
-    // Для маркеров также лучше использовать transform вместо left/top,
-    // но так как их много, мы просто расставляем их абсолютно (left/top) 
-    // и скрываем невидимые.
     this.markers.forEach(m => {
       const el = elMap.get(m.id);
       if (!el) return;
-      const px = left + (m.x / 100) * mapRect.width;
-      const py = top + (m.y / 100) * mapRect.height;
-
-      el.style.left = px + 'px';
-      el.style.top = py + 'px';
-
-      // ВИРТУАЛИЗАЦИЯ: если маркер за пределами видимой области — прячем его
-      const isVisible = (
-        px > -pad &&
-        px < containerW + pad &&
-        py > -pad &&
-        py < containerH + pad
-      );
-
-      const currentDisplay = el.style.display;
-      const targetDisplay = isVisible ? 'flex' : 'none';
-      if (currentDisplay !== targetDisplay) {
-        el.style.display = targetDisplay;
-      }
+      // Позиции — в процентах от размеров карты; масштаб и сдвиг
+      // применяет браузер через transform wrapper'а (синхронно).
+      el.style.left = (m.x / 100 * mapW) + 'px';
+      el.style.top = (m.y / 100 * mapH) + 'px';
     });
   },
 
@@ -3746,14 +3734,12 @@ const App = {
     // Берем активные категории из нашего внутреннего фильтра
     const activeCats = [...this.listFilter];
 
-    // Кэшируем геометрию карты один раз на весь рендер
+    // Кэшируем геометрию карты один раз на весь рендер.
+    // Маркеры лежат внутри #map-wrapper — координаты относительные
+    // картинки, без учёта pan/зума (их применяет transform wrapper'а).
     const img = document.getElementById('map');
-    const mapRect = img ? img.getBoundingClientRect() : null;
-    const containerRect = this.container.getBoundingClientRect();
-    const renderLeft = mapRect ? mapRect.left - containerRect.left : 0;
-    const renderTop = mapRect ? mapRect.top - containerRect.top : 0;
-    const renderWidth = mapRect ? mapRect.width : 0;
-    const renderHeight = mapRect ? mapRect.height : 0;
+    const renderWidth = img ? img.clientWidth : 0;
+    const renderHeight = img ? img.clientHeight : 0;
 
     const fragment = document.createDocumentFragment();
 
@@ -3788,8 +3774,8 @@ const App = {
       if (!this.regionMode && !this.serialMode && this.flashingIds.has(m.id)) {
         el.classList.add('highlighted');
       }
-      const px = renderLeft + (m.x / 100) * renderWidth;
-      const py = renderTop + (m.y / 100) * renderHeight;
+      const px = (m.x / 100) * renderWidth;
+      const py = (m.y / 100) * renderHeight;
 
       el.style.left = px + 'px';
       el.style.top = py + 'px';

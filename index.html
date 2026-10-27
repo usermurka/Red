@@ -173,9 +173,12 @@
     <main id="map-container">
       <div id="map-wrapper">
         <img id="map" src="img/map.png" alt="Карта Омской области" draggable="false">
+        <!-- Слои областей и маркеров внутри wrapper'а: transform карты
+             (пан/зум) применяется к ним автоматически, без пересчёта
+             позиций на каждый кадр — маркеры движутся синхронно с картой -->
+        <svg id="regions-layer" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="markers-layer"></div>
       </div>
-      <svg id="regions-layer" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div id="markers-layer"></div>
 
       <!-- Мобильная верхняя панель: меню + зум -->
       <div id="mobile-topbar">
