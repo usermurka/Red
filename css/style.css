@@ -440,11 +440,10 @@ body {
   border-radius: 50%;
     border: 2px solid var(--parchment-light);
     transform: translate(-50%, -50%);
-    will-change: transform;
   /* Дает GPU-ускорение */
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.15s;
+  transition: none; /* без анимации scale — маркеры строго следуют за картой при зуме */
   text-shadow: none;
     /* Убираем тень у текста */
     box-shadow: none;
