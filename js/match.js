@@ -1,3 +1,10 @@
+// Экранирование HTML (защита от XSS при выводе названий видов)
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
+
 const MatchGame = {
     TOTAL_PAIRS: 10,
     init() {
@@ -53,7 +60,7 @@ const MatchGame = {
             if (c.type === 'img') {
                 el.innerHTML = `<img src="img/species/${c.id}.png" onerror="this.src='img/species/placeholder.png'">`;
             } else {
-                el.innerHTML = `<span>${c.name}</span>`;
+                el.innerHTML = `<span>${escHtml(c.name)}</span>`;
             }
             el.addEventListener('click', () => this.handleClick(el));
             grid.appendChild(el);

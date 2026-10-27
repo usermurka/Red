@@ -1,3 +1,10 @@
+// Экранирование HTML (защита от XSS при выводе названий видов)
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
+
 const MemoGame = {
     init() {
         document.getElementById('btn-memo').addEventListener('click', () => this.open());
@@ -169,7 +176,7 @@ const MemoGame = {
             <div class="memo-match-card">
                 <img src="img/species/${speciesId}.png"
                      onerror="this.src='img/species/placeholder.png'">
-                <div class="memo-match-name">${name}</div>
+                <div class="memo-match-name">${escHtml(name)}</div>
             </div>
         `;
         document.body.appendChild(overlay);

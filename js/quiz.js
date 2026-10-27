@@ -1,3 +1,10 @@
+// Экранирование HTML (защита от XSS при выводе названий видов)
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
+
 const Quiz = {
     scoreRight: 0,
     scoreWrong: 0,
@@ -179,7 +186,7 @@ const Quiz = {
 
         const resultContainer = document.getElementById('quiz-result');
         resultContainer.classList.remove('hidden');
-        resultContainer.innerHTML = `<p style="color: #B71C1C;">Время вышло! Это <strong>${this.currentSpecies.name}</strong>.</p>`;
+        resultContainer.innerHTML = `<p style="color: #B71C1C;">Время вышло! Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
 
         this.showInfoPanel();
         this.showNextButton(resultContainer);
@@ -206,7 +213,7 @@ const Quiz = {
             document.getElementById('quiz-score-streak').textContent = this.currentStreak;
             this.updateStreakUI();
 
-            resultContainer.innerHTML = `<p style="color: #2E7D32;">Верно! Это <strong>${this.currentSpecies.name}</strong>.</p>`;
+            resultContainer.innerHTML = `<p style="color: #2E7D32;">Верно! Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
         } else {
             btnElement.classList.add('wrong');
             this.scoreWrong++;
@@ -220,7 +227,7 @@ const Quiz = {
                     btn.classList.add('correct');
                 }
             });
-            resultContainer.innerHTML = `<p style="color: #B71C1C;">Неверно. Это <strong>${this.currentSpecies.name}</strong>.</p>`;
+            resultContainer.innerHTML = `<p style="color: #B71C1C;">Неверно. Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
         }
 
         this.showInfoPanel();

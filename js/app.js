@@ -2,8 +2,9 @@
 // ОСНОВНАЯ ЛОГИКА ПРИЛОЖЕНИЯ
 // ============================================================
 
-// Экранирует HTML-спецсимволы, чтобы данные из JSON не ломали вёрстку
-// и не выполняли случайный скрипт (защита от XSS в свитке о виде).
+// Экранирует HTML-спецсимволы, чтобы данные из JSON / localStorage / импорта
+// не ломали вёрстку и не выполняли случайный скрипт (защита от XSS).
+// Доступно другим модулям через window.escapeHtml (journal.js и др.).
 function escapeHtml(str) {
   return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
     return {
@@ -15,6 +16,11 @@ function escapeHtml(str) {
     }[m];
   });
 }
+window.escapeHtml = escapeHtml;
+
+// Безопасная вставка текста в innerHTML-шаблоны: то же, что escapeHtml,
+// но читаемое имя на месте вызова.
+const esc = escapeHtml;
 
 // Пересчет координат из процентов (x, y) в реальные (широта, долгота)
 function xyToGeo(x, y) {
@@ -1551,13 +1557,24 @@ const App = {
   onPanMove(e) {
     if (!this.isPanning) return;
 
-    const dx = e.clientX - this.panStartX;
-    const dy = e.clientY - this.panStartY;
+    // Сохраняем только последние координаты; применяем трансформ не чаще
+    // одного раза на кадр анимации (mousemove приходит в разы чаще refresh rate)
+    this._panLastEvent = e;
+    if (this._panRafPending) return;
+    this._panRafPending = true;
+    requestAnimationFrame(() => {
+      this._panRafPending = false;
+      const ev = this._panLastEvent;
+      if (!this.isPanning || !ev) return;
 
-    this.panX = this.panStartPanX + dx;
-    this.panY = this.panStartPanY + dy;
+      const dx = ev.clientX - this.panStartX;
+      const dy = ev.clientY - this.panStartY;
 
-    this.applyTransform();
+      this.panX = this.panStartPanX + dx;
+      this.panY = this.panStartPanY + dy;
+
+      this.applyTransform();
+    });
   },
 
   onPanEnd() {
@@ -1735,7 +1752,7 @@ const App = {
     overlay.innerHTML = `
       <div class="fullscreen-map-content">
         <div class="fullscreen-map-header">
-          <h3>${name}</h3>
+          <h3>${esc(name)}</h3>
           <button class="fullscreen-map-close" title="Закрыть">✕</button>
         </div>
         <div class="fullscreen-map-body">
@@ -2210,8 +2227,8 @@ const App = {
 
       const items = [...grouped.entries()].map(([cls, speciesArr]) => {
         const list = speciesArr.map(sp => `
-          <li class="scroll-nearby-item" data-species-id="${sp.id}" style="cursor:pointer;">
-            <span class="scroll-nearby-name">${sp.name}</span>
+          <li class="scroll-nearby-item" data-species-id="${esc(sp.id)}" style="cursor:pointer;">
+            <span class="scroll-nearby-name">${esc(sp.name)}</span>
           </li>
         `).join('');
 
@@ -2281,7 +2298,7 @@ const App = {
           return `
             <li class="scroll-nearby-item" data-species-id="${m.speciesId}">
               <span class="scroll-nearby-icon">${icon}</span>
-              <span class="scroll-nearby-name">${name}${countLabel}</span>
+              <span class="scroll-nearby-name">${esc(name)}${countLabel}</span>
               ${statusBadge}
             </li>
           `;
@@ -2707,8 +2724,8 @@ const App = {
         const idsAttr = g.ids.join(',');
 
         return `
-          <div class="region-marker-item" data-marker-ids="${idsAttr}" style="cursor:pointer; padding:3px 8px 3px 24px; display:flex; align-items:center; gap:6px; border-bottom: 1px dotted rgba(0,0,0,0.05);">
-            <span class="nearby-name" style="flex:1;">${g.name}${countLabel}</span>
+          <div class="region-marker-item" data-marker-ids="${esc(idsAttr)}" style="cursor:pointer; padding:3px 8px 3px 24px; display:flex; align-items:center; gap:6px; border-bottom: 1px dotted rgba(0,0,0,0.05);">
+            <span class="nearby-name" style="flex:1;">${esc(g.name)}${countLabel}</span>
             ${st ? `<span class="nearby-status" style="background:${st.color}" title="${st.value} — ${st.label}">${st.value}</span>` : ''}
           </div>
         `;
@@ -3288,9 +3305,23 @@ const App = {
   },
 
   // Проверка введённого пароля
-  checkPassword() {
+  async checkPassword() {
     const password = document.getElementById('password-input').value;
-    if (password === CONFIG.ui.developerPassword) {
+    // Сравниваем SHA-256 хэш введённого пароля с хэшем из config.js,
+    // чтобы сам пароль не хранился в исходниках в открытом виде.
+    let ok = false;
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
+      const hex = Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+      ok = hex === CONFIG.ui.developerPasswordHash;
+    } catch (e) {
+      console.error('Password hash failed:', e);
+      document.getElementById('password-error').textContent =
+        'Браузер не поддерживает WebCrypto (нужен HTTPS или localhost)';
+      return;
+    }
+    if (ok) {
       document.getElementById('password-modal').classList.add('hidden');
       this.setMode(true);
     } else {
@@ -3912,10 +3943,10 @@ const App = {
            <strong style="color:#1a3a2e;">Входит в области обитания:</strong><br>
            ${regionsHere.map(r => r.speciesList || []).flat().map(sp => {
              if (sp.speciesId === marker.speciesId) return '';
-             return `<div class="region-link-item" data-species-id="${sp.speciesId}" 
+             return `<div class="region-link-item" data-species-id="${esc(sp.speciesId)}" 
                           style="cursor: pointer; padding: 2px 4px; border-radius: 2px; transition: background 0.15s;"
                           title="Кликните, чтобы подсветить этот вид на карте">
-                       ${sp.speciesName}
+                       ${esc(sp.speciesName)}
                      </div>`;
            }).join('')}
          </div>`
@@ -3951,10 +3982,10 @@ const App = {
         const cat = CONFIG.categories.find(c => c.key === m.category);
         const st = CONFIG.statuses.find(s => s.value === m.status);
         const countLabel = g.count > 1 ? ` <span class="nearby-count">×${g.count}</span>` : '';
-        return `<div class="nearby-item" data-marker-id="${m.id}">
+        return `<div class="nearby-item" data-marker-id="${esc(m.id)}">
                <span class="nearby-icon">${cat && cat.icon ? cat.icon : '●'}</span>
-               <span class="nearby-name">${m.name}${countLabel}</span>
-               ${st ? `<span class="nearby-status" style="background:${st.color}" title="${st.value} — ${st.label}">${st.value}</span>` : ''}
+               <span class="nearby-name">${esc(m.name)}${countLabel}</span>
+               ${st ? `<span class="nearby-status" style="background:${esc(st.color)}" title="${esc(st.value)} — ${esc(st.label)}">${esc(st.value)}</span>` : ''}
              </div>`;
       }).join('')}
          </div>`
@@ -3962,7 +3993,7 @@ const App = {
 
     // Лупа справа от названия — открывает вид в справочнике
     const gotoIcon = marker.speciesId
-      ? `<span class="tooltip-goto" data-species-id="${marker.speciesId}" title="Изучить вид в справочнике">🔍</span>`
+      ? `<span class="tooltip-goto" data-species-id="${esc(marker.speciesId)}" title="Изучить вид в справочнике">🔍</span>`
       : '';
 
     // Считаем координаты
@@ -3978,13 +4009,13 @@ const App = {
 
         <div class="tooltip-drag-handle" style="cursor: move; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
           <div style="display: flex; align-items: center;">
-            <b>${marker.name}</b>
+            <b>${esc(marker.name)}</b>
             ${gotoIcon}
           </div>
           <span style="color: #999; font-size: 14px; user-select: none;">✥</span>
         </div>
         
-        <span class="status" style="color:${statusConfig ? statusConfig.color : '#666'}">${statusText}</span>
+        <span class="status" style="color:${statusConfig ? esc(statusConfig.color) : '#666'}">${esc(statusText)}</span>
       </div>
       <div id="tooltip-body">
         ${regionsInfo}
@@ -4353,15 +4384,15 @@ const App = {
         const speciesNames = r.speciesList.map(sp => {
           const int = sp.intensity || r.intensity || 'weak';
           const intLabel = int === 'strong' ? 'пост.' : 'непост.';
-          return `<div class="tooltip-species-item" data-species-id="${sp.speciesId}" data-region-id="${r.id}" 
+          return `<div class="tooltip-species-item" data-species-id="${esc(sp.speciesId)}" data-region-id="${esc(r.id)}" 
                        style="padding: 4px 2px; cursor: pointer; border-bottom: 1px dotted rgba(0,0,0,0.1); transition: background 0.15s; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 500; color: var(--ink); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;">${sp.speciesName}</span>
+                    <span style="font-weight: 500; color: var(--ink); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;">${esc(sp.speciesName)}</span>
                     <span style="font-size: 10px; color: var(--text-mid); flex-shrink: 0;">${intLabel}</span>
                   </div>`;
         }).join('');
 
         return `
-          <div class="region-list-item" data-region-id="${r.id}"
+          <div class="region-list-item" data-region-id="${esc(r.id)}"
                style="padding: 0 0 0 8px; margin-bottom: 4px; border: none; border-left: 3px solid var(--gold-deep);">
             <div class="region-list-info" style="width: 100%; display: flex; align-items: flex-start;">
                <div style="width: 100%;">
@@ -4394,7 +4425,7 @@ const App = {
       namesHtml = `<span style="font-size: 16px; font-weight: bold; letter-spacing: 0.3px;">${namesList[0]}</span>`;
     } else {
       namesHtml = `<div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px;">` +
-        namesList.map(name => `<span style="font-size: 14px; font-weight: normal; line-height: 1.3; color: var(--ink);">${name}</span>`).join('') +
+        namesList.map(name => `<span style="font-size: 14px; font-weight: normal; line-height: 1.3; color: var(--ink);">${esc(name)}</span>`).join('') +
         `</div>`;
     }
 
@@ -4403,9 +4434,9 @@ const App = {
     const migSpeciesArray = migration.speciesList || [{ speciesId: migration.speciesId, speciesName: migration.speciesName || migration.speciesId }];
 
     speciesListHtml = migSpeciesArray.map(sp => `
-      <div class="species-link-item" data-species-id="${sp.speciesId}" style="cursor: pointer; font-size: 13px; color: var(--ink); padding: 3px 0; transition: color 0.15s; display: flex; justify-content: space-between; align-items: center;">
-        <span>${sp.speciesName}</span>
-        ${this.developerMode ? `<button class="mig-species-remove-btn" data-species-id="${sp.speciesId}" data-mig-id="${migration.id}" title="Удалить вид из миграции" style="background: none; border: none; color: var(--red-dark); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;">✕</button>` : ''}
+      <div class="species-link-item" data-species-id="${esc(sp.speciesId)}" style="cursor: pointer; font-size: 13px; color: var(--ink); padding: 3px 0; transition: color 0.15s; display: flex; justify-content: space-between; align-items: center;">
+        <span>${esc(sp.speciesName)}</span>
+        ${this.developerMode ? `<button class="mig-species-remove-btn" data-species-id="${esc(sp.speciesId)}" data-mig-id="${esc(migration.id)}" title="Удалить вид из миграции" style="background: none; border: none; color: var(--red-dark); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;">✕</button>` : ''}
       </div>
     `).join('');
 
@@ -4590,7 +4621,7 @@ const App = {
     document.getElementById('tooltip-content').innerHTML = `
       <b>Область обитания</b><br>
       <span class="status">Здесь отмечены виды:</span>
-      <div class="comment">${speciesList.join('<br>')}</div>
+      <div class="comment">${speciesList.map(esc).join('<br>')}</div>
     `;
 
     const actions = document.getElementById('tooltip-actions');
@@ -4631,25 +4662,25 @@ const App = {
       const speciesNames = r.speciesList.map(sp => {
         const int = sp.intensity || r.intensity || 'weak';
         const intLabel = int === 'strong' ? 'пост.' : 'непост.';
-        return `<div class="tooltip-species-item" data-species-id="${sp.speciesId}" data-region-id="${r.id}" 
+        return `<div class="tooltip-species-item" data-species-id="${esc(sp.speciesId)}" data-region-id="${esc(r.id)}" 
                      style="padding: 4px 2px; cursor: pointer; border-bottom: 1px dotted rgba(0,0,0,0.1); transition: background 0.15s; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-weight: 500; color: var(--ink); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;">${sp.speciesName}</span>
+                  <span style="font-weight: 500; color: var(--ink); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%;">${esc(sp.speciesName)}</span>
                   <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 10px; color: var(--text-mid); flex-shrink: 0;">${intLabel}</span>
-                    ${isDev ? `<button class="species-remove-btn" data-species-id="${sp.speciesId}" data-region-id="${r.id}" title="Удалить вид из области" style="background: none; border: none; color: var(--red-dark); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;">✕</button>` : ''}
+                    ${isDev ? `<button class="species-remove-btn" data-species-id="${esc(sp.speciesId)}" data-region-id="${esc(r.id)}" title="Удалить вид из области" style="background: none; border: none; color: var(--red-dark); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;">✕</button>` : ''}
                   </div>
                 </div>`;
       }).join('');
 
       return `
         <div class="region-list-item${isCurrent ? ' current' : ''}"
-             data-region-id="${r.id}"
+             data-region-id="${esc(r.id)}"
              style="padding: 0 0 0 8px; margin-bottom: 4px; border: none; border-left: 3px solid var(--gold-deep);">
           <div class="region-list-info" style="width: 100%; display: flex; align-items: flex-start;">
              <div style="width: 100%;">
                 ${speciesNames}
              </div>
-             ${isDev ? `<button class="region-delete-btn" data-region-delete-id="${r.id}" title="Удалить область" style="border:none; background:none; cursor:pointer; padding:0; font-size: 10px; margin-left: 4px;">🗑</button>` : ''}
+             ${isDev ? `<button class="region-delete-btn" data-region-delete-id="${esc(r.id)}" title="Удалить область" style="border:none; background:none; cursor:pointer; padding:0; font-size: 10px; margin-left: 4px;">🗑</button>` : ''}
           </div>
         </div>
       `;
@@ -4681,7 +4712,7 @@ const App = {
           const countLabel = g.count > 1 ? ` <span style="color:#7a2d2d;font-weight:600;">×${g.count}</span>` : '';
           return `<div class="region-marker-item" style="padding:3px 8px;">
                     <span class="nearby-icon">⇔</span>
-                    <span class="nearby-name" style="flex:1;">${g.name}${countLabel}</span>
+                    <span class="nearby-name" style="flex:1;">${esc(g.name)}${countLabel}</span>
                   </div>`;
         }).join('');
 
@@ -5102,9 +5133,21 @@ const App = {
         allSpecies = allSpecies.filter(s => this.passesStatusFilter(s));
       }
 
-      const filtered = query
-        ? allSpecies.filter(s => (s.name + ' ' + s.latin).toLowerCase().includes(query))
-        : allSpecies;
+      let filtered;
+      if (query) {
+        // Не вызываем toLowerCase() для каждой записи при каждом нажатии клавиши:
+        // кэшируем «сниженный» текст поиска; инвалидация — при изменении
+        // ссылки на собранный список видов (перезагрузка данных и т.п.)
+        if (allSpecies !== this._searchCacheRef) {
+          this._searchCacheRef = allSpecies;
+          this._searchCacheList = allSpecies.map(s => ({
+            s, hay: ((s.name || '') + ' ' + (s.latin || '')).toLowerCase(),
+          }));
+        }
+        filtered = this._searchCacheList.filter(e => e.hay.includes(query)).map(e => e.s);
+      } else {
+        filtered = allSpecies;
+      }
       filtered.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 
       filtered.forEach(s => {
@@ -5149,19 +5192,6 @@ return;
     };
     Object.values(SPECIES).forEach(walk);
     return result;
-  },
-
-  findSpecies(node, query) {
-    let results = [];
-    if (node.species) {
-      node.species.forEach(s => {
-        const haystack = (s.name + ' ' + s.latin).toLowerCase();
-        if (haystack.includes(query)) results.push(s);
-      });
-    }
-    if (node.classes) node.classes.forEach(c => results = results.concat(this.findSpecies(c, query)));
-    if (node.orders) node.orders.forEach(o => results = results.concat(this.findSpecies(o, query)));
-    return results;
   },
 
   createGroupNode(label, childrenFn, collapsed = false) {
@@ -5275,12 +5305,12 @@ return;
       const el = document.createElement('div');
       el.className = 'species-item';
       el.innerHTML = `
-        <span class="species-status-badge" style="background:${statusConfig ? statusConfig.color : '#999'};">
+        <span class="species-status-badge" style="background:${statusConfig ? esc(statusConfig.color) : '#999'};">
           ${species.status}
         </span>
         <div style="flex:1;">
-          <span class="species-name">${species.name}</span>
-          <span class="species-latin">${species.latin}</span>
+          <span class="species-name">${esc(species.name)}</span>
+          <span class="species-latin">${esc(species.latin)}</span>
         </div>
       `;
 
@@ -5322,12 +5352,12 @@ return;
       el.dataset.speciesId = speciesId;
       el.innerHTML = `
         <span class="species-toggle species-toggle-empty"></span>
-        <span class="species-status-badge" style="background:${statusConfig ? statusConfig.color : '#999'};">
+        <span class="species-status-badge" style="background:${statusConfig ? esc(statusConfig.color) : '#999'};">
           ${species.status}
         </span>
         <div style="flex:1;">
-          <span class="species-name">${species.name}</span>
-          <span class="species-latin">${this.shortNodeLabel(species.latin)}</span>
+          <span class="species-name">${esc(species.name)}</span>
+          <span class="species-latin">${esc(this.shortNodeLabel(species.latin))}</span>
         </div>
         <span class="species-book" title="Изучить вид в Красной книге">📖</span>
       `;
@@ -5348,7 +5378,7 @@ return;
     parent.dataset.speciesId = speciesId;
     parent.innerHTML = `
       <span class="species-toggle">${isExpanded ? '▼' : '▶'}</span>
-      <span class="species-status-badge" style="background:${statusConfig ? statusConfig.color : '#999'};">
+      <span class="species-status-badge" style="background:${statusConfig ? esc(statusConfig.color) : '#999'};">
         ${species.status}
       </span>
       <div style="flex:1;">
