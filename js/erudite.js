@@ -1,8 +1,20 @@
 // Игра «Эрудит»: собери название вида из перемешанных букв по картинке
 const EruditeGame = {
   ROUNDS: 5,
-  MIN_WORD_LEN: 4,
-  MAX_WORD_LEN: 12,
+  MIN_WORD_LEN: 4,          // длина слова без учёта пробелов
+  MAX_WORD_LEN: 16,         // общая длина с пробелом между словами
+  START_BALANCE: 10,        // стартовый банк баллов
+  LETTER_REWARD: 2,         // баллов за каждую верно угаданную букву
+  WORD_BONUS: 5,            // бонус за собранное слово целиком
+  STREAK_BONUS: 3,          // доп. бонус за серию (умножается на серию)
+  HINTS: {                  // система подсказок и их цены в баллах
+    firstLetter: { cost: 5,  label: 'Первая буква' },
+    vowels:      { cost: 8,  label: 'Все гласные' },
+    shuffle:     { cost: 4,  label: 'Перемешать' },
+    revealOne:   { cost: 12, label: 'Открыть букву' },
+    wordLength:  { cost: 6,  label: 'Длина слова' },
+    category:    { cost: 7,  label: 'Категория вида' },
+  },
 
   init() {
     document.getElementById('btn-erudite').addEventListener('click', () => this.open());
@@ -10,8 +22,17 @@ const EruditeGame = {
     document.getElementById('erudite-restart').addEventListener('click', () => this.startGame());
     document.getElementById('erudite-restart-btn').addEventListener('click', () => this.startGame());
     document.getElementById('erudite-backspace').addEventListener('click', () => this.undoLast());
-    document.getElementById('erudite-shuffle').addEventListener('click', () => this.shuffleTray());
     document.getElementById('erudite-skip').addEventListener('click', () => this.skipWord());
+
+    // Кнопки подсказок (делегирование — один слушатель вместо N)
+    const hintsEl = document.getElementById('erudite-hints');
+    if (hintsEl) {
+      hintsEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.erudite-hint-btn');
+        if (!btn || btn.disabled) return;
+        this.buyHint(btn.dataset.hint);
+      });
+    }
 
     // Поддержка аппаратной клавиатуры (Desktop / Android)
     document.addEventListener('keydown', (e) => {
@@ -19,6 +40,7 @@ const EruditeGame = {
       if (!modal || modal.classList.contains('hidden')) return;
       if (e.key === 'Backspace') { e.preventDefault(); this.undoLast(); return; }
       if (e.key === 'Enter') { e.preventDefault(); this.checkWord(); return; }
+      if (e.key === ' ') { e.preventDefault(); this.placeSpace(); return; }
       const ch = (e.key || '').toLocaleLowerCase('ru-RU');
       if (/^[а-яё]$/.test(ch)) this.tryPlaceLetter(ch);
     });
@@ -38,17 +60,18 @@ const EruditeGame = {
   startGame() {
     document.getElementById('erudite-end-screen').classList.add('hidden');
     this.round = 0;
-    this.score = 0;
+    this.score = 0;          // итоговые очки (не тратятся)
+    this.balance = this.START_BALANCE; // банк баллов для подсказок
     this.streak = 0;
     this.bestStreak = 0;
     this.solvedCount = 0;
     document.getElementById('erudite-total').textContent = this.ROUNDS;
-    this.updateStats();
 
     const all = App.collectAllSpecies().filter(sp => sp && sp.id && sp.name);
     const usable = all.filter(sp => {
       const w = this.normalizeWord(sp.name);
-      return w.length >= this.MIN_WORD_LEN && w.length <= this.MAX_WORD_LEN;
+      const lettersOnly = w.replace(/ /g, '');
+      return lettersOnly.length >= this.MIN_WORD_LEN && w.length <= this.MAX_WORD_LEN;
     });
     if (usable.length < this.ROUNDS) {
       alert(`Недостаточно коротких названий для игры (нужно минимум ${this.ROUNDS}).`);
@@ -62,9 +85,10 @@ const EruditeGame = {
       const w = this.normalizeWord(sp.name);
       if (seen.has(w)) continue;
       seen.add(w);
-      this.queue.push({ speciesId: sp.id, name: sp.name, word: w });
+      this.queue.push({ speciesId: sp.id, name: sp.name, word: w, category: this.categoryLabel(App.detectCategory(sp.id)) });
       if (this.queue.length >= this.ROUNDS) break;
     }
+    this.updateStats();
     this.nextRound();
   },
 
@@ -72,9 +96,11 @@ const EruditeGame = {
     if (this.round >= this.queue.length) { this.finishGame(); return; }
     const item = this.queue[this.round];
     this.current = item;
-    this.placed = []; // [{letter, trayIndex}]
+    this.placed = []; // [{letter|null, trayIndex|null}] — null означает пробел
     this.locked = false;
-    this.hintUsed = false;
+    this.checked = false;
+    this.hintsUsed = {};       // какие подсказки уже куплены в этом раунде
+    this.revealedSlots = new Set(); // слоты, открытые подсказкой (зафиксированы)
 
     document.getElementById('erudite-round').textContent = this.round + 1;
     document.getElementById('erudite-hint').textContent = '';
@@ -85,16 +111,31 @@ const EruditeGame = {
 
     this.buildTray(item.word);
     this.renderSlots();
+    this.renderHintButtons();
+    this.updateStats();
   },
 
   normalizeWord(name) {
-    return String(name || '')
-      .toLocaleLowerCase('ru-RU')
-      .replace(/[^а-яёa-z]/g, '');
+    // Отсекаем всё в скобках (латинские названия и примечания), затем нормализуем.
+    // Пробел между словами сохраняется: «красный коршун» -> «красный коршун».
+    let s = String(name || '');
+    s = s.replace(/\([^)]*\)/g, ' ');           // убрать содержимое (...)
+    s = s.replace(/[«»"']/g, ' ');              // кавычки как разделители
+    s = s.toLocaleLowerCase('ru-RU');
+    s = s.replace(/[^а-яёa-z ]/g, ' ');         // только русские буквы, латиница и пробелы
+    s = s.replace(/\s+/g, ' ').trim();
+    // Латиницу внутри оставшегося текста вырезаем (напр. «Canis lupus» без скобок)
+    s = s.replace(/[a-z]+/g, '').replace(/\s+/g, ' ').trim();
+    return s;
+  },
+
+  categoryLabel(groupKey) {
+    if (!groupKey || typeof SPECIES === 'undefined' || !SPECIES[groupKey]) return '';
+    return SPECIES[groupKey].label || groupKey;
   },
 
   buildTray(word) {
-    const letters = Array.from(word);
+    const letters = Array.from(word).filter(ch => ch !== ' ');
     this.tray = this.shuffle(letters.map((ch, i) => ({ letter: ch, used: false, origIndex: i })));
     this.renderTray();
   },
@@ -114,17 +155,28 @@ const EruditeGame = {
     });
   },
 
+  // Позиция следующего слота, который нужно заполнить (пропуская зафиксированные/пробелы)
+  nextFreeSlot() {
+    const word = this.current.word;
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === ' ') continue;               // пробел заполняется автоматически
+      if (this.revealedSlots.has(i)) continue;     // открыт подсказкой
+      if (!this.placed[i]) return i;
+    }
+    return -1;
+  },
+
   onTileClick(trayIndex) {
     if (this.locked) return;
     const tile = this.tray[trayIndex];
     if (!tile || tile.used) return;
+    const slotIdx = this.nextFreeSlot();
+    if (slotIdx === -1) return;
     tile.used = true;
-    this.placed.push({ letter: tile.letter, trayIndex });
+    this.placed[slotIdx] = { letter: tile.letter, trayIndex };
     this.renderTray();
     this.renderSlots();
-    if (this.placed.length === this.current.word.length) {
-      this.checkWord();
-    }
+    if (this.isComplete()) this.checkWord();
   },
 
   tryPlaceLetter(ch) {
@@ -133,21 +185,33 @@ const EruditeGame = {
     if (idx !== -1) this.onTileClick(idx);
   },
 
-  undoLast() {
-    if (this.locked || !this.placed.length) return;
-    const last = this.placed.pop();
-    this.tray[last.trayIndex].used = false;
-    this.renderTray();
-    this.renderSlots();
+  placeSpace() {
+    // Пробел в слове расставляется автоматически — кнопка/клавиша ничего не делают
   },
 
-  shuffleTray() {
+  undoLast() {
     if (this.locked) return;
-    const free = this.tray.filter(t => !t.used);
-    const letters = this.shuffle(free.map(t => t.letter));
-    let k = 0;
-    this.tray = this.tray.map(t => (t.used ? t : { ...t, letter: letters[k++] }));
-    this.renderTray();
+    const word = this.current.word;
+    for (let i = word.length - 1; i >= 0; i--) {
+      const p = this.placed[i];
+      if (p && !this.revealedSlots.has(i)) {
+        this.tray[p.trayIndex].used = false;
+        delete this.placed[i];
+        this.placed.length = word.length;
+        this.renderTray();
+        this.renderSlots();
+        return;
+      }
+    }
+  },
+
+  isComplete() {
+    const word = this.current.word;
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === ' ') continue;
+      if (!this.placed[i]) return false;
+    }
+    return true;
   },
 
   renderSlots() {
@@ -156,9 +220,19 @@ const EruditeGame = {
     const word = this.current.word;
     for (let i = 0; i < word.length; i++) {
       const slot = document.createElement('div');
+      if (word[i] === ' ') {
+        slot.className = 'erudite-slot space';
+        slot.setAttribute('aria-hidden', 'true');
+        slotsEl.appendChild(slot);
+        continue;
+      }
       slot.className = 'erudite-slot';
+      const revealed = this.revealedSlots.has(i);
       const placed = this.placed[i];
-      if (placed) {
+      if (revealed) {
+        slot.textContent = word[i].toUpperCase();
+        slot.classList.add('filled', 'revealed');
+      } else if (placed) {
         slot.textContent = placed.letter.toUpperCase();
         slot.classList.add('filled');
         if (this.checked) {
@@ -171,48 +245,172 @@ const EruditeGame = {
     }
   },
 
+  /* ===== Система подсказок за баллы ===== */
+
+  renderHintButtons() {
+    const hintsEl = document.getElementById('erudite-hints');
+    if (!hintsEl) return;
+    hintsEl.innerHTML = '';
+    for (const [key, hint] of Object.entries(this.HINTS)) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'erudite-hint-btn';
+      btn.dataset.hint = key;
+      const used = !!this.hintsUsed[key];
+      const affordable = this.balance >= hint.cost;
+      btn.innerHTML = `${hint.label} <span class="hint-cost">${hint.cost}🪙</span>`;
+      btn.disabled = this.locked || used || !affordable;
+      if (used) btn.classList.add('used');
+      if (!affordable && !used) btn.classList.add('expensive');
+      hintsEl.appendChild(btn);
+    }
+  },
+
+  buyHint(key) {
+    if (this.locked) return;
+    const hint = this.HINTS[key];
+    if (!hint || this.hintsUsed[key]) return;
+    if (this.balance < hint.cost) {
+      this.showHintMessage(`Недостаточно баллов: нужно ${hint.cost}, есть ${this.balance}. Угадывай буквами!`, 'bad');
+      return;
+    }
+    const word = this.current.word;
+    let applied = false;
+
+    switch (key) {
+      case 'firstLetter': {
+        // Первая буква каждого слова
+        for (let i = 0; i < word.length; i++) {
+          if (word[i] !== ' ' && (i === 0 || word[i - 1] === ' ')) this.revealSlot(i);
+        }
+        applied = true;
+        break;
+      }
+      case 'vowels': {
+        const vowels = 'аеёиоуыэюя';
+        for (let i = 0; i < word.length; i++) {
+          if (vowels.includes(word[i])) this.revealSlot(i);
+        }
+        applied = true;
+        break;
+      }
+      case 'shuffle': {
+        const free = this.tray.filter(t => !t.used);
+        const letters = this.shuffle(free.map(t => t.letter));
+        let k = 0;
+        this.tray = this.tray.map(t => (t.used ? t : { ...t, letter: letters[k++] }));
+        this.renderTray();
+        applied = true;
+        break;
+      }
+      case 'revealOne': {
+        // Открыть одну неизвестную букву в случайной свободной позиции
+        const candidates = [];
+        for (let i = 0; i < word.length; i++) {
+          if (word[i] !== ' ' && !this.revealedSlots.has(i) && !this.placed[i]) candidates.push(i);
+        }
+        if (!candidates.length) { this.showHintMessage('Все буквы уже на месте!', 'bad'); return; }
+        this.revealSlot(candidates[Math.floor(Math.random() * candidates.length)]);
+        applied = true;
+        break;
+      }
+      case 'wordLength': {
+        const parts = word.split(' ');
+        const info = parts.length > 1
+          ? `Слово состоит из ${parts.length} частей: ${parts.map(p => p.length).join(' + ')} букв`
+          : `В слове ${word.length} букв`;
+        this.showHintMessage(info, 'good');
+        applied = true;
+        break;
+      }
+      case 'category': {
+        if (!this.current.category) { this.showHintMessage('Категория вида неизвестна — верни баллы.', 'bad'); return; }
+        this.showHintMessage(`Категория Красной книги: ${this.current.category}`, 'good');
+        applied = true;
+        break;
+      }
+    }
+
+    if (!applied) return;
+    this.hintsUsed[key] = true;
+    this.balance -= hint.cost;
+    this.updateStats();
+    this.renderHintButtons();
+    if (this.isComplete()) this.checkWord();
+  },
+
+  revealSlot(i) {
+    const word = this.current.word;
+    if (word[i] === ' ' || this.revealedSlots.has(i)) return;
+    // Если буква уже стояла игроком — освободим плитку
+    const p = this.placed[i];
+    if (p) {
+      this.tray[p.trayIndex].used = false;
+      delete this.placed[i];
+    }
+    this.revealedSlots.add(i);
+    this.renderTray();
+    this.renderSlots();
+  },
+
+  showHintMessage(text, cls) {
+    const hintEl = document.getElementById('erudite-hint');
+    hintEl.textContent = text;
+    hintEl.classList.remove('good', 'bad');
+    if (cls) hintEl.classList.add(cls);
+  },
+
   checkWord() {
-    if (this.locked || this.placed.length !== this.current.word.length) return;
+    if (this.locked || !this.isComplete()) return;
     this.locked = true;
     this.checked = true;
     this.renderSlots();
 
-    const guess = this.placed.map(p => p.letter).join('');
-    const correct = guess === this.current.word;
+    const word = this.current.word;
+    let guess = '';
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === ' ') { guess += ' '; continue; }
+      const p = this.placed[i];
+      guess += this.revealedSlots.has(i) ? word[i] : (p ? p.letter : '');
+    }
+    const correct = guess === word;
     const hintEl = document.getElementById('erudite-hint');
 
     if (correct) {
-      this.score += 10 + Math.max(0, 5 - this.streak) * 2;
+      // Банк пополняется за каждую верно угаданную букву + бонусы
+      const lettersCount = word.replace(/ /g, '').length;
+      const earned = lettersCount * this.LETTER_REWARD + this.WORD_BONUS
+        + this.streak * this.STREAK_BONUS;
+      this.balance += earned;
+      this.score += earned;
       this.streak += 1;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
       this.solvedCount += 1;
-      hintEl.textContent = `Верно! Это — ${this.current.name}`;
-      hintEl.classList.add('good');
+      this.showHintMessage(`Верно! Это — ${this.current.name}. +${earned} баллов`, 'good');
     } else {
       this.streak = 0;
-      hintEl.textContent = `Ошибка. Правильное слово: «${this.current.word.toUpperCase()}» (${this.current.name})`;
-      hintEl.classList.add('bad');
+      this.showHintMessage(`Ошибка. Правильное слово: «${word.toUpperCase()}» (${this.current.name})`, 'bad');
     }
     this.updateStats();
+    this.renderHintButtons();
 
     setTimeout(() => {
       hintEl.classList.remove('good', 'bad');
       this.checked = false;
       this.round++;
       this.nextRound();
-    }, 1800);
+    }, 2200);
   },
 
   skipWord() {
     if (this.locked) return;
     this.locked = true;
     this.streak = 0;
-    const hintEl = document.getElementById('erudite-hint');
-    hintEl.textContent = `Пропущено: «${this.current.word.toUpperCase()}» (${this.current.name})`;
-    hintEl.classList.add('bad');
+    this.showHintMessage(`Пропущено: «${this.current.word.toUpperCase()}» (${this.current.name})`, 'bad');
     this.updateStats();
+    this.renderHintButtons();
     setTimeout(() => {
-      hintEl.classList.remove('good', 'bad');
+      this.checked = false;
       this.round++;
       this.nextRound();
     }, 1500);
@@ -221,12 +419,16 @@ const EruditeGame = {
   updateStats() {
     document.getElementById('erudite-score').textContent = this.score;
     document.getElementById('erudite-streak').textContent = this.streak;
+    const balEl = document.getElementById('erudite-balance');
+    if (balEl) balEl.textContent = this.balance;
   },
 
   finishGame() {
     document.getElementById('erudite-final-solved').textContent = this.solvedCount;
     document.getElementById('erudite-final-total').textContent = this.queue.length;
     document.getElementById('erudite-final-streak').textContent = this.bestStreak;
+    const finalScoreEl = document.getElementById('erudite-final-score');
+    if (finalScoreEl) finalScoreEl.textContent = this.score;
 
     const titleEl = document.getElementById('erudite-end-title');
     const achieveEl = document.getElementById('erudite-end-achieve');

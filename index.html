@@ -600,11 +600,12 @@
         <div id="erudite-tray" class="erudite-tray" aria-label="Буквы"></div>
         <div class="erudite-controls">
           <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫</button>
-          <button id="erudite-shuffle" type="button" title="Перемешать буквы">🔀</button>
           <button id="erudite-skip" type="button" title="Пропустить слово">⏭</button>
         </div>
+        <div id="erudite-hints" class="erudite-hints" aria-label="Подсказки за баллы"></div>
         <div id="erudite-hint" class="erudite-hint"></div>
-        <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong id="erudite-streak">0</strong></div>
+        <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong
+            id="erudite-streak">0</strong> · Баллы: <strong id="erudite-balance">10</strong>🪙</div>
       </div>
       <div id="erudite-end-screen" class="hidden"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -613,7 +614,8 @@
         <p id="erudite-end-achieve"
           style="font-family:Georgia; font-size: 16px; color: var(--gold-deep); font-weight: bold; margin-bottom: 15px;"></p>
         <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Собрано слов: <strong
-            id="erudite-final-solved">0</strong> из <strong id="erudite-final-total">5</strong>. Лучшая серия: <strong
+            id="erudite-final-solved">0</strong> из <strong id="erudite-final-total">5</strong>. Очки: <strong
+            id="erudite-final-score">0</strong>. Лучшая серия: <strong
             id="erudite-final-streak">0</strong>.</p>
         <button id="erudite-restart" class="quiz-next-btn" style="margin-top:15px; padding: 10px 25px; font-size: 15px;">Играть
           снова</button>
