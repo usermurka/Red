@@ -1,19 +1,20 @@
 // Игра «Эрудит»: собери название вида из перемешанных букв по картинке
 const EruditeGame = {
-  ROUNDS: 5,
+  ROUNDS: 10,
   MIN_WORD_LEN: 4,          // длина слова без учёта пробелов
   MAX_WORD_LEN: 16,         // общая длина с пробелом между словами
   START_BALANCE: 10,        // стартовый банк баллов
-  LETTER_REWARD: 2,         // баллов за каждую верно угаданную букву
+  BASE_LETTER_REWARD: 2,    // базовых баллов за каждую верно угаданную букву
+  LONG_WORD_STEP: 6,        // за каждые полных 6 букв слова — множитель сложности +1
+  LONG_WORD_MAX_MULT: 3,    // потолок множителя за длину
   WORD_BONUS: 5,            // бонус за собранное слово целиком
   STREAK_BONUS: 3,          // доп. бонус за серию (умножается на серию)
+  PARTIAL_LETTER_REWARD: 1, // баллов за каждую букву на верном месте (слово не собрано)
   HINTS: {                  // система подсказок и их цены в баллах
     firstLetter: { cost: 5,  label: 'Первая буква' },
     vowels:      { cost: 8,  label: 'Все гласные' },
     shuffle:     { cost: 4,  label: 'Перемешать' },
     revealOne:   { cost: 12, label: 'Открыть букву' },
-    wordLength:  { cost: 6,  label: 'Длина слова' },
-    category:    { cost: 7,  label: 'Категория вида' },
   },
 
   init() {
@@ -85,7 +86,7 @@ const EruditeGame = {
       const w = this.normalizeWord(sp.name);
       if (seen.has(w)) continue;
       seen.add(w);
-      this.queue.push({ speciesId: sp.id, name: sp.name, word: w, category: this.categoryLabel(App.detectCategory(sp.id)) });
+      this.queue.push({ speciesId: sp.id, name: sp.name, word: w });
       if (this.queue.length >= this.ROUNDS) break;
     }
     this.updateStats();
@@ -122,16 +123,11 @@ const EruditeGame = {
     s = s.replace(/\([^)]*\)/g, ' ');           // убрать содержимое (...)
     s = s.replace(/[«»"']/g, ' ');              // кавычки как разделители
     s = s.toLocaleLowerCase('ru-RU');
-    s = s.replace(/[^а-яёa-z ]/g, ' ');         // только русские буквы, латиница и пробелы
+    s = s.replace(/[^а-яёa-z ]/gi, ' ');        // только русские буквы, латиница и пробелы (без учёта регистра)
     s = s.replace(/\s+/g, ' ').trim();
     // Латиницу внутри оставшегося текста вырезаем (напр. «Canis lupus» без скобок)
-    s = s.replace(/[a-z]+/g, '').replace(/\s+/g, ' ').trim();
+    s = s.replace(/[a-z]+/gi, '').replace(/\s+/g, ' ').trim();
     return s;
-  },
-
-  categoryLabel(groupKey) {
-    if (!groupKey || typeof SPECIES === 'undefined' || !SPECIES[groupKey]) return '';
-    return SPECIES[groupKey].label || groupKey;
   },
 
   buildTray(word) {
@@ -209,9 +205,20 @@ const EruditeGame = {
     const word = this.current.word;
     for (let i = 0; i < word.length; i++) {
       if (word[i] === ' ') continue;
-      if (!this.placed[i]) return false;
+      // Слот считается заполненным, если в нём стоит буква игрока ИЛИ он открыт подсказкой
+      if (!this.placed[i] && !this.revealedSlots.has(i)) return false;
     }
     return true;
+  },
+
+  // Число букв слова (без пробелов)
+  lettersCount(word) {
+    return Array.from(word).filter(ch => ch !== ' ').length;
+  },
+
+  // Множитель сложности за длину: 1x до 6 букв, 2x до 12, максимум 3x
+  lengthMultiplier(letters) {
+    return Math.min(1 + Math.floor(letters / this.LONG_WORD_STEP), this.LONG_WORD_MAX_MULT);
   },
 
   renderSlots() {
@@ -287,7 +294,7 @@ const EruditeGame = {
         break;
       }
       case 'vowels': {
-        const vowels = 'аеёиоуыэюя';
+        const vowels = 'а е ё и о у ы э ю я'.split(' '); // гласные, ё явным токеном U+0451
         for (let i = 0; i < word.length; i++) {
           if (vowels.includes(word[i])) this.revealSlot(i);
         }
@@ -314,21 +321,6 @@ const EruditeGame = {
         applied = true;
         break;
       }
-      case 'wordLength': {
-        const parts = word.split(' ');
-        const info = parts.length > 1
-          ? `Слово состоит из ${parts.length} частей: ${parts.map(p => p.length).join(' + ')} букв`
-          : `В слове ${word.length} букв`;
-        this.showHintMessage(info, 'good');
-        applied = true;
-        break;
-      }
-      case 'category': {
-        if (!this.current.category) { this.showHintMessage('Категория вида неизвестна — верни баллы.', 'bad'); return; }
-        this.showHintMessage(`Категория Красной книги: ${this.current.category}`, 'good');
-        applied = true;
-        break;
-      }
     }
 
     if (!applied) return;
@@ -349,8 +341,24 @@ const EruditeGame = {
       delete this.placed[i];
     }
     this.revealedSlots.add(i);
+    // Забираем из лотка плитку с такой же буквой, если она ещё свободна:
+    // открытая подсказкой буква не должна оставаться в наборе.
+    const dupIdx = this.tray.findIndex(t => !t.used && t.letter === word[i]);
+    if (dupIdx !== -1) {
+      this.tray[dupIdx].used = true;
+      this.tray[dupIdx].revealedFor = i; // привязка к слоту — для возврата при откате
+    }
     this.renderTray();
     this.renderSlots();
+  },
+
+  // Возврат «конфискованной» плитки в лоток, если слот перестал быть открытым
+  restoreTrayForSlot(i) {
+    const idx = this.tray.findIndex(t => t.used && t.revealedFor === i);
+    if (idx !== -1) {
+      this.tray[idx].used = false;
+      delete this.tray[idx].revealedFor;
+    }
   },
 
   showHintMessage(text, cls) {
@@ -370,31 +378,49 @@ const EruditeGame = {
     let guess = '';
     for (let i = 0; i < word.length; i++) {
       if (word[i] === ' ') { guess += ' '; continue; }
-      const p = this.placed[i];
-      guess += this.revealedSlots.has(i) ? word[i] : (p ? p.letter : '');
+      if (this.revealedSlots.has(i)) { guess += word[i]; continue; }
+      guess += this.placed[i] ? this.placed[i].letter : '';
     }
     const correct = guess === word;
-    const hintEl = document.getElementById('erudite-hint');
+
+    // Буквы игрока на верных местах (открытые подсказкой не считаются — за них уже заплачено)
+    let rightOnPosition = 0;
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === ' ' || this.revealedSlots.has(i)) continue;
+      const p = this.placed[i];
+      if (p && p.letter === word[i]) rightOnPosition++;
+    }
 
     if (correct) {
-      // Банк пополняется за каждую верно угаданную букву + бонусы
-      const lettersCount = word.replace(/ /g, '').length;
-      const earned = lettersCount * this.LETTER_REWARD + this.WORD_BONUS
+      // Банк пополняется: буквы × множитель за длину + бонус + серия
+      const letters = this.lettersCount(word);
+      const mult = this.lengthMultiplier(letters);
+      const earned = letters * this.BASE_LETTER_REWARD * mult + this.WORD_BONUS
         + this.streak * this.STREAK_BONUS;
       this.balance += earned;
       this.score += earned;
       this.streak += 1;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
       this.solvedCount += 1;
-      this.showHintMessage(`Верно! Это — ${this.current.name}. +${earned} баллов`, 'good');
+      const multInfo = mult > 1 ? ` (×${mult} за длину)` : '';
+      const streakInfo = this.streak > 1 ? `, серия ×${this.streak}` : '';
+      this.showHintMessage(`Верно! Это — ${this.current.name}. +${earned} баллов${multInfo}${streakInfo}`, 'good');
     } else {
+      // Слово не собрано, но верные буквы на своих местах тоже приносят баллы
+      const partial = rightOnPosition * this.PARTIAL_LETTER_REWARD;
+      if (partial > 0) {
+        this.balance += partial;
+        this.score += partial;
+      }
       this.streak = 0;
-      this.showHintMessage(`Ошибка. Правильное слово: «${word.toUpperCase()}» (${this.current.name})`, 'bad');
+      const partialInfo = partial > 0 ? ` +${partial} баллов за ${rightOnPosition} верн. букв` : '';
+      this.showHintMessage(`Ошибка. Правильное слово: «${word.toUpperCase()}» (${this.current.name})${partialInfo}`, 'bad');
     }
     this.updateStats();
     this.renderHintButtons();
 
     setTimeout(() => {
+      const hintEl = document.getElementById('erudite-hint');
       hintEl.classList.remove('good', 'bad');
       this.checked = false;
       this.round++;
