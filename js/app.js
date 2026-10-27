@@ -867,20 +867,10 @@ const App = {
           this.highlightedSpeciesRegions.clear();
           this.highlightedSpeciesMigrations.clear();
 
-          // --- ПРИНУДИТЕЛЬНО ВЫДЕЛЯЕМ ВСЁ ИЗ ЗАГРУЖЕННОГО ФАЙЛА ---
-          this.markers.forEach(m => this.highlightedIds.add(m.id));
-          this.migrations.forEach(m => {
-            if (m.speciesId) this.highlightedSpeciesMigrations.add(m.speciesId);
-          });
-          this.regions.forEach(r => {
-            if (r.speciesList) {
-              r.speciesList.forEach(sp => this.highlightedSpeciesRegions.add(sp.speciesId));
-            }
-          });
-          this.mapOnlyHighlighted = false;
-          const toggle = document.getElementById('toggle-species-only-highlighted');
-          if (toggle) toggle.checked = false;
-          // ---------------------------------------------------------
+          // --- Импортированные данные НЕ выделяются автоматически:
+          // загруженные маркеры/области/линии остаются скрытыми, пока
+          // пользователь не выберет вид/фильтр. (mapOnlyHighlighted при
+          // необходимости включается кнопкой «Только выделенные».) ---
 
           Storage.save(this.markers);
           Storage.saveRegions(this.regions);
@@ -1590,25 +1580,9 @@ const App = {
     const wrapper = document.getElementById('map-wrapper');
     if (!wrapper) return;
 
+    // Единственный transform на wrapper: карта, маркеры и слои областей
+    // движутся и масштабируются синхронно (аппаратно), без пересчётов.
     wrapper.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
-
-    // Маркеры и слой областей лежат ВНУТРИ #map-wrapper — их позиции
-    // наследуют transform карты автоматически (синхронно, без «догоняния»).
-    // Компенсация масштаба (--marker-zoom) нужна ТОЛЬКО при изменении zoom:
-    // при панорамировании (zoom не меняется) её трогать нельзя — это
-    // сбрасывает GPU-слой и вызывает «догоняние» маркеров.
-    if (this._lastCompensatedZoom !== this.zoom && this.markersLayer) {
-      this._lastCompensatedZoom = this.zoom;
-      // Дожидаемся кадра, чтобы браузер применил transform слоя одним
-      // пакетом вместе с трансформом wrapper'а (один общий reflow).
-      if (this._markerZoomRaf) cancelAnimationFrame(this._markerZoomRaf);
-      this._markerZoomRaf = requestAnimationFrame(() => {
-        this._markerZoomRaf = null;
-        if (this.markersLayer) {
-          this.markersLayer.style.setProperty('--marker-zoom', this.zoom);
-        }
-      });
-    }
   },
 
   // ============================================================
