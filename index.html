@@ -42,6 +42,10 @@
       style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
       <span style="font-size: 24px; line-height: 1;">🃏</span> Мемо
     </button>
+    <button id="btn-erudite"
+      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+      <span style="font-size: 24px; line-height: 1;">🦉</span> Эрудит
+    </button>
   </div>
 
   <!-- НОВОЕ: Полевой дневник -->
@@ -576,13 +580,56 @@
     </div>
   </div>
   
+  <!-- Модалка: Эрудит (собери слово) -->
+  <div id="erudite-modal" class="hidden">
+    <div class="erudite-scroll">
+      <div class="quiz-top-controls">
+        <button id="erudite-restart-btn" title="Начать заново">↺</button>
+        <button id="erudite-close" title="Закрыть">✕</button>
+      </div>
+      <div class="quiz-header">
+        <h2>Эрудит</h2>
+        <div class="quiz-progress">Собери название вида из букв · Раунд <strong id="erudite-round">1</strong>/<span id="erudite-total">5</span></div>
+      </div>
+      <div class="erudite-body">
+        <div class="erudite-picture">
+          <img id="erudite-img" src="" alt="" loading="lazy"
+            onerror="this.src='img/species/placeholder.png'">
+        </div>
+        <div id="erudite-slots" class="erudite-slots" aria-label="Слово"></div>
+        <div id="erudite-tray" class="erudite-tray" aria-label="Буквы"></div>
+        <div class="erudite-controls">
+          <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫</button>
+          <button id="erudite-shuffle" type="button" title="Перемешать буквы">🔀</button>
+          <button id="erudite-skip" type="button" title="Пропустить слово">⏭</button>
+        </div>
+        <div id="erudite-hint" class="erudite-hint"></div>
+        <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong id="erudite-streak">0</strong></div>
+      </div>
+      <div id="erudite-end-screen" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
+        <h2 id="erudite-end-title" style="color:var(--dark-green); font-family:Georgia; font-size: 28px; margin-bottom: 10px;">
+          🏆 Игра окончена!</h2>
+        <p id="erudite-end-achieve"
+          style="font-family:Georgia; font-size: 16px; color: var(--gold-deep); font-weight: bold; margin-bottom: 15px;"></p>
+        <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Собрано слов: <strong
+            id="erudite-final-solved">0</strong> из <strong id="erudite-final-total">5</strong>. Лучшая серия: <strong
+            id="erudite-final-streak">0</strong>.</p>
+        <button id="erudite-restart" class="quiz-next-btn" style="margin-top:15px; padding: 10px 25px; font-size: 15px;">Играть
+          снова</button>
+      </div>
+    </div>
+  </div>
+
   <link rel="stylesheet" href="css/quiz.css">
   <link rel="stylesheet" href="css/match.css">
   <link rel="stylesheet" href="css/memo.css">
+  <link rel="stylesheet" href="css/erudite.css">
   
   <script defer src="js/quiz.js"></script>
   <script defer src="js/match.js"></script>
   <script defer src="js/memo.js"></script>
+  <script defer src="js/erudite.js"></script>
   <script defer src="js/journal.js"></script>
   <script defer src="js/species.js"></script>
   <script defer src="js/species-data.js"></script>
