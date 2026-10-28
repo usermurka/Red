@@ -652,6 +652,23 @@ body {
     padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
   }
 
+  /* --- Свиток викторины на мобильных ---
+     Панель лежит ЗА полноэкранной Викторной (z-index ниже), а её скролл
+     был смещён за пределы окна из-за height/max-height: 100dvh при
+     position: fixed с top:0/bottom:0 — прокрутка оказывалась скрыта
+     окном викторины. Оставляем панель ровно в границах экрана и
+     включаем прокрутку внутри неё. */
+  #quiz-info-panel {
+    top: 0;
+    bottom: 0;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-left: 0;
+    z-index: 30;
+  }
+
   /* статус-шкала в модалке — крупные кнопки */
   .status-btn {
     min-width: 44px;

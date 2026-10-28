@@ -59,6 +59,36 @@ const App = {
   showHighlightAnim: true,   // подсветка всегда включена (галочка убрана из UI)
   regionMode: false,        // режим рисования области
   currentRegionPoints: [],  // текущие точки рисуемой области
+
+  // --- ТОНКАЯ РУЧНАЯ ПОДСТРОЙКА СМЕЩЕНИЯ МАРКЕРОВ И ОБЛАСТЕЙ ---
+  // Маркеры и SVG-слой областей лежат ВНУТРИ #map-wrapper и позиционируются
+  // от его левого верхнего угла (padding-box). Если границы слоя и картинки
+  // расходятся (рамка/outline у <img>, padding у wrapper'а) — слои «съезжают».
+  // getMapLayerOffset() ниже вычисляет этот зазор автоматически; сюда можно
+  // добавить ручную поправку в CSS-пикселях (до масштабирования transform'ом):
+  //   markerAlignX/Y — сдвиг маркеров по горизонтали/вертикали
+  //   regionAlignX/Y — сдвиг контуров областей (SVG-слоя)
+  // Пример: markerAlignY: -3 сдвинет все маркеры на 3px вверх.
+  markerAlignX: 0,
+  markerAlignY: 0,
+  regionAlignX: 5,
+  regionAlignY: 5,
+
+  // РАСТЯЖКА / МАСШТАБ слоёв вокруг ЦЕНРА карты (для ручной подстройки).
+  // Если одна точка области совпадает, а противоположный край «отъезжает» —
+  // это расхождение масштаба, а не сдвига. Коэффициенты задаются отдельно
+  // для маркеров и областей; 1 = без изменений.
+  //   *ScaleX > 1 — слой растягивается шире, < 1 — сжимается (центр неподвижен)
+  //   *ScaleY    — то же по вертикали
+  // Растяжка применяется ОТНОСИТЕЛЬНО ЦЕНТРА: точки в центре карты остаются
+  // на месте, а края расходятся симметрично. Удобно подгонять так: сначала
+  // выставить alignX/Y по центру, затем ScaleX по левому/правому краю, ScaleY
+  // по верхнему/нижнему.
+  // Пример: regionScaleX: 1.02 растянет контуры областей на 2% ширине.
+  markerScaleX: 1,
+  markerScaleY: 1,
+  regionScaleX: 1.02,
+  regionScaleY: 1.02,
   regions: [],  // сохранённые области обитания
   migrations: [],  // сохранённые линии миграций
   showMigrations: true,  // показывать ли линии миграций на карте
@@ -1587,6 +1617,17 @@ const App = {
     // Единственный transform на wrapper: карта, маркеры и слои областей
     // движутся и масштабируются синхронно (аппаратно), без пересчётов.
     wrapper.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
+
+    // Позиции слоёв заданы внутри wrapper'а и наследуют transform —
+    // но всё же пересчитываем их через rAF (как в исходной версии):
+    // это подстраховка на случай, если зазор картинки/слоя изменился
+    // (например, браузер иначе округлил размеры при новом масштабе).
+    if (this._rafPending) return;
+    this._rafPending = true;
+    requestAnimationFrame(() => {
+      this._rafPending = false;
+      this.updateMarkerPositions();
+    });
   },
 
   // ============================================================
@@ -2322,6 +2363,83 @@ const App = {
     `;
   },
 
+  // ============================================================
+  // Геометрия слоёв внутри #map-wrapper
+  // ============================================================
+  // Маркеры и SVG областей позиционируются от угла wrapper'а, а координаты
+  // видов привязаны к КАРТИНКЕ. Если между картинкой и слоем есть любой
+  // зазор (рамка у <img>, рамка/padding/outline у wrapper'а) — слои
+  // визуально «съезжают». Этот метод вычисляет реальный зазор картинки
+  // относительно системы координат слоя (в CSS-пикселях до transform'а),
+  // поэтому смещение компенсируется автоматически при любом раскладе.
+  getMapLayerOffset() {
+    const img = this.map || document.getElementById('map');
+    const layer = this.markersLayer;
+    if (!img || !layer) return { x: 0, y: 0 };
+
+    let dx = 0, dy = 0;
+    try {
+      const ir = img.getBoundingClientRect();
+      const lr = layer.getBoundingClientRect();
+      // Делим на текущий zoom: гетBoundingClientRect учитывает transform
+      // wrapper'а, а left/top маркеров — нет.
+      const z = this.zoom || 1;
+      dx = (ir.left - lr.left) / z;
+      dy = (ir.top - lr.top) / z;
+    } catch (e) { /* layout ещё не готов — нулевой зазор */ }
+
+    // Ручные поправки (можно подвигать эти цифры вверху объекта App)
+    dx += this.markerAlignX;
+    dy += this.markerAlignY;
+    return { x: dx, y: dy };
+  },
+
+  // Отдельная пара поправок для контуров областей (SVG-слой)
+  getRegionLayerOffset() {
+    const off = this.getMapLayerOffset();
+    return {
+      x: off.x - this.markerAlignX + this.regionAlignX,
+      y: off.y - this.markerAlignY + this.regionAlignY
+    };
+  },
+
+  // ============================================================
+  // Ручная растяжка слоёв вокруг ЦЕНРА карты (Scale-параметры выше)
+  // ============================================================
+  // Позиция в пикселях слоя пересчитывается так, что центр карты остаётся
+  // неподвижным, а края симметрично расходятся/сходятся при scale != 1.
+  applyLayerScale(px, py, w, h, sx, sy) {
+    if (sx === 1 && sy === 1) return { x: px, y: py };
+    return {
+      x: w / 2 + (px - w / 2) * sx,
+      y: h / 2 + (py - h / 2) * sy
+    };
+  },
+
+  // То же для координат внутри SVG-слоя областей: вместо ручной правки
+  // каждой точки проще растянуть весь svg — viewBox остаётся прежним,
+  // поэтому все контуры масштабируются автоматически вокруг центра.
+  // Возвращает строку transform или 'none'.
+  getRegionSvgTransform() {
+    const sx = this.regionScaleX || 1;
+    const sy = this.regionScaleY || 1;
+    if (sx === 1 && sy === 1) return 'none';
+    return `scale(${sx}, ${sy})`;
+  },
+
+  // Обратная растяжка: перевод координат клика/курсора (проценты ОТ КАРТИНКИ)
+  // обратно в «сырые» проценты хранилища, чтобы новые точки, поставленные
+  // при включённой растяжке regionScaleX/Y, ложились ровно под курсор.
+  unscaleRegionPercent(px, py) {
+    const sx = this.regionScaleX || 1;
+    const sy = this.regionScaleY || 1;
+    if (sx === 1 && sy === 1) return { x: px, y: py };
+    return {
+      x: 50 + (px - 50) / sx,
+      y: 50 + (py - 50) / sy
+    };
+  },
+
   updateMarkerPositions() {
     // Если открыт свиток или панель справочника, не тратим ресурсы на пересчет карты
     const scroll = document.getElementById('species-scroll');
@@ -2337,20 +2455,25 @@ const App = {
     // вызывается только когда меняются РЕАЛЬНЫЕ размеры карты
     // (resize окна, загрузка новой подложки, открытие панели).
 
-    // Собственные (незамасштабированные) размеры карты в CSS-пикселях
+    // Незамасштабированные размеры CONTENT-области картинки
+    // (clientWidth/clientHeight — без рамок) и автоматическая
+    // компенсация зазора между уголком слоя и уголком картинки.
     const mapW = img.clientWidth;
     const mapH = img.clientHeight;
+    const regOff = this.getRegionLayerOffset();
 
     // --- СЛОЙ ОБЛАСТЕЙ (SVG) ---
     // Растягиваем svg ровно поверх картинки внутри wrapper'а;
     // viewBox уже равен naturalWidth/naturalHeight (см. renderRegions).
     const svg = document.getElementById('regions-layer');
     if (svg) {
-      svg.style.left = '0px';
-      svg.style.top = '0px';
+      svg.style.left = regOff.x + 'px';
+      svg.style.top = regOff.y + 'px';
       svg.style.width = mapW + 'px';
       svg.style.height = mapH + 'px';
-      svg.style.transform = 'none';
+      // Ручная растяжка контуров вокруг центра слоя (regionScaleX/Y)
+      svg.style.transformOrigin = '50% 50%';
+      svg.style.transform = this.getRegionSvgTransform();
     }
 
     // --- МАРКЕРЫ ---
@@ -2360,13 +2483,21 @@ const App = {
       if (id) elMap.set(Number(id), el);
     });
 
+    const mkOff = this.getMapLayerOffset();
     this.markers.forEach(m => {
       const el = elMap.get(m.id);
       if (!el) return;
-      // Позиции — в процентах от размеров карты; масштаб и сдвиг
-      // применяет браузер через transform wrapper'а (синхронно).
-      el.style.left = (m.x / 100 * mapW) + 'px';
-      el.style.top = (m.y / 100 * mapH) + 'px';
+      // Позиции — в процентах от размеров карты + компенсация зазора
+      // + ручная растяжка вокруг центра (markerScaleX/Y);
+      // масштаб и сдвиг применяет браузер через transform wrapper'а.
+      const pos = this.applyLayerScale(
+        m.x / 100 * mapW + mkOff.x,
+        m.y / 100 * mapH + mkOff.y,
+        mapW, mapH,
+        this.markerScaleX || 1, this.markerScaleY || 1
+      );
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
     });
   },
 
@@ -3475,27 +3606,38 @@ const App = {
     if (!this.developerMode) return;
     if (e.target.classList.contains('marker')) return;
 
+    // Координаты видов (x/y в процентах) привязаны к КАРТИНКЕ, а не к wrapper'у.
+    // getBoundingClientRect() даёт реальное положение content-области картинки
+    // на экране (с учётом pan/зума wrapper'а и любых рамок), поэтому клик
+    // всегда попадает ровно туда, куда смотрит пользователь.
     const rect = this.map.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
     if (x < 0 || x > 100 || y < 0 || y > 100) return;
 
-    // Если включён режим рисования области — добавляем точку
+    // Если включён режим рисования области — добавляем точку.
+    // Точки областей хранятся в «сырых» процентах и растягиваются при
+    // отрисовке (regionScaleX/Y), поэтому кликовые координаты нужно
+    // прогнать через ОБРАТНУЮ растяжку — иначе новый контур уедет от курсора.
     if (this.regionMode) {
-      this.addRegionPoint(x, y);
+      const rp = this.unscaleRegionPercent(x, y);
+      this.addRegionPoint(rp.x, rp.y);
       return;
     }
 
     // Если включён режим рисования миграции — добавляем точку
+    // (линии миграций рисуются в том же SVG-слое — тоже обратная растяжка)
     if (this.migrationMode) {
-      this.addMigrationPoint(x, y);
+      const mp = this.unscaleRegionPercent(x, y);
+      this.addMigrationPoint(mp.x, mp.y);
       return;
     }
 
     // Если клик не в маркер и не в режиме разработчика — проверяем, нет ли тут областей
     if (!this.developerMode) {
-      const regionsHere = this.findRegionsAtPoint(x, y);
+      const rp = this.unscaleRegionPercent(x, y);
+      const regionsHere = this.findRegionsAtPoint(rp.x, rp.y);
       if (regionsHere.length > 0) {
         this.showRegionsTooltip(e, regionsHere);
         return;
@@ -3725,10 +3867,11 @@ const App = {
 
     // Кэшируем геометрию карты один раз на весь рендер.
     // Маркеры лежат внутри #map-wrapper — координаты относительные
-    // картинки, без учёта pan/зума (их применяет transform wrapper'а).
+    // картинки + автоматическая компенсация зазора (getMapLayerOffset).
     const img = document.getElementById('map');
     const renderWidth = img ? img.clientWidth : 0;
     const renderHeight = img ? img.clientHeight : 0;
+    const mkOff = this.getMapLayerOffset();
 
     const fragment = document.createDocumentFragment();
 
@@ -3763,11 +3906,14 @@ const App = {
       if (!this.regionMode && !this.serialMode && this.flashingIds.has(m.id)) {
         el.classList.add('highlighted');
       }
-      const px = (m.x / 100) * renderWidth;
-      const py = (m.y / 100) * renderHeight;
+      const px = (m.x / 100) * renderWidth + mkOff.x;
+      const py = (m.y / 100) * renderHeight + mkOff.y;
+      // Ручная растяжка маркеров вокруг центра карты (markerScaleX/Y)
+      const pos = this.applyLayerScale(px, py, renderWidth, renderHeight,
+        this.markerScaleX || 1, this.markerScaleY || 1);
 
-      el.style.left = px + 'px';
-      el.style.top = py + 'px';
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
       el.dataset.id = m.id;
 
       // Символ формата (основной визуал маркера)
@@ -4278,10 +4424,17 @@ const App = {
     this.highlightedRegionId = region.id;
 
     // Ищем все области, которые накрывают эту точку
+    // Координаты видов (x/y в процентах) привязаны к КАРТИНКЕ, а не к wrapper'у.
+    // getBoundingClientRect() даёт реальное положение content-области картинки
+    // на экране (с учётом pan/зума wrapper'а и любых рамок), поэтому клик
+    // всегда попадает ровно туда, куда смотрит пользователь.
     const rect = this.map.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    const regionsHere = this.findRegionsAtPoint(x, y);
+    // Обратная растяжка SVG-слоя (regionScaleX/Y), чтобы поиск областей
+    // соответствовал растянутому контуру под курсором
+    const rp = this.unscaleRegionPercent(x, y);
+    const regionsHere = this.findRegionsAtPoint(rp.x, rp.y);
 
     // Показываем тултип
     this.showRegionTooltip(e, region, regionsHere);

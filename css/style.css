@@ -389,6 +389,12 @@ body {
   transform-origin: 0 0;
   will-change: transform;
   filter: drop-shadow(0 6px 20px rgba(43, 33, 24, 0.35));
+  /* Рамка — У КАРТИНКИ (как в исходной версии). Маркеры и SVG-слой
+     областей лежат внутри wrapper'а и позиционируются от его угла,
+     поэтому App.getMapLayerOffset() автоматически прибавляет величину
+     этой рамки (и любого другого зазора) к координатам слоёв.
+     Если что-то всё же нужно подвинуть вручную — правьте цифры
+     markerAlignX/Y и regionAlignX/Y в начале js/app.js. */
 }
 
 #map-wrapper img {
@@ -398,10 +404,10 @@ body {
   height: auto;
   display: block;
   user-select: none;
-  border: 6px solid var(--parchment-deep);
   outline: 2px solid var(--gold-deep);
   outline-offset: -8px;
   box-shadow: inset 0 0 60px rgba(43, 33, 24, 0.25);
+  border: 6px solid var(--parchment-deep);
 }
 
 #map-wrapper img {
