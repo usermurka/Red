@@ -1,0 +1,165 @@
+/* ===== Игра «Латынь» (соедини русское и латинское название) ===== */
+
+#latin-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(36, 53, 42, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#latin-modal.hidden {
+    display: none;
+}
+
+.latin-scroll {
+    background: var(--parchment-light);
+    width: 96vw;
+    max-width: 720px;
+    max-height: 94vh;
+    border: 2px solid var(--gold-deep);
+    box-shadow: var(--shadow-deep);
+    border-radius: 2px;
+    clip-path: var(--torn-edge);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.latin-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 16px 20px;
+}
+
+.latin-instruction {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green);
+    margin: 4px 0 12px;
+    text-align: center;
+}
+
+/* Таймер раунда */
+.latin-timer-track {
+    height: 6px;
+    margin: 6px 16px 2px;
+    background: rgba(36, 53, 42, 0.15);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.latin-timer-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--green), var(--gold-soft));
+    transition: width 1s linear;
+}
+
+/* Табло */
+.latin-scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    padding: 8px 16px 0;
+    font-family: Georgia, serif;
+    font-size: 15px;
+    color: var(--dark-green);
+}
+
+.latin-sb {
+    transition: opacity 0.3s;
+}
+
+.latin-sb-right strong { color: var(--green-dark, #2e6b3e); }
+.latin-sb-wrong strong { color: #a33; }
+
+/* Сетка пар */
+.latin-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 640px;
+}
+
+.latin-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.latin-cell {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px 10px;
+    background: var(--parchment, #f0e6cf);
+    border: 2px solid var(--gold-deep);
+    border-radius: 4px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: var(--dark-green);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.2s, transform 0.1s, opacity 0.3s;
+}
+
+.latin-la {
+    font-style: italic;
+}
+
+.latin-cell:hover {
+    transform: translateY(-1px);
+    background: #f7efdc;
+}
+
+.latin-cell.selected {
+    background: var(--gold-soft, #d9b45b);
+    border-color: var(--dark-green);
+    box-shadow: 0 0 0 2px rgba(36, 53, 42, 0.35);
+}
+
+.latin-cell.matched {
+    background: rgba(46, 107, 62, 0.25);
+    border-color: var(--green);
+    opacity: 0.55;
+    pointer-events: none;
+    cursor: default;
+}
+
+.latin-cell.shake {
+    animation: latin-shake 0.45s;
+    border-color: #a33;
+    background: rgba(170, 51, 51, 0.2);
+}
+
+@keyframes latin-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+@media (max-width: 480px) {
+    .latin-cell {
+        font-size: 12px;
+        min-height: 42px;
+        padding: 6px 6px;
+    }
+    .latin-row { gap: 6px; }
+    .latin-scoreboard { gap: 12px; font-size: 13px; }
+}

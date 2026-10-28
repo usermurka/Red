@@ -46,6 +46,10 @@
       style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
       <span style="font-size: 24px; line-height: 1;">🦉</span> Эрудит
     </button>
+    <button id="btn-latin"
+      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+      <span style="font-size: 24px; line-height: 1;">🏛️</span> Латынь
+    </button>
   </div>
 
   <!-- НОВОЕ: Полевой дневник -->
@@ -623,15 +627,52 @@
     </div>
   </div>
 
+  <!-- Модалка: Латынь (соедини русское и латинское название) -->
+  <div id="latin-modal" class="hidden">
+    <div class="latin-scroll">
+      <div class="quiz-top-controls">
+        <button id="latin-restart-btn" title="Начать заново">↺</button>
+        <button id="latin-close" title="Закрыть">✕</button>
+      </div>
+      <div class="quiz-header">
+        <h2>Латынь</h2>
+        <div class="quiz-progress" id="latin-round-label">Раунд <strong id="latin-q-num">1</strong> из 3</div>
+      </div>
+      <div class="latin-timer-track"><div id="latin-timer-bar" class="latin-timer-bar"></div></div>
+      <div class="latin-scoreboard">
+        <span class="latin-sb latin-sb-right">✓ <strong id="latin-score-right">0</strong></span>
+        <span class="latin-sb latin-sb-wrong">✗ <strong id="latin-score-wrong">0</strong></span>
+        <span class="latin-sb" id="latin-streak-block">🔥 <strong id="latin-score-streak">0</strong></span>
+      </div>
+      <div class="latin-body">
+        <p class="latin-instruction">Нажми на русское название, затем на соответствующее латинское</p>
+        <div id="latin-grid" class="latin-grid"></div>
+      </div>
+      <div id="latin-end-screen" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
+        <h2 id="latin-end-title" style="color:var(--dark-green); font-family:Georgia; font-size: 28px; margin-bottom: 10px;">
+          🏆 Игра окончена!</h2>
+        <p id="latin-end-achieve"
+          style="font-family:Georgia; font-size: 16px; color: var(--gold-deep); font-weight: bold; margin-bottom: 15px;"></p>
+        <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Решено пар: <strong
+            id="latin-final-score">0</strong>. Ошибок: <strong id="latin-final-mistakes">0</strong>.</p>
+        <button id="latin-restart" class="quiz-next-btn" style="margin-top:15px; padding: 10px 25px; font-size: 15px;">Играть
+          снова</button>
+      </div>
+    </div>
+  </div>
+
   <link rel="stylesheet" href="css/quiz.css">
   <link rel="stylesheet" href="css/match.css">
   <link rel="stylesheet" href="css/memo.css">
   <link rel="stylesheet" href="css/erudite.css">
-  
+  <link rel="stylesheet" href="css/latin.css">
+
   <script defer src="js/quiz.js"></script>
   <script defer src="js/match.js"></script>
   <script defer src="js/memo.js"></script>
   <script defer src="js/erudite.js"></script>
+  <script defer src="js/latin.js"></script>
   <script defer src="js/journal.js"></script>
   <script defer src="js/species.js"></script>
   <script defer src="js/species-data.js"></script>
