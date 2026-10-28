@@ -3343,9 +3343,12 @@ const App = {
     document.getElementById('btn-developer').classList.toggle('active', isDeveloper);
     document.getElementById('btn-guest').classList.toggle('active', !isDeveloper);
 
-    // Показываем игры только в режиме гостя
-    const gamesMenu = document.getElementById('games-menu');
-    if (gamesMenu) gamesMenu.classList.toggle('hidden', isDeveloper);
+    // Меню игр управляется режимом «Игры» (Achievements), а не гость/разработчик.
+    // В игровом режиме devTools остаётся скрытым (см. выше).
+    if (!(typeof Achievements !== 'undefined' && Achievements.gamesModeActive)) {
+      const gamesMenu = document.getElementById('games-menu');
+      if (gamesMenu) gamesMenu.classList.add('hidden');
+    }
 
     // Обновляем подсказку через общий метод
     this.updateHintForSerial();

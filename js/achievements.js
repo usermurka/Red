@@ -161,19 +161,15 @@ const Achievements = {
     document.body.classList.add('games-mode');
     this.setModeButtons();
 
-    // Скрываем карту, показываем витрину медалей
-    const mapContainer = document.getElementById('map-container');
+    // КАРТА ОСТАЁТСЯ ВИДИМОЙ — витрина медалей лежит ПОВЕРХ неё
+    // (position:absolute внутри #map-container), поэтому медали видно сразу.
     const showcase = document.getElementById('games-showcase');
-    if (mapContainer) mapContainer.style.display = 'none';
     if (showcase) showcase.classList.remove('hidden');
 
-    // Подсказка под картой больше не нужна
-    const hint = document.getElementById('hint');
-    if (hint) hint.style.display = 'none';
-
-    // Прячем все секции карты на панели: остаётся только выбор игр + прогресс
+    // Прячем все секции карты на панели: остаётся только сетка режимов 2×2
+    // + выбор игр + прогресс. Кнопки «Гость», «Разработчик» и «Игры» НЕ трогаем.
     const hideSelectors = [
-      '#sidebar > h1', '#btn-journal',
+      '#sidebar-title',
       '#sidebar > h2:not(#games-menu h2)', '#map-switcher', '#status-layers', '#layers',
       '#btn-open-list', '.toggle-grid', '#developer-tools',
       '.actions-row', '#stats-panel'
@@ -197,18 +193,13 @@ const Achievements = {
     this.gamesModeActive = false;
     document.body.classList.remove('games-mode');
 
-    const mapContainer = document.getElementById('map-container');
     const showcase = document.getElementById('games-showcase');
-    if (mapContainer) mapContainer.style.display = '';
     if (showcase) showcase.classList.add('hidden');
-
-    const hint = document.getElementById('hint');
-    if (hint) hint.style.display = '';
 
     // Возвращаем секции панели (скрыватель — класс .hidden, его снимаем
     // только с тех элементов, которые скрыли мы; devTools управляется App.setMode)
     const restoreSelectors = [
-      '#sidebar > h1', '#btn-journal',
+      '#sidebar-title',
       '#sidebar > h2:not(#games-menu h2)', '#map-switcher', '#status-layers',
       '#layers', '#btn-open-list', '.toggle-grid',
       '.actions-row', '#stats-panel'

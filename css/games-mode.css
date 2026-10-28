@@ -2,6 +2,43 @@
    РЕЖИМ «ИГРЫ»: витрина медалей, крупные кнопки выбора, тост
    ============================================================ */
 
+/* --- Переключатель режимов: сетка 2×2 (гость/разработчик, дневник/игры) --- */
+.mode-switch.mode-switch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.mode-switch.mode-switch-grid button {
+  flex: none;
+  min-width: 0;
+  padding: 9px 4px;
+  font-size: 11px;
+}
+
+/* Кнопка «Дневник» — с золотым акцентом */
+#btn-journal {
+  border-color: var(--gold-soft);
+}
+
+/* Меню режима «Игры»: крупные кнопки столбиком */
+#games-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#games-menu.hidden {
+  display: none;
+}
+
+/* В режиме «Игры» карта остаётся видна под витриной медалей */
+body.games-mode #map-container {
+  display: block;
+}
+
 /* --- Крупные кнопки выбора игр в левой панели --- */
 .game-big-btn {
     width: 100%;

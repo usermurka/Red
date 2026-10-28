@@ -21,23 +21,18 @@
         <button id="btn-sidebar-close" type="button" aria-label="Закрыть панель">✕</button>
       </div>
 
-      <h1>Красная книга<br>Омской области</h1>
+      <h1 id="sidebar-title">Красная книга<br>Омской области</h1>
 
-      <!-- Переключатель режимов: всегда вверху панели, включая режим «Игры» -->
-      <div class="mode-switch">
+      <!-- Переключатель режимов: сетка 2×2, всегда виден (включая режим «Игры») -->
+      <div class="mode-switch mode-switch-grid">
         <button id="btn-guest" class="active">Режим гостя</button>
         <button id="btn-developer">Режим разработчика</button>
+        <button id="btn-journal" type="button" title="Полевой дневник наблюдений">📔 Дневник</button>
         <button id="btn-games" type="button" title="Мини-игры и медали">🎮 Игры</button>
       </div>
 
-      <!-- НОВОЕ: Полевой дневник (вне игр — на главной он недоступен) -->
-      <button id="btn-journal"
-        style="width: 100%; padding: 10px; margin-bottom: 12px; font-size: 12px; background: linear-gradient(180deg, var(--green-light), var(--green)); border-color: var(--gold-soft);">
-        📔 Полевой дневник
-      </button>
-
       <!-- Меню режима «Игры»: крупные кнопки выбора + прогресс (видно только в режиме) -->
-      <div id="games-menu" class="hidden" style="flex-direction: column; gap: 8px; margin-bottom: 12px;">
+      <div id="games-menu" class="hidden">
         <h2 style="margin-top: 4px;">Выбор игры</h2>
         <button id="btn-open-quiz"    class="game-big-btn" type="button"><span class="gbi">🎲</span> Викторина</button>
         <button id="btn-open-match"   class="game-big-btn" type="button"><span class="gbi">🧩</span> Найди пару</button>
