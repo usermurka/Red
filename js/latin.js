@@ -82,6 +82,8 @@ const LatinGame = {
         const names = this.shuffle(selected.map(sp => ({ kind: 'ru', speciesId: sp.id, text: sp.name })));
         const latins = this.shuffle(selected.map(sp => ({ kind: 'la', speciesId: sp.id, text: this.shortLatin(sp.latin) })));
 
+        this.roundSpecies = selected;
+
         const grid = document.getElementById('latin-grid');
         grid.innerHTML = '';
         for (let i = 0; i < this.PAIRS_PER_ROUND; i++) {
@@ -92,7 +94,57 @@ const LatinGame = {
             grid.appendChild(row);
         }
 
+        // Пять перевёрнутых карточек с фотографиями видов раунда (как в мемо).
+        // Порядок — по списку выбранных видов; фото скрыто, пока пара не угадана.
+        this.renderPhotoCards(selected);
+
         this.startTimer();
+    },
+
+    renderPhotoCards(speciesList) {
+        const strip = document.getElementById('latin-photos');
+        if (!strip) return;
+        strip.innerHTML = '';
+        speciesList.forEach(sp => {
+            const card = document.createElement('div');
+            card.className = 'latin-photo-card';
+            card.dataset.speciesId = sp.id;
+
+            const inner = document.createElement('div');
+            inner.className = 'latin-photo-inner';
+
+            const back = document.createElement('div');
+            back.className = 'latin-photo-back';
+            back.textContent = '?';
+
+            const front = document.createElement('div');
+            front.className = 'latin-photo-front';
+            const img = document.createElement('img');
+            img.src = `img/species/${sp.id}.png`;
+            img.alt = sp.name || '';
+            img.loading = 'lazy';
+            img.addEventListener('error', () => {
+                // Нет фотографии — показываем текстовый плейсхолдер вместо битой картинки
+                img.remove();
+                const ph = document.createElement('div');
+                ph.className = 'latin-photo-placeholder';
+                ph.textContent = (sp.name || '').split(' ')[0];
+                front.appendChild(ph);
+            });
+            front.appendChild(img);
+
+            inner.appendChild(back);
+            inner.appendChild(front);
+            card.appendChild(inner);
+            strip.appendChild(card);
+        });
+    },
+
+    flipPhotoFor(speciesId) {
+        const strip = document.getElementById('latin-photos');
+        if (!strip) return;
+        const card = strip.querySelector(`.latin-photo-card[data-species-id="${CSS.escape(String(speciesId))}"]`);
+        if (card) card.classList.add('flipped');
     },
 
     // Сокращает латинское название: убирает авторский хвост и всё после первой запятой
@@ -144,6 +196,9 @@ const LatinGame = {
             this.matchedCount++;
             this.score++;
             document.getElementById('latin-score-right').textContent = this.score;
+
+            // Переворачиваем карточку с фотографией угаданного вида
+            this.flipPhotoFor(first.dataset.speciesId);
 
             if (this.matchedCount === this.PAIRS_PER_ROUND) {
                 this.stopTimer();
