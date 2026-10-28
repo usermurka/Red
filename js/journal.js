@@ -86,13 +86,21 @@ const Journal = {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     try {
+                        // Ограничиваем размер файла, чтобы огромный файл не «положил» вкладку
+                        if (file.size > 20 * 1024 * 1024) {
+                            throw new Error('файл слишком большой (максимум 20 МБ)');
+                        }
                         const data = JSON.parse(ev.target.result);
                         if (data && Array.isArray(data.journal)) {
-                            this.records = data.journal;
+                            const clean = this.sanitizeRecords(data.journal);
+                            if (clean.length === 0) {
+                                throw new Error('в файле нет корректных записей');
+                            }
+                            this.records = clean;
                             localStorage.setItem('red_book_journal', JSON.stringify(this.records));
                             this.renderMarkers();
                             this.renderList();
-                            alert('Дневник успешно загружен!');
+                            alert(`Дневник успешно загружен! Записей: ${clean.length}`);
                         } else {
                             alert('Неверный формат файла дневника.');
                         }
@@ -133,7 +141,8 @@ const Journal = {
         try {
             const saved = localStorage.getItem('red_book_journal');
             if (saved) {
-                this.records = JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                this.records = Array.isArray(parsed) ? this.sanitizeRecords(parsed) : [];
             }
         } catch (e) {
             console.warn('Ошибка загрузки дневника:', e);
@@ -281,7 +290,7 @@ const Journal = {
             this.pendingPins = []; // Очищаем временные
             document.getElementById('journal-describe-btn').classList.add('hidden');
             document.getElementById('journal-form-modal').classList.add('hidden');
-            this.renderPendingPins();
+            this.renderMarkers();
             this.renderList();
         }
     },
@@ -289,8 +298,13 @@ const Journal = {
     saveToLocalStorage() {
         try {
             localStorage.setItem('red_book_journal', JSON.stringify(this.records));
+            return true;
         } catch (e) {
-            alert('Ошибка сохранения! Возможно, фотографии слишком большие.');
+            console.error('Journal save failed:', e);
+            alert(e && e.name === 'QuotaExceededError'
+                ? 'Хранилище переполнено! Удалите часть фото или записей и попробуйте снова.'
+                : 'Ошибка сохранения журнала.');
+            return false;
         }
     },
 
@@ -344,6 +358,30 @@ const Journal = {
         }
     },
 
+    // ============================================================
+    // Валидация записей дневника (в т.ч. загруженных из файла).
+    // Без неё импортированный JSON может содержать произвольные
+    // данные (HTML/JS в полях, объекты вместо чисел), которые
+    // затем попадают в DOM и localStorage.
+    // ============================================================
+    sanitizeRecords(list) {
+        const isPct = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100;
+        return list
+            .filter((r) => r && typeof r === 'object')
+            .map((r) => ({
+                id: Number.isFinite(r.id) ? r.id : Date.now() + Math.floor(Math.random() * 1e6),
+                name: String(r.name ?? '').slice(0, 200),
+                comment: String(r.comment ?? '').slice(0, 5000),
+                pins: Array.isArray(r.pins)
+                    ? r.pins.filter((p) => p && isPct(p.x) && isPct(p.y)).slice(0, 500)
+                    : [],
+                photos: Array.isArray(r.photos)
+                    ? r.photos.filter((p) => typeof p === 'string' && /^data:image\//i.test(p)).slice(0, 50)
+                    : [],
+            }))
+            .filter((r) => r.pins.length > 0 || r.name);
+    },
+
     renderList() {
         const list = document.getElementById('journal-list');
         if (!list) return;
@@ -361,18 +399,26 @@ const Journal = {
 
             let photosHtml = '';
             if (rec.photos && rec.photos.length > 0) {
-                photosHtml = `<div class="j-carousel">` +
-                    rec.photos.map((p, index) => `<img src="${p}" class="journal-thumb" data-index="${index}">`).join('') +
-                    `</div>`;
+                // Разрешаем только data:image URL — это исключает javascript:,
+                // data:text/html и прочие опасные схемы из импортируемых файлов
+                const safePhotos = rec.photos.filter(p => typeof p === 'string' && /^data:image\//i.test(p));
+                if (safePhotos.length > 0) {
+                    photosHtml = `<div class="j-carousel">` +
+                        safePhotos.map((p, index) => `<img src="${p}" class="journal-thumb" data-index="${index}" loading="lazy">`).join('') +
+                        `</div>`;
+                }
             }
 
-            // Заменяем \n на <br>, чтобы переносы строк работали
-            const formattedComment = (rec.comment || 'Без комментария').replace(/\n/g, '<br>');
+            // Экранируем пользовательские данные (защита от XSS, в т.ч. через импорт),
+            // затем возвращаем переносы строк уже в безопасном виде
+            const safeName = ((window.escapeHtml ? window.escapeHtml(rec.name) : rec.name) || '') || 'Без названия';
+            const rawComment = rec.comment || 'Без комментария';
+            const safeComment = (window.escapeHtml ? window.escapeHtml(rawComment) : rawComment).replace(/\n/g, '<br>');
 
             card.innerHTML = `
                 <button class="j-delete" title="Удалить">✕</button>
-                <h4>${rec.name}</h4>
-                <div class="j-comment">${formattedComment}</div>
+                <h4>${safeName}</h4>
+                <div class="j-comment">${safeComment}</div>
                 ${photosHtml}
             `;
 
@@ -474,7 +520,13 @@ const Journal = {
         const img = document.getElementById('gallery-current-img');
         if (!img) return;
 
-        img.src = this.currentPhotoList[this.currentPhotoIndex];
+        const currentPhoto = this.currentPhotoList[this.currentPhotoIndex] || '';
+        // Защита от опасных схем (javascript: и т.п.) в данных журнала/импорта
+        if (/^data:image\//i.test(currentPhoto)) {
+            img.src = currentPhoto;
+        } else {
+            img.removeAttribute('src');
+        }
         document.getElementById('gallery-current-num').textContent = this.currentPhotoIndex + 1;
         document.getElementById('gallery-total-num').textContent = this.currentPhotoList.length;
 
@@ -505,4 +557,4 @@ const Journal = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => setTimeout(() => Journal.init(), 300));
+document.addEventListener('DOMContentLoaded', () => Journal.init());

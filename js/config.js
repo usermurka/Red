@@ -93,7 +93,11 @@ const CONFIG = {
   ui: {
     appTitle: 'Красная книга Омской области',
     defaultMode: 'guest',              // 'developer' или 'guest'
-    developerPassword: '1861',  // пароль для входа в режим разработчика
+    // Пароль для входа в режим разработчика. Хранится не сам пароль,
+    // а его SHA-256 хэш (проверка — в App.checkPassword).
+    // Это убирает открытый пароль из исходников; для смены хэша:
+    // crypto.subtle.digest('SHA-256', new TextEncoder().encode('новый_пароль'))
+    developerPasswordHash: '4eec6372c08f87b2f48f9c96ea4cb155b0cbd3f883a494067b72c3d1df4e586e',
     defaultMapIndex: 0,
     storageKey: 'red_book_omsk_markers',
     nearbyRadiusKm: 5,                // радиус зоны «поблизости» в км (по умолчанию)

@@ -1,3 +1,10 @@
+// Экранирование HTML (защита от XSS при выводе названий видов)
+function escHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
+
 const Quiz = {
     scoreRight: 0,
     scoreWrong: 0,
@@ -179,7 +186,7 @@ const Quiz = {
 
         const resultContainer = document.getElementById('quiz-result');
         resultContainer.classList.remove('hidden');
-        resultContainer.innerHTML = `<p style="color: #B71C1C;">Время вышло! Это <strong>${this.currentSpecies.name}</strong>.</p>`;
+        resultContainer.innerHTML = `<p style="color: #B71C1C;">Время вышло! Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
 
         this.showInfoPanel();
         this.showNextButton(resultContainer);
@@ -206,7 +213,7 @@ const Quiz = {
             document.getElementById('quiz-score-streak').textContent = this.currentStreak;
             this.updateStreakUI();
 
-            resultContainer.innerHTML = `<p style="color: #2E7D32;">Верно! Это <strong>${this.currentSpecies.name}</strong>.</p>`;
+            resultContainer.innerHTML = `<p style="color: #2E7D32;">Верно! Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
         } else {
             btnElement.classList.add('wrong');
             this.scoreWrong++;
@@ -220,7 +227,7 @@ const Quiz = {
                     btn.classList.add('correct');
                 }
             });
-            resultContainer.innerHTML = `<p style="color: #B71C1C;">Неверно. Это <strong>${this.currentSpecies.name}</strong>.</p>`;
+            resultContainer.innerHTML = `<p style="color: #B71C1C;">Неверно. Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
         }
 
         this.showInfoPanel();
@@ -287,13 +294,25 @@ const Quiz = {
         if (percent >= 90) {
             title.textContent = '🏆 Вы настоящий биолог!';
             desc.textContent = `Вы ответили верно на ${this.scoreRight} из ${this.totalQuestions} вопросов. Отличное знание Красной книги!`;
+            this.unlockAch('perfect');
         } else if (percent >= 60) {
             title.textContent = '🌿 Хороший результат!';
             desc.textContent = `Верных ответов: ${this.scoreRight} из ${this.totalQuestions}. Вы хорошо знаете природу, но есть куда стремиться.`;
+            this.unlockAch('good');
         } else {
             title.textContent = '📖 Нужно повторить материал';
             desc.textContent = `Верных ответов: ${this.scoreRight} из ${this.totalQuestions}. Загляните в справочник видов, чтобы узнать больше!`;
         }
+        this.unlockAch('first_win');
+    },
+
+    // Выдача медали через общий реестр достижений (если тот загружен)
+    unlockAch(achId) {
+        try {
+            if (typeof Achievements !== 'undefined' && Achievements.unlock) {
+                Achievements.unlock('quiz', achId);
+            }
+        } catch (e) { /* noop */ }
     },
 
     shuffleArray(array) {
