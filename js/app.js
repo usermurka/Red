@@ -1379,6 +1379,10 @@ const App = {
   // Зум колесом мыши (к курсору)
   // ============================================================
   onWheel(e) {
+    // В режиме «Игры» витрина медалей перекрывает карту: колесо должно
+    // скроллить витрину, а не зумить карту под ней.
+    if (typeof Achievements !== 'undefined' && Achievements.gamesModeActive) return;
+
     // Если курсор над тултипом или подменю — не зумим карту, даем проскроллить контент
     if (e.target.closest('#tooltip') || e.target.closest('.layer-submenu') || e.target.closest('#species-panel') || e.target.closest('#species-scroll')) {
       return;

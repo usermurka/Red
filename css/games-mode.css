@@ -2,12 +2,19 @@
    РЕЖИМ «ИГРЫ»: витрина медалей, крупные кнопки выбора, тост
    ============================================================ */
 
-/* --- Переключатель режимов: сетка 2×2 (гость/разработчик, дневник/игры) --- */
+/* --- Переключатель режимов: сетка 2×2 (гость/разработчик, дневник/игры) ---
+   grid-стили идут ПЕРВЫМИ и без !important — в каскаде они выигрывают
+   у flex из style.css за счёт большего числа селекторов. .hidden не трогаем:
+   display:none!important в style.css остаётся сильнее. */
 .mode-switch.mode-switch-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-bottom: 10px;
+}
+
+body.games-mode .mode-switch.mode-switch-grid {
+  display: grid;
 }
 
 .mode-switch.mode-switch-grid button {
@@ -17,13 +24,29 @@
   font-size: 11px;
 }
 
+/* В режиме «Игры» прячем все секции карты на панели, но НЕ переключатель
+   режимов (он всегда виден) и НЕ заголовок sidebar-title. */
+body.games-mode #map-switcher,
+body.games-mode #status-layers,
+body.games-mode #layers,
+body.games-mode #btn-open-list,
+body.games-mode .toggle-grid,
+body.games-mode #developer-tools,
+body.games-mode .actions-row,
+body.games-mode #stats-panel,
+body.games-mode #sidebar h2 {
+  display: none !important;
+}
+
 /* Кнопка «Дневник» — с золотым акцентом */
 #btn-journal {
   border-color: var(--gold-soft);
 }
 
-/* Меню режима «Игры»: крупные кнопки столбиком */
-#games-menu {
+/* Меню режима «Игры»: крупные кнопки столбиком.
+   display:flex только в режиме «Игры» — на главной меню полностью скрыто
+   (.hidden работает через display:none!important в style.css). */
+body.games-mode #games-menu {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -31,12 +54,30 @@
 }
 
 #games-menu.hidden {
-  display: none;
+  display: none !important;
+}
+
+/* Заголовок панели в режиме игр (текст подменяет Achievements) */
+body.games-mode #sidebar-title {
+  color: var(--gold-soft);
 }
 
 /* В режиме «Игры» карта остаётся видна под витриной медалей */
 body.games-mode #map-container {
   display: block;
+}
+
+/* Подсказка карты («кликните по маркеру…») в режиме игр не нужна */
+body.games-mode #hint {
+  display: none !important;
+}
+
+/* На мобильных витрина медалей обязана перекрывать карту и мобильную
+   панель зума (z-index 100), иначе кнопки «＋/－» лежат поверх медалей. */
+@media (max-width: 768px) {
+  body.games-mode #games-showcase {
+    z-index: 150;
+  }
 }
 
 /* --- Крупные кнопки выбора игр в левой панели --- */
@@ -244,6 +285,32 @@ body.games-mode #map-container {
     color: var(--gold-deep, #8a6a1e);
     margin: 4px 0 0;
     line-height: 1.4;
+}
+
+/* --- Редкости медалей (яркость полученных) --- */
+.medal-top .medal-coin {
+    background: radial-gradient(circle at 35% 30%, #fff2c2, #f0c94a 45%, #b8860b 100%);
+    border-color: #7a5c12;
+    box-shadow: inset 0 0 0 3px rgba(255, 252, 230, 0.8), 0 0 14px rgba(240, 201, 74, 0.75), 0 2px 6px rgba(36, 53, 42, 0.4);
+}
+
+.medal-top .medal-name { color: #7a5c12; }
+
+.medal-epic .medal-coin {
+    background: radial-gradient(circle at 35% 30%, #ffe9d2, #e8a15c 50%, #a05a20 100%);
+    border-color: #8a4d1a;
+    box-shadow: inset 0 0 0 3px rgba(255, 240, 220, 0.7), 0 0 10px rgba(232, 161, 92, 0.6), 0 2px 5px rgba(36, 53, 42, 0.35);
+}
+
+.medal-crown .medal-pendant::after {
+    content: '✦';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #d4b45a;
+    text-shadow: 0 0 6px rgba(212, 180, 90, 0.9);
 }
 
 /* --- Тост уведомлений о медалях --- */
