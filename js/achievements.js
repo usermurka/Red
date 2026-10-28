@@ -269,7 +269,7 @@ const Achievements = {
     const title = document.getElementById('sidebar-title');
     if (title) {
       this._savedTitleHtml = title.innerHTML;
-      title.textContent = 'Режим «Игры»';
+      title.textContent = 'Красная Книга Омской области';
     }
 
     // Показываем меню режима «Игры»
