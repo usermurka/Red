@@ -14,6 +14,8 @@ const LatinGame = {
         document.getElementById('latin-close').addEventListener('click', () => this.close());
         document.getElementById('latin-restart').addEventListener('click', () => this.startGame());
         document.getElementById('latin-restart-btn').addEventListener('click', () => this.startGame());
+        const nextBtn = document.getElementById('latin-next-round-btn');
+        if (nextBtn) nextBtn.addEventListener('click', () => this.continueToNextRound());
     },
 
     open() {
@@ -36,7 +38,27 @@ const LatinGame = {
         this.mistakes = 0;   // всего ошибочных соединений
         this.perfectRounds = 0;
         this.usedIds = new Set();
+        this.hideNextRoundBtn();
         document.getElementById('latin-end-screen').classList.add('hidden');
+        this.nextRound();
+    },
+
+    showNextRoundBtn() {
+        const btn = document.getElementById('latin-next-round-btn');
+        if (!btn) return;
+        btn.textContent = (this.round >= this.TOTAL_ROUNDS)
+            ? 'Итоги игры →' : 'Продолжить →';
+        btn.classList.remove('hidden');
+    },
+
+    hideNextRoundBtn() {
+        const btn = document.getElementById('latin-next-round-btn');
+        if (btn) btn.classList.add('hidden');
+    },
+
+    // Игра останавливается после раунда и ждёт нажатия «Продолжить»
+    continueToNextRound() {
+        this.hideNextRoundBtn();
         this.nextRound();
     },
 
@@ -50,6 +72,7 @@ const LatinGame = {
         this.matchedCount = 0;
         this.selectedCell = null;
         this.locked = false;
+        this.hideNextRoundBtn();
 
         const all = App.collectAllSpecies().filter(sp => sp.name && sp.latin);
         if (all.length < this.PAIRS_PER_ROUND) {
@@ -115,7 +138,7 @@ const LatinGame = {
 
             const back = document.createElement('div');
             back.className = 'latin-photo-back';
-            back.textContent = '?';
+            back.innerHTML = 'КРАСНАЯ<br>КНИГА';
 
             const front = document.createElement('div');
             front.className = 'latin-photo-front';
@@ -211,7 +234,8 @@ const LatinGame = {
                 }
                 document.getElementById('latin-streak-block').style.opacity = this.streak > 0 ? '1' : '0.3';
                 document.getElementById('latin-score-streak').textContent = this.streak;
-                setTimeout(() => this.nextRound(), 800);
+                // Игра останавливается: новый раунд — только по кнопке «Продолжить»
+                this.showNextRoundBtn();
             }
         } else {
             // Неверно
@@ -267,15 +291,19 @@ const LatinGame = {
 
         titleEl.textContent = titleText;
 
-        // Достижения
+        // Достижения (синхронизируем с общими медалями режима «Игры»)
         let achieve = '';
         if (titleText.startsWith('🏆')) {
+            this.unlockAch('student'); // пройдены все раунды — базовая медаль
             if (this.mistakes === 0) {
                 achieve = 'Достижение: «Хранитель латыни» — ни одной ошибки!';
+                this.unlockAch('keeper');
             } else if (this.perfectRounds >= 2) {
                 achieve = 'Достижение: «Лингвист-натуралист» — 2 идеальных раунда подряд!';
+                this.unlockAch('linguist');
             } else if (this.mistakes <= 3) {
                 achieve = 'Достижение: «Точный переводчик»';
+                this.unlockAch('translator');
             } else {
                 achieve = 'Достижение: «Ученик систематика»';
             }
@@ -287,6 +315,15 @@ const LatinGame = {
         achieveEl.textContent = achieve;
 
         document.getElementById('latin-end-screen').classList.remove('hidden');
+    },
+
+    // Выдача медали через общий реестр достижений (если тот загружен)
+    unlockAch(achId) {
+        try {
+            if (typeof Achievements !== 'undefined' && Achievements.unlock) {
+                Achievements.unlock('latin', achId);
+            }
+        } catch (e) { /* noop */ }
     },
 
     shuffle(array) {

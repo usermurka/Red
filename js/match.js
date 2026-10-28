@@ -102,16 +102,20 @@ const MatchGame = {
                         if (this.mistakes === 0) {
                             titleEl.textContent = '👑 Абсолютный чемпион!';
                             achieveEl.textContent = 'Получено достижение: «Без единой ошибки»';
+                            this.unlockAch('flawless');
                         } else if (this.mistakes <= 3) {
                             titleEl.textContent = '🏆 Отличный результат!';
                             achieveEl.textContent = 'Получено достижение: «Орлиный глаз»';
+                            this.unlockAch('eagle');
                         } else if (this.mistakes <= 8) {
                             titleEl.textContent = '🌟 Хорошая работа!';
                             achieveEl.textContent = 'Получено достижение: «Внимательный натуралист»';
+                            this.unlockAch('naturalist');
                         } else {
                             titleEl.textContent = '🌱 Победа!';
                             achieveEl.textContent = 'Получено достижение: «Упорство и труд»';
                         }
+                        this.unlockAch('persistent');
 
                         document.getElementById('match-end-screen').classList.remove('hidden');
                     }, 500);
@@ -130,6 +134,15 @@ const MatchGame = {
             }
         }
     },
+    // Выдача медали через общий реестр достижений (если тот загружен)
+    unlockAch(achId) {
+        try {
+            if (typeof Achievements !== 'undefined' && Achievements.unlock) {
+                Achievements.unlock('match', achId);
+            }
+        } catch (e) { /* noop */ }
+    },
+
     shuffle(array) {
         const arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {

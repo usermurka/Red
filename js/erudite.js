@@ -461,17 +461,30 @@ const EruditeGame = {
     if (this.solvedCount === this.queue.length && this.bestStreak >= 4) {
       titleEl.textContent = '👑 Великий Эрудит!';
       achieveEl.textContent = 'Достижение получено: «Лингвист Красной книги»';
+      this.unlockAch('linguist');
     } else if (this.solvedCount >= this.queue.length - 1) {
       titleEl.textContent = '🏆 Отличный результат!';
       achieveEl.textContent = 'Достижение получено: «Знаток орфографии»';
+      this.unlockAch('ortho');
     } else if (this.solvedCount >= Math.ceil(this.queue.length / 2)) {
       titleEl.textContent = '🌟 Хорошая работа!';
       achieveEl.textContent = 'Достижение получено: «Начинающий филолог»';
+      this.unlockAch('philologist');
     } else {
       titleEl.textContent = '🌱 Тренируйся ещё!';
       achieveEl.textContent = 'Достижение получено: «Первые буквы»';
     }
+    this.unlockAch('letters');
     document.getElementById('erudite-end-screen').classList.remove('hidden');
+  },
+
+  // Выдача медали через общий реестр достижений (если тот загружен)
+  unlockAch(achId) {
+    try {
+      if (typeof Achievements !== 'undefined' && Achievements.unlock) {
+        Achievements.unlock('erudite', achId);
+      }
+    } catch (e) { /* noop */ }
   },
 
   shuffle(array) {

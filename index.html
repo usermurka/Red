@@ -23,41 +23,45 @@
 
       <h1>Красная книга<br>Омской области</h1>
 
+      <!-- Переключатель режимов: всегда вверху панели, включая режим «Игры» -->
       <div class="mode-switch">
         <button id="btn-guest" class="active">Режим гостя</button>
         <button id="btn-developer">Режим разработчика</button>
+        <button id="btn-games" type="button" title="Мини-игры и медали">🎮 Игры</button>
       </div>
 
-<div id="games-menu" class="hidden" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
-  <div style="display: flex; gap: 6px;">
-    <button id="btn-quiz"
-      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-      <span style="font-size: 24px; line-height: 1;">🎲</span> Викторина
-    </button>
-    <button id="btn-match"
-      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-      <span style="font-size: 24px; line-height: 1;">🧩</span> Найди пару
-    </button>
-    <button id="btn-memo"
-      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-      <span style="font-size: 24px; line-height: 1;">🃏</span> Мемо
-    </button>
-    <button id="btn-erudite"
-      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-      <span style="font-size: 24px; line-height: 1;">🦉</span> Эрудит
-    </button>
-    <button id="btn-latin"
-      style="flex: 1; padding: 10px 4px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
-      <span style="font-size: 24px; line-height: 1;">🏛️</span> Латынь
-    </button>
-  </div>
+      <!-- НОВОЕ: Полевой дневник (вне игр — на главной он недоступен) -->
+      <button id="btn-journal"
+        style="width: 100%; padding: 10px; margin-bottom: 12px; font-size: 12px; background: linear-gradient(180deg, var(--green-light), var(--green)); border-color: var(--gold-soft);">
+        📔 Полевой дневник
+      </button>
 
-  <!-- НОВОЕ: Полевой дневник -->
-  <button id="btn-journal"
-    style="width: 100%; padding: 10px; margin-top: 4px; font-size: 12px; background: linear-gradient(180deg, var(--green-light), var(--green)); border-color: var(--gold-soft);">
-    📔 Полевой дневник
-  </button>
-</div>
+      <!-- Меню режима «Игры»: крупные кнопки выбора + прогресс (видно только в режиме) -->
+      <div id="games-menu" class="hidden" style="flex-direction: column; gap: 8px; margin-bottom: 12px;">
+        <h2 style="margin-top: 4px;">Выбор игры</h2>
+        <button id="btn-open-quiz"    class="game-big-btn" type="button"><span class="gbi">🎲</span> Викторина</button>
+        <button id="btn-open-match"   class="game-big-btn" type="button"><span class="gbi">🧩</span> Найди пару</button>
+        <button id="btn-open-memo"    class="game-big-btn" type="button"><span class="gbi">🃏</span> Мемо</button>
+        <button id="btn-open-erudite" class="game-big-btn" type="button"><span class="gbi">🦉</span> Эрудит</button>
+        <button id="btn-open-latin"   class="game-big-btn" type="button"><span class="gbi">🏛️</span> Латынь</button>
+
+        <h2 style="margin-top: 8px;">Прогресс</h2>
+        <div class="sub-btn-group" style="display: flex; gap: 6px;">
+          <button id="btn-save-progress" class="sub-btn" type="button" style="flex:1; display:inline-flex;">💾 Сохранить</button>
+          <button id="btn-load-progress" class="sub-btn" type="button" style="flex:1; display:inline-flex;">📂 Загрузить</button>
+        </div>
+        <input type="file" id="progress-file-input" accept=".json,application/json" hidden>
+        <p id="games-progress-info" class="games-progress-info"></p>
+      </div>
+
+      <!-- Скрытые кнопки-хуки: через них Achievements открывает модалки игр -->
+      <span class="hidden">
+        <button id="btn-quiz"></button>
+        <button id="btn-match"></button>
+        <button id="btn-memo"></button>
+        <button id="btn-erudite"></button>
+        <button id="btn-latin"></button>
+      </span>
 
       <h2>Вид карты</h2>
       <div id="map-switcher"></div>
@@ -208,6 +212,15 @@
       <div id="hint">
         <span id="hint-text"></span>
         <button id="hint-show-btn" class="hidden" onclick="App.showSelectedSpecies()">Показать на карте</button>
+      </div>
+
+      <!-- Витрина медалей (режим «Игры», скрыта на карте) -->
+      <div id="games-showcase" class="hidden">
+        <div class="showcase-inner">
+          <h2 class="showcase-title">🏅 Медали</h2>
+          <p class="showcase-sub">Достижения мини-игр Красной книги. Играйте — получайте медали, сохраняйте и передавайте прогресс через кнопки «Сохранить» / «Загрузить» на левой панели.</p>
+          <div id="medals-list"></div>
+        </div>
       </div>
     </main>
 
@@ -648,6 +661,7 @@
         <p class="latin-instruction">Нажми на русское название, затем на соответствующее латинское. Угаданная пара открывает фотографию вида</p>
         <div id="latin-grid" class="latin-grid"></div>
         <div id="latin-photos" class="latin-photos" aria-label="Фотографии видов"></div>
+        <button id="latin-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
       </div>
       <div id="latin-end-screen" class="hidden"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -668,12 +682,14 @@
   <link rel="stylesheet" href="css/memo.css">
   <link rel="stylesheet" href="css/erudite.css">
   <link rel="stylesheet" href="css/latin.css">
+  <link rel="stylesheet" href="css/games-mode.css">
 
   <script defer src="js/quiz.js"></script>
   <script defer src="js/match.js"></script>
   <script defer src="js/memo.js"></script>
   <script defer src="js/erudite.js"></script>
   <script defer src="js/latin.js"></script>
+  <script defer src="js/achievements.js"></script>
   <script defer src="js/journal.js"></script>
   <script defer src="js/species.js"></script>
   <script defer src="js/species-data.js"></script>

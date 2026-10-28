@@ -294,13 +294,25 @@ const Quiz = {
         if (percent >= 90) {
             title.textContent = '🏆 Вы настоящий биолог!';
             desc.textContent = `Вы ответили верно на ${this.scoreRight} из ${this.totalQuestions} вопросов. Отличное знание Красной книги!`;
+            this.unlockAch('perfect');
         } else if (percent >= 60) {
             title.textContent = '🌿 Хороший результат!';
             desc.textContent = `Верных ответов: ${this.scoreRight} из ${this.totalQuestions}. Вы хорошо знаете природу, но есть куда стремиться.`;
+            this.unlockAch('good');
         } else {
             title.textContent = '📖 Нужно повторить материал';
             desc.textContent = `Верных ответов: ${this.scoreRight} из ${this.totalQuestions}. Загляните в справочник видов, чтобы узнать больше!`;
         }
+        this.unlockAch('first_win');
+    },
+
+    // Выдача медали через общий реестр достижений (если тот загружен)
+    unlockAch(achId) {
+        try {
+            if (typeof Achievements !== 'undefined' && Achievements.unlock) {
+                Achievements.unlock('quiz', achId);
+            }
+        } catch (e) { /* noop */ }
     },
 
     shuffleArray(array) {

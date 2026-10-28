@@ -1621,6 +1621,8 @@ const App = {
       sidebar.addEventListener('click', (e) => {
         if (!this.isMobileLayout()) return;
         const clickedButton = e.target.closest('#games-menu button, #btn-open-list, .map-option, #map-switcher button');
+        // Кнопки смены режима не закрывают панель: в режиме «Игры» это единственный способ выйти
+        if (clickedButton && clickedButton.closest('.mode-switch')) return;
         if (clickedButton) {
           // небольшая задержка, чтобы обработчик кнопки отработал
           setTimeout(closeSidebar, 150);
@@ -3298,7 +3300,13 @@ const App = {
 
     // Весь блок «Режим разработчика» — только для разработчика
     const devTools = document.getElementById('developer-tools');
-    if (devTools) devTools.classList.toggle('hidden', !isDeveloper);
+    if (devTools) {
+      devTools.classList.toggle('hidden', !isDeveloper);
+      // В режиме «Игры» панели карты скрыты — не показываем их и при смене режима
+      if (typeof Achievements !== 'undefined' && Achievements.gamesModeActive) {
+        devTools.classList.add('hidden');
+      }
+    }
 
     // Внутри блока: «Завершить» и «Отменить» — только если включён режим рисования
     const regionFinishBtn = document.getElementById('btn-region-finish');

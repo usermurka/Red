@@ -130,16 +130,20 @@ const MemoGame = {
                         if (this.moves <= 14) {
                             titleEl.textContent = '👑 Идеальная память!';
                             achieveEl.textContent = 'Достижение получено: «Фотографическая память»';
+                            this.unlockAch('photo');
                         } else if (this.moves <= 20) {
                             titleEl.textContent = '🏆 Отличный результат!';
                             achieveEl.textContent = 'Достижение получено: «Знаток Красной книги»';
+                            this.unlockAch('expert');
                         } else if (this.moves <= 28) {
                             titleEl.textContent = '🌟 Хорошая работа!';
                             achieveEl.textContent = 'Достижение получено: «Внимательный натуралист»';
+                            this.unlockAch('attentive');
                         } else {
                             titleEl.textContent = '🌱 Победа!';
                             achieveEl.textContent = 'Достижение получено: «Первый шаг в науке»';
                         }
+                        this.unlockAch('firststep');
 
                         document.getElementById('memo-end-screen').classList.remove('hidden');
                     }, 500);
@@ -232,6 +236,15 @@ const MemoGame = {
                 }, 250);
             }, 550);
         }, 2000);
+    },
+
+    // Выдача медали через общий реестр достижений (если тот загружен)
+    unlockAch(achId) {
+        try {
+            if (typeof Achievements !== 'undefined' && Achievements.unlock) {
+                Achievements.unlock('memo', achId);
+            }
+        } catch (e) { /* noop */ }
     },
 
     shuffle(array) {
