@@ -31,7 +31,7 @@ function xyToGeo(x, y) {
   return { lat, lon };
 }
 
-const App = {
+window.App = {
 
   markers: [],
   developerMode: false,
@@ -134,9 +134,9 @@ const App = {
     this.tooltip = document.getElementById('tooltip');
     this.modal = document.getElementById('modal');
 
-  this.markers = Storage.load();
-  this.regions = Storage.loadRegions();
-  this.migrations = Storage.loadMigrations();
+  this.markers = LocalStore.load();
+  this.regions = LocalStore.loadRegions();
+  this.migrations = LocalStore.loadMigrations();
 
   // --- ПРИ СТАРТЕ НИЧЕГО НЕ ВЫДЕЛЕНО (все объекты скрыты) ---
   this.highlightedIds.clear();
@@ -796,7 +796,7 @@ const App = {
     });
 
     document.getElementById('btn-export').addEventListener('click', () => {
-      Storage.exportAll(this.markers, this.regions, this.migrations);
+      LocalStore.exportAll(this.markers, this.regions, this.migrations);
     });
 
     // Экспорт в GeoJSON
@@ -882,7 +882,7 @@ const App = {
     document.getElementById('file-input').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
-        Storage.importAll(file, (data) => {
+        LocalStore.importAll(file, (data) => {
           // Поддержка обоих форматов: старый (массив маркеров) и новый (объект с markers + regions + migrations)
           if (Array.isArray(data)) {
             this.markers = data;
@@ -902,9 +902,9 @@ const App = {
           // пользователь не выберет вид/фильтр. (mapOnlyHighlighted при
           // необходимости включается кнопкой «Только выделенные».) ---
 
-          Storage.save(this.markers);
-          Storage.saveRegions(this.regions);
-          Storage.saveMigrations(this.migrations);
+          LocalStore.save(this.markers);
+          LocalStore.saveRegions(this.regions);
+          LocalStore.saveMigrations(this.migrations);
           this.render();
         });
       }
@@ -923,9 +923,9 @@ const App = {
         this.highlightedRegionId = null;
         this.isAllHighlighted = false;
         this.mapOnlyHighlighted = true;
-        Storage.save(this.markers);
-        Storage.saveRegions(this.regions);
-        Storage.saveMigrations(this.migrations);
+        LocalStore.save(this.markers);
+        LocalStore.saveRegions(this.regions);
+        LocalStore.saveMigrations(this.migrations);
         this.render();
         this.updateStats();
       }
@@ -2998,7 +2998,7 @@ const App = {
       speciesList: [{ speciesId, speciesName, category }]
     });
 
-    Storage.saveMigrations(this.migrations);
+    LocalStore.saveMigrations(this.migrations);
 
     // Автоматически подсвечиваем этот вид
     this.highlightedSpeciesMigrations.add(speciesId);
@@ -3070,7 +3070,7 @@ const App = {
       points: this.pendingRegionPoints.slice()
     });
 
-    Storage.saveRegions(this.regions);
+    LocalStore.saveRegions(this.regions);
 
     this.activeRegionSpeciesId = speciesId;
 
@@ -3382,9 +3382,9 @@ const App = {
     this.isAllHighlighted = false;
 
     // Сохраняем в localStorage
-    Storage.save(this.markers);
-    Storage.saveRegions(this.regions);
-    Storage.saveMigrations(this.migrations);
+    LocalStore.save(this.markers);
+    LocalStore.saveRegions(this.regions);
+    LocalStore.saveMigrations(this.migrations);
 
     // Перерисовываем
     this.render();
@@ -3671,7 +3671,7 @@ const App = {
       // Автоматически подсвечиваем новый маркер
       this.highlightedIds.add(newId);
 
-      Storage.save(this.markers);
+      LocalStore.save(this.markers);
       this.render();
       return;
     }
@@ -3848,7 +3848,7 @@ const App = {
       return;
     }
 
-    Storage.save(this.markers);
+    LocalStore.save(this.markers);
     this.render();
     this.closeModal();
 
@@ -4300,7 +4300,7 @@ const App = {
       if (confirm(`Удалить маркер «${marker.name}»?`)) {
         this.markers = this.markers.filter(m => m.id !== id);
         this.highlightedIds.delete(id);
-        Storage.save(this.markers);
+        LocalStore.save(this.markers);
         this.render();
         this.tooltip.style.display = 'none';
       }
@@ -4411,7 +4411,7 @@ const App = {
 
         // Удаляем вторую область
         this.regions = this.regions.filter(r => r.id !== region.id);
-        Storage.saveRegions(this.regions);
+        LocalStore.saveRegions(this.regions);
       }
 
       this._regionToMergeSource = null;
@@ -4490,7 +4490,7 @@ const App = {
 
         // Удаляем вторую линию
         this.migrations = this.migrations.filter(m => m.id !== migration.id);
-        Storage.saveMigrations(this.migrations);
+        LocalStore.saveMigrations(this.migrations);
       }
 
       this._migrationToMergeSource = null;
@@ -4636,7 +4636,7 @@ const App = {
         if (!mig.speciesList || mig.speciesList.length <= 1) {
           if (confirm('Это единственный вид в линии. Удалить всю линию миграции?')) {
             this.migrations = this.migrations.filter(m => m.id !== migId);
-            Storage.saveMigrations(this.migrations);
+            LocalStore.saveMigrations(this.migrations);
             this.tooltip.style.display = 'none';
             this.renderRegions();
           }
@@ -4653,7 +4653,7 @@ const App = {
           mig.category = mig.speciesList[0].category;
         }
 
-        Storage.saveMigrations(this.migrations);
+        LocalStore.saveMigrations(this.migrations);
         this.tooltip.style.display = 'none';
         this.renderRegions();
       });
@@ -4729,7 +4729,7 @@ const App = {
 
   deleteMigration(migrationId) {
     this.migrations = this.migrations.filter(m => m.id !== migrationId);
-    Storage.saveMigrations(this.migrations);
+    LocalStore.saveMigrations(this.migrations);
     this.renderRegions();
   },
 
@@ -4994,7 +4994,7 @@ const App = {
           }
           
           // Сохраняем и перерисовываем
-          Storage.saveRegions(this.regions);
+          LocalStore.saveRegions(this.regions);
           this.renderRegions();
           
           // Закрываем тултип (так как данные изменились)
@@ -5094,7 +5094,7 @@ const App = {
 
   deleteRegion(regionId) {
     this.regions = this.regions.filter(r => r.id !== regionId);
-    Storage.saveRegions(this.regions);
+    LocalStore.saveRegions(this.regions);
     this.highlightedRegionId = null;
     this.renderRegions();
   },
@@ -5674,7 +5674,7 @@ return;
         // Добавляем вид, если его еще нет
         if (!mig.speciesList.some(sp => sp.speciesId === species.id)) {
           mig.speciesList.push({ speciesId: species.id, speciesName: species.name, category: category });
-          Storage.saveMigrations(this.migrations);
+          LocalStore.saveMigrations(this.migrations);
           this.highlightedSpeciesMigrations.add(species.id);
         }
 
@@ -5694,7 +5694,7 @@ return;
         // Проверяем, нет ли уже такого вида в области
         if (!region.speciesList.some(sp => sp.speciesId === species.id)) {
           region.speciesList.push({ speciesId: species.id, speciesName: species.name, category: category, intensity: region.intensity || 'weak' });
-          Storage.saveRegions(this.regions);
+          LocalStore.saveRegions(this.regions);
           // Добавляем вид в список выделенных, чтобы область не пропала
           this.highlightedSpeciesRegions.add(species.id);
         }
@@ -6071,4 +6071,10 @@ updateIsAllHighlightedFlag() {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    App.init();
+  } catch (e) {
+    console.error('App: ошибка инициализации:', e);
+  }
+});

@@ -16,6 +16,7 @@ const MemoGame = {
     },
     open() {
         document.getElementById('memo-modal').classList.remove('hidden');
+        document.getElementById('app').style.pointerEvents = 'none';
         document.getElementById('memo-modal').style.pointerEvents = 'auto';
         this.startGame();
     },
@@ -259,9 +260,16 @@ const MemoGame = {
     }
 };
 document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
-    if (typeof App === 'undefined') {
-        console.warn('MemoGame: App не загружен — игра не запущена.');
-        return;
-    }
-    MemoGame.init();
+    const tryInit = () => {
+        if (!window.App) {
+            setTimeout(tryInit, 500);
+            return;
+        }
+        try {
+            MemoGame.init();
+        } catch (e) {
+            console.error('MemoGame: ошибка инициализации:', e);
+        }
+    };
+    tryInit();
 }, 200));

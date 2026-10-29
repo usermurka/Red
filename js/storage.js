@@ -2,7 +2,7 @@
 
 const STORAGE_KEY = 'red_book_omsk_markers';
 
-const Storage = {
+const LocalStore = {
 
   // Загрузить маркеры из localStorage
   load() {
@@ -123,3 +123,4 @@ const Storage = {
     reader.readAsText(file);
   }
 };
+window.LocalStore = window.Storage = LocalStore;

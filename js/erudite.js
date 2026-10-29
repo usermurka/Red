@@ -51,6 +51,7 @@ const EruditeGame = {
 
   open() {
     document.getElementById('erudite-modal').classList.remove('hidden');
+    document.getElementById('app').style.pointerEvents = 'none';
     document.getElementById('erudite-modal').style.pointerEvents = 'auto';
     this.startGame();
   },
@@ -500,9 +501,16 @@ const EruditeGame = {
 };
 
 document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
-  if (typeof App === 'undefined') {
-    console.warn('EruditeGame: App не загружен — игра не запущена.');
-    return;
-  }
-  EruditeGame.init();
+  const tryInit = () => {
+        if (!window.App) {
+            setTimeout(tryInit, 500);
+            return;
+        }
+        try {
+            EruditeGame.init();
+        } catch (e) {
+            console.error('EruditeGame: ошибка инициализации:', e);
+        }
+    };
+    tryInit();
 }, 200));

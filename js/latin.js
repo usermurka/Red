@@ -22,6 +22,7 @@ const LatinGame = {
 
     open() {
         document.getElementById('latin-modal').classList.remove('hidden');
+        document.getElementById('app').style.pointerEvents = 'none';
         document.getElementById('latin-modal').style.pointerEvents = 'auto';
         this.startGame();
     },
@@ -339,9 +340,16 @@ const LatinGame = {
 };
 
 document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
-    if (typeof App === 'undefined') {
-        console.warn('LatinGame: App не загружен — игра не запущена.');
-        return;
-    }
-    LatinGame.init();
+    const tryInit = () => {
+        if (!window.App) {
+            setTimeout(tryInit, 500);
+            return;
+        }
+        try {
+            LatinGame.init();
+        } catch (e) {
+            console.error('LatinGame: ошибка инициализации:', e);
+        }
+    };
+    tryInit();
 }, 200));

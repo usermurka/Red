@@ -329,10 +329,17 @@ const Quiz = {
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-        if (typeof App === 'undefined') {
-            console.warn('Quiz: App не загружен — игра не запущена.');
+        const tryInit = () => {
+        if (!window.App) {
+            setTimeout(tryInit, 500);
             return;
         }
-        Quiz.init();
+        try {
+            Quiz.init();
+        } catch (e) {
+            console.error('Quiz: ошибка инициализации:', e);
+        }
+    };
+    tryInit();
     }, 200);
 });

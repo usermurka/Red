@@ -17,6 +17,7 @@ const MatchGame = {
     },
     open() {
         document.getElementById('match-modal').classList.remove('hidden');
+        document.getElementById('app').style.pointerEvents = 'none';
         document.getElementById('match-modal').style.pointerEvents = 'auto';
         this.startGame();
     },
@@ -155,9 +156,16 @@ const MatchGame = {
     }
 };
 document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
-    if (typeof App === 'undefined') {
-        console.warn('MatchGame: App не загружен — игра не запущена.');
-        return;
-    }
-    MatchGame.init();
+    const tryInit = () => {
+        if (!window.App) {
+            setTimeout(tryInit, 500);
+            return;
+        }
+        try {
+            MatchGame.init();
+        } catch (e) {
+            console.error('MatchGame: ошибка инициализации:', e);
+        }
+    };
+    tryInit();
 }, 200));
