@@ -21,6 +21,8 @@ const EruditeGame = {
     document.getElementById('btn-erudite').addEventListener('click', () => this.open());
     document.getElementById('erudite-close').addEventListener('click', () => this.close());
     document.getElementById('erudite-restart').addEventListener('click', () => this.startGame());
+    // Крестик на финальном экране — закрыть игру
+    document.querySelector('#erudite-end-screen .game-close-x')?.addEventListener('click', () => this.close());
     document.getElementById('erudite-restart-btn').addEventListener('click', () => this.startGame());
     document.getElementById('erudite-backspace').addEventListener('click', () => this.undoLast());
     document.getElementById('erudite-skip').addEventListener('click', () => this.skipWord());

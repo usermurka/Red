@@ -22,6 +22,8 @@ const Quiz = {
         document.getElementById('btn-quiz').addEventListener('click', () => this.open());
         document.getElementById('quiz-close').addEventListener('click', () => this.close());
         document.getElementById('quiz-restart').addEventListener('click', () => this.startGame());
+        // Крестик на финальном экране — закрыть игру
+        document.querySelector('#quiz-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('quiz-restart-btn').addEventListener('click', () => {
             if (confirm('Начать викторину заново? Текущий прогресс будет потерян.')) {
                 this.startGame();

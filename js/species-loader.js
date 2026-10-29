@@ -1,12 +1,12 @@
 // ============================================================
 // ЗАГРУЗЧИК ДАННЫХ О ВИДАХ
-// Сначала пробует взять данные из window.SPECIES_DATA (для file://)
-// Если нет — идёт fetch('data/species/{id}.json')
+// Данные берутся из window.SPECIES_DATA — объекта, «зашитого»
+// в js/species-data.js (папка data/species/ больше не используется).
 // ============================================================
 
 const SpeciesLoader = {
 
-  // Кэш, чтобы не грузить один и тот же вид дважды
+  // Кэш, чтобы не возвращать один и тот же вид дважды
   _cache: {},
 
   // Основной метод. Возвращает Promise с данными вида.
@@ -17,28 +17,16 @@ const SpeciesLoader = {
       return Promise.resolve(this._cache[speciesId]);
     }
 
-    // 2. Есть в window.SPECIES_DATA? (для file://)
+    // 2. Есть в window.SPECIES_DATA (js/species-data.js)?
     if (window.SPECIES_DATA && window.SPECIES_DATA[speciesId]) {
       const data = window.SPECIES_DATA[speciesId];
       this._cache[speciesId] = data;
       return Promise.resolve(data);
     }
 
-    // 3. Пробуем fetch (для Live Server)
-    return fetch(`data/species/${speciesId}.json`)
-      .then(response => {
-        if (!response.ok) throw new Error('Файл не найден: ' + speciesId);
-        return response.json();
-      })
-      .then(data => {
-        this._cache[speciesId] = data;
-        return data;
-      })
-      .catch(err => {
-        console.log('Данные о виде не загружены:', speciesId, err.message);
-        this._cache[speciesId] = null;
-        return null;
-      });
+    // 3. Данных нет — запоминаем и отдаём null
+    this._cache[speciesId] = null;
+    return Promise.resolve(null);
   },
 
   // Есть ли данные о виде (без загрузки)

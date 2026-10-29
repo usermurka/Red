@@ -915,11 +915,19 @@ const App = {
         this.markers = [];
         this.regions = [];
         this.migrations = [];
+        // Снимаем ВСЕ выделения — вместе с данными, чтобы после обновления
+        // страницы логика «выделено/не выделено» не ломалась.
         this.highlightedIds.clear();
+        this.highlightedSpeciesRegions.clear();
+        this.highlightedSpeciesMigrations.clear();
+        this.highlightedRegionId = null;
+        this.isAllHighlighted = false;
+        this.mapOnlyHighlighted = true;
         Storage.save(this.markers);
         Storage.saveRegions(this.regions);
         Storage.saveMigrations(this.migrations);
         this.render();
+        this.updateStats();
       }
     });
 
@@ -2156,7 +2164,7 @@ const App = {
         ` : ''}
         <div class="scroll-empty">
           <strong>Подробные данные о виде пока не добавлены</strong>
-          Их можно добавить в файл <code>data/species/${speciesId}.json</code>
+          Их можно добавить в файл <code>js/species-data.js</code> (объект <code>SPECIES_DATA</code>)
         </div>
 
         ${(markerCount > 0 || regionCount > 0 || migrationCount > 0) ? `
@@ -3312,15 +3320,16 @@ const App = {
     this.updateHintForSerial();
   },
 
-  // Автозагрузка данных из файла (если он есть)
+  // Автозагрузка данных карты.
+  // 1) Сначала window.MARKERS_DATA — «зашитые» данные из js/markers-data.js
+  //    (генерируется из data/red-book-omsk.json, работает без сервера, file://).
+  // 2) Если файла данных нет — fetch(path) через локальный сервер.
   loadFromFile(path) {
-    // 1. Если данные "зашиты" в файле markers-data.js (для работы без сервера)
     if (window.MARKERS_DATA) {
       this.processLoadedData(window.MARKERS_DATA);
       return;
     }
 
-    // 2. Иначе пробуем скачать через fetch (для Live Server)
     fetch(path)
       .then(response => {
         if (!response.ok) throw new Error('Файл не найден');
@@ -3366,19 +3375,11 @@ const App = {
       }
     });
 
-    // Выделяем всё по умолчанию
-    this.markers.forEach(m => this.highlightedIds.add(m.id));
-    this.regions.forEach(r => {
-      if (r.speciesList) {
-        r.speciesList.forEach(sp => this.highlightedSpeciesRegions.add(sp.speciesId));
-      }
-    });
-    this.migrations.forEach(m => {
-      if (m.speciesId) this.highlightedSpeciesMigrations.add(m.speciesId);
-    });
-    
-    // Отключаем режим "только выделенные", чтобы всё было видно
-    this.mapOnlyHighlighted = false;
+    // --- ПРИ ЗАГРУЗКЕ ДАННЫХ НИЧЕГО НЕ ВЫДЕЛЯЕМ ---
+    // Маркеры/области/линии остаются скрытыми, пока пользователь
+    // явно не выберет вид/фильтр. Режим «только выделенные» включён.
+    this.mapOnlyHighlighted = true;
+    this.isAllHighlighted = false;
 
     // Сохраняем в localStorage
     Storage.save(this.markers);
