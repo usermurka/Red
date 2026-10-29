@@ -23,6 +23,7 @@ const LatinGame = {
     open() {
         document.getElementById('latin-modal').classList.remove('hidden');
         document.getElementById('app').style.pointerEvents = 'none';
+        document.getElementById('latin-modal').style.pointerEvents = 'auto';
         this.startGame();
     },
 
