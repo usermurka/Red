@@ -684,15 +684,24 @@
   <link rel="stylesheet" href="css/latin.css">
   <link rel="stylesheet" href="css/games-mode.css">
 
-  <!-- Сначала базовые данные и App (app.js объявляет window.App), затем игры,
-       которые при своём DOMContentLoaded проверяют наличие App. -->
+  <!-- Сначала базовые данные и App (модули app-*.js дополняют window.App),
+       затем игры, которые при своём DOMContentLoaded проверяют наличие App.
+       Порядок подключения app-*.js важен: core -> ui -> map -> regions ->
+       species -> render -> tooltips -> guide (guide содержит App.init). -->
   <script defer src="js/species-data.js"></script>
   <script defer src="js/markers-data.js"></script>
   <script defer src="js/config.js"></script>
   <script defer src="js/storage.js"></script>
   <script defer src="js/species-loader.js"></script>
   <script defer src="js/species.js"></script>
-  <script defer src="js/app.js"></script>
+  <script defer src="js/app-core.js"></script>
+  <script defer src="js/app-ui.js"></script>
+  <script defer src="js/app-map.js"></script>
+  <script defer src="js/app-regions.js"></script>
+  <script defer src="js/app-species.js"></script>
+  <script defer src="js/app-render.js"></script>
+  <script defer src="js/app-tooltips.js"></script>
+  <script defer src="js/app-guide.js"></script>
   <script defer src="js/quiz.js"></script>
   <script defer src="js/match.js"></script>
   <script defer src="js/memo.js"></script>
