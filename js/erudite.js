@@ -51,7 +51,6 @@ const EruditeGame = {
 
   open() {
     document.getElementById('erudite-modal').classList.remove('hidden');
-    document.getElementById('app').style.pointerEvents = 'none';
     document.getElementById('erudite-modal').style.pointerEvents = 'auto';
     this.startGame();
   },

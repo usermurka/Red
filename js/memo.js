@@ -16,7 +16,6 @@ const MemoGame = {
     },
     open() {
         document.getElementById('memo-modal').classList.remove('hidden');
-        document.getElementById('app').style.pointerEvents = 'none';
         document.getElementById('memo-modal').style.pointerEvents = 'auto';
         this.startGame();
     },

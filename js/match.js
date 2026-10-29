@@ -17,7 +17,6 @@ const MatchGame = {
     },
     open() {
         document.getElementById('match-modal').classList.remove('hidden');
-        document.getElementById('app').style.pointerEvents = 'none';
         document.getElementById('match-modal').style.pointerEvents = 'auto';
         this.startGame();
     },
