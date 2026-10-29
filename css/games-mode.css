@@ -349,3 +349,33 @@ body.games-mode #hint {
     .medal-name { font-size: 12px; }
     .medal-hint { font-size: 10px; }
 }
+
+/* ============================================================
+   Крестик закрытия на финальных экранах всех игр
+   (.game-close-x — в quiz/match/memo/erudite/latin end-screen)
+   ============================================================ */
+.game-close-x {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--parchment-deep, #b9a77a);
+    border-radius: 50%;
+    background: var(--parchment-light, #f7efdc);
+    color: var(--dark-green, #24352a);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.game-close-x:hover {
+    background: var(--gold-deep, #c9a227);
+    color: #fff;
+    transform: scale(1.08);
+}

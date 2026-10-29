@@ -10,6 +10,8 @@ const MemoGame = {
         document.getElementById('btn-memo').addEventListener('click', () => this.open());
         document.getElementById('memo-close').addEventListener('click', () => this.close());
         document.getElementById('memo-restart').addEventListener('click', () => this.startGame());
+        // Крестик на финальном экране — закрыть игру
+        document.querySelector('#memo-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('memo-restart-btn').addEventListener('click', () => this.startGame());
     },
     open() {

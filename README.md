@@ -111,16 +111,26 @@ py import.py --force   # игнорировать защиту от повтор
 ```
 Логика одного цикла: читает `inbox/data.txt`, валидирует 18 полей (id, name, latin,
 status и др.), проверяет id против `js/species.js`, защищает от дублирования
-(id + хэш текста), пишет `data/species/{id}.json` и только после успеха переносит
+(id + хэш текста), добавляет/обновляет запись вида в `js/species-data.js`
+(`SPECIES_DATA[id]`) и только после успеха переносит
 картинку в `img/species/{id}.png`. После каждого цикла — пауза (Enter — следующий
 вид, Ctrl+C — выход).
+
+### Генерация данных карты (`scripts/generate_markers_data.py`)
+```bash
+python3 scripts/generate_markers_data.py
+```
+Создаёт `js/markers-data.js` из `data/red-book-omsk.json`
+(`window.MARKERS_DATA = { markers, regions, migrations }`) — «зашитые» данные
+для работы приложения без сервера (file://). Запускайте после изменений в
+`red-book-omsk.json`.
 
 ### Заполнение статусов (`scripts/fill_status_text.py`)
 ```bash
 py fill_status_text.py
 ```
 Обходит виды в порядке систематики `js/species.js` и предлагает вручную ввести
-`status_text` для каждого. Управление: Enter с текстом — сохранить, пустой Enter —
+`status_text` для каждого (пишет в `js/species-data.js`). Управление: Enter с текстом — сохранить, пустой Enter —
 пропустить, `u` — назад, `q` — выход (прогресс сохраняется).
 
 ## Хранение данных

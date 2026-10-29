@@ -7,7 +7,7 @@
 #   1. Читаем inbox/data.txt
 #   2. Валидируем (18 полей, id в species.js, status, name)
 #   3. Защита: если id+хэш текста совпали с предыдущим импортом — блок
-#   4. Пишем data/species/{id}.json
+#   4. Пишем запись вида в js/species-data.js (SPECIES_DATA[id])
 #   5. Только после успеха — перемещаем картинку в img/species/{id}.png
 #
 # После цикла — ждём Enter для следующего вида. Ctrl+C — выход.
@@ -20,10 +20,11 @@ import shutil
 import sys
 from pathlib import Path
 
+from species_store import load_species_data, save_species_data
+
 INBOX_DIR        = Path("inbox")
 HUB_FILE         = INBOX_DIR / "data.txt"
 SPECIES_JS       = Path("js/species.js")
-SPECIES_JSON_DIR = Path("data/species")
 SPECIES_IMG_DIR  = Path("img/species")
 
 REQUIRED_FIELDS = [
@@ -218,25 +219,23 @@ def process_one(force, counter):
     if not validate(data, species_ids, force=force):
         return False
 
-    # 8. Запись JSON
+    # 8. Запись данных вида в js/species-data.js
     print()
     info(f"Импортирую: {species_id}")
 
-    SPECIES_JSON_DIR.mkdir(parents=True, exist_ok=True)
     SPECIES_IMG_DIR.mkdir(parents=True, exist_ok=True)
 
-    json_dst = SPECIES_JSON_DIR / f"{species_id}.json"
     img_dst  = SPECIES_IMG_DIR  / f"{species_id}.png"
 
-    existed = json_dst.exists()
-    json_dst.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    store = load_species_data()
+    existed = species_id in store
+    store[species_id] = data
+    save_species_data(store)
+    dst_name = "js/species-data.js"
     if existed:
-        ok(f"JSON  → {json_dst}  (перезаписан)")
+        ok(f"JSON  → {dst_name}  (запись «{species_id}» перезаписана)")
     else:
-        ok(f"JSON  → {json_dst}")
+        ok(f"JSON  → {dst_name}  (добавлена запись «{species_id}»)")
 
     # 9. ТОЛЬКО ПОСЛЕ УСПЕШНОЙ ЗАПИСИ — картинка
     try:

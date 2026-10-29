@@ -13,6 +13,8 @@ const LatinGame = {
         document.getElementById('btn-latin').addEventListener('click', () => this.open());
         document.getElementById('latin-close').addEventListener('click', () => this.close());
         document.getElementById('latin-restart').addEventListener('click', () => this.startGame());
+        // Крестик на финальном экране — закрыть игру
+        document.querySelector('#latin-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('latin-restart-btn').addEventListener('click', () => this.startGame());
         const nextBtn = document.getElementById('latin-next-round-btn');
         if (nextBtn) nextBtn.addEventListener('click', () => this.continueToNextRound());

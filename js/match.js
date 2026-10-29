@@ -11,6 +11,8 @@ const MatchGame = {
         document.getElementById('btn-match').addEventListener('click', () => this.open());
         document.getElementById('match-close').addEventListener('click', () => this.close());
         document.getElementById('match-restart').addEventListener('click', () => this.startGame());
+        // Крестик на финальном экране — закрыть игру
+        document.querySelector('#match-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('match-restart-btn').addEventListener('click', () => this.startGame());
     },
     open() {
