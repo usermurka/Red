@@ -58,6 +58,7 @@
 ├── index.html              # Единая страница приложения
 ├── css/
 │   ├── style.css           # Основные стили
+│   ├── games-mode.css      # Стили режима «Игры»
 │   ├── responsive.css      # Адаптивная вёрстка (мобильные)
 │   └── *.css               # Стили отдельных игр (quiz, match, memo, erudite, latin)
 ├── js/
@@ -66,23 +67,28 @@
 │   ├── species.js          # Систематика и данные видов
 │   ├── species-data.js     # Большой массив данных о видах
 │   ├── species-loader.js   # Загрузка дополнительных данных видов из data/
+│   ├── markers-data.js     # «Зашитые» данные карты (генерируется скриптом)
 │   ├── storage.js          # Работа с localStorage (маркеры, области, миграции)
 │   ├── journal.js          # Полевой дневник наблюдений
 │   ├── achievements.js     # Реестр медалей и прогресса игр
+│   ├── old_*.js            # Архивные версии модулей игр
 │   └── quiz.js, match.js, memo.js, erudite.js, latin.js   # Мини-игры
 ├── data/
 │   ├── red-book-omsk.json      # Экспортированные данные карты (маркеры и пр.)
 │   ├── red-book-omsk.geojson   # Тот же набор в формате GeoJSON
 │   ├── all_species_data.json   # Сводные данные по всем видам
-│   └── field-journal-omsk.json # Пример экспорта дневника
+│   ├── field-journal-omsk.json # Пример экспорта дневника
+│   └── list.txt                # Список файлов данных видов
 ├── img/
 │   ├── map*.png            # Фоны карт (5 вариантов)
 │   ├── species/            # Фотографии видов
 │   └── user/               # Пользовательские изображения
-├── inbox/
-│   └── data.txt            # Очередь видов для пакетного импорта
+├── inbox/                  # (создаётся вручную) очередь видов для пакетного импорта
+│   └── data.txt            # Описание одного вида для импорта
 └── scripts/
     ├── import.py           # Циклический импорт видов из inbox/
+    ├── species_store.py    # Обслуживающий модуль для import.py
+    ├── generate_markers_data.py  # Генерация js/markers-data.js из data/
     └── fill_status_text.py # Полуручное заполнение status_text
 ```
 
