@@ -5,6 +5,14 @@ function escHtml(str) {
   });
 }
 
+// Двойной клик по карточке — временное увеличение изображения.
+// Сбрасывается через несколько секунд или при клике в другом месте.
+let matchZoomTimer = null;
+function resetMatchZoom() {
+    if (matchZoomTimer) { clearTimeout(matchZoomTimer); matchZoomTimer = null; }
+    document.querySelectorAll('.match-card.zoomed').forEach(z => z.classList.remove('zoomed'));
+}
+
 const MatchGame = {
     TOTAL_PAIRS: 10,
     init() {
@@ -14,6 +22,11 @@ const MatchGame = {
         // Крестик на финальном экране — закрыть игру
         document.querySelector('#match-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('match-restart-btn').addEventListener('click', () => this.startGame());
+
+        // Сброс увеличения по клику в любом другом месте
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.match-card')) resetMatchZoom();
+        });
     },
     open() {
         document.getElementById('match-modal').classList.remove('hidden');
@@ -66,11 +79,29 @@ const MatchGame = {
                 el.innerHTML = `<span>${escHtml(c.name)}</span>`;
             }
             el.addEventListener('click', () => this.handleClick(el));
+            // Двойной клик — рассмотреть изображение (только карточки с картинкой)
+            el.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                if (c.type !== 'img' || el.classList.contains('matched')) return;
+                resetMatchZoom();
+                el.classList.add('zoomed');
+                matchZoomTimer = setTimeout(() => {
+                    el.classList.remove('zoomed');
+                    matchZoomTimer = null;
+                }, 3000);
+            });
             grid.appendChild(el);
         });
     },
     handleClick(el) {
-        if (el.classList.contains('matched') || el.classList.contains('selected')) return;
+        if (el.classList.contains('matched')) return;
+
+        // Второй клик по выделенной карточке — снять выделение
+        if (el.classList.contains('selected')) {
+            el.classList.remove('selected');
+            this.selectedCard = null;
+            return;
+        }
 
         if (!this.selectedCard) {
             this.selectedCard = el;

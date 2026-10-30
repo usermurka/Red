@@ -30,12 +30,8 @@ const Quiz = {
             }
         });
 
-        document.getElementById('qi-open-full').addEventListener('click', () => {
-            this.close();
-            if (this.currentSpecies) {
-                App.openSpeciesScroll(this.currentSpecies.id);
-            }
-        });
+        // Единый мини-свиток (js/mini-scroll.js): панель #quiz-info-panel
+        // строится кодом, кнопка «📖 Читать в свитке» — общая для всех игр.
     },
 
     open() {
@@ -256,29 +252,37 @@ const Quiz = {
     },
 
     showInfoPanel() {
-        const panel = document.getElementById('quiz-info-panel');
-        panel.classList.remove('hidden');
-
         const sp = this.currentSpecies;
-        document.getElementById('qi-name').textContent = sp.name;
-        document.getElementById('qi-latin').textContent = sp.latin || '';
-
         const statusConfig = CONFIG.statuses.find(s => s.value === sp.status);
-        const statusBlock = document.getElementById('qi-status');
 
-        if (statusConfig) {
-            statusBlock.querySelector('.qi-status-badge').textContent = statusConfig.value;
-            statusBlock.querySelector('.qi-status-badge').style.background = statusConfig.color;
-            statusBlock.querySelector('.qi-status-text').textContent = statusConfig.label;
-        }
-
-        SpeciesLoader.load(sp.id).then(data => {
-            if (data && data.description_short) {
-                document.getElementById('qi-desc').textContent = data.description_short;
-            } else {
-                document.getElementById('qi-desc').textContent = 'Краткое описание отсутствует.';
+        // Единый мини-свиток: информация из книги + кнопка «Читать в свитке»
+        MiniScroll.show({
+            modalId: 'quiz-modal',
+            panelId: 'quiz-info-panel',
+            speciesId: sp.id,
+            data: {
+                title: sp.name,
+                latin: sp.latin || '',
+                status: statusConfig ? { value: statusConfig.value, color: statusConfig.color, label: statusConfig.label } : null,
+                blocks: [{ title: 'Краткое описание', text: 'Загрузка…' }]
             }
         });
+
+        const panel = document.getElementById('quiz-info-panel');
+        const body = panel.querySelector('.ms-block-body');
+
+        SpeciesLoader.load(sp.id).then(data => {
+            const text = (data && data.description_short) ? data.description_short : 'Краткое описание отсутствует.';
+            // Панель могла смениться на другой вопрос — обновляем только если это тот же вид
+            if (this.currentSpecies && this.currentSpecies.id === sp.id && body.isConnected) {
+                body.textContent = text;
+            }
+        });
+
+        // Кнопка «📖 Читать в свитке» — под содержимым свитка
+        if (!panel.querySelector('.ms-open-full')) {
+            panel.appendChild(MiniScroll.footerButton(sp.id, () => this.close()));
+        }
     },
 
     finishGame() {

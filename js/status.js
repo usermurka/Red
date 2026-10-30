@@ -194,35 +194,82 @@ const StatusGame = {
         this.startTimer();
     },
 
-    // Боковая панель с данными из Красной книги, чтобы ответ можно
-    // было проверить по источнику (полная формулировка категории).
-    // Панель скрыта (is-hidden) до тех пор, пока игрок не ответит —
-    // иначе правильная категория читается прямо из текста источника.
+    // ---------- Мини-свиток «Данные из Красной книги» ----------
+    // Единый для всех игр (js/mini-scroll.js): появляется ПОСЛЕ ЛЮБОГО
+    // ответа (или когда время вышло) с подсветкой и кнопкой
+    // «📖 Читать в свитке». До ответа скрыт — иначе категория
+    // редкости читается прямо из текста источника.
+
     setInfoVisible(visible) {
-        const body = document.getElementById('status-info-body');
-        const ph = document.getElementById('status-info-placeholder');
-        if (body) body.classList.toggle('is-hidden', !visible);
-        if (ph) ph.classList.toggle('hidden', !!visible);
+        if (!visible) MiniScroll.hide('status-info-panel');
+        // показ строится в renderInfoPanel() по явному вызову
+    },
+
+    highlightStatusText(text, statusValue) {
+        // Подсветка ключевых слов категории редкости в тексте статуса
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        let html = esc(text);
+        const wordsByStatus = {
+            0: ['не подтверждено', 'исчезнувший', 'исчезновения'],
+            1: ['угроз', 'критическ', 'исчезнуть'],
+            2: ['сокращающ', 'уменьшилась', 'численность'],
+            3: ['обычный', 'стабильн', 'достаточн'],
+            4: ['неопределённ', 'мало данных', 'недостаточно'],
+            5: ['восстановлен', 'изменён', 'статус'],
+            6: ['высокая', 'благополучн', 'увеличен']
+        };
+        const words = wordsByStatus[statusValue] || [];
+        words.forEach(w => {
+            const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[а-яё]*)', 'gi');
+            html = html.replace(re, '<mark class="ms-hl">$1</mark>');
+        });
+        return html;
     },
 
     renderInfoPanel(sp) {
-        const el = document.getElementById('status-info-body');
-        if (!el) return;
         const full = (window.SPECIES_DATA && sp.id) ? window.SPECIES_DATA[sp.id] : null;
         const st = this.statusList().find(s => s.value === sp.status);
         const txt = (s) => escHtml(String(s || '').replace(/\s+/g, ' ').trim()).replace(/\n/g, '<br>');
-        let html = '';
+
+        const blocks = [];
         if (st) {
-            html += `<div class="si-section"><div class="si-label">Категория ${st.value} — ${txt(st.label)}</div>` +
-                `<div class="si-text si-small">${txt(st.description)}</div></div>`;
+            blocks.push({
+                title: `Категория ${st.value} — ${st.label}`,
+                html: `<div class="si-small">${txt(st.description)}</div>`
+            });
         }
-        html += `<div class="si-section"><div class="si-label">Статус вида в базе</div>` +
-            `<div class="si-text">${txt(sp.status_text || (full && full.status_text))}</div></div>`;
+        blocks.push({
+            title: 'Статус вида в базе',
+            html: `<div class="si-small">${this.highlightStatusText(sp.status_text || (full && full.status_text), sp.status).replace(/\n/g, '<br>')}</div>`
+        });
         if (full && (full.abundance || full.limiting_factors)) {
-            html += `<div class="si-section"><div class="si-label">Численность и лимитирующие факторы</div>` +
-                `<div class="si-text si-small">${txt(full.abundance)}${full.abundance && full.limiting_factors ? ' ' : ''}${txt(full.limiting_factors)}</div></div>`;
+            blocks.push({
+                title: 'Численность и лимитирующие факторы',
+                html: `<div class="si-small">${txt(full.abundance)}${full.abundance && full.limiting_factors ? ' ' : ''}${txt(full.limiting_factors)}</div>`
+            });
+        } else if (sp.status_text) {
+            blocks.push({
+                title: 'Численность и лимитирующие факторы',
+                text: 'Поле «Лимитирующие факторы» в базе пусто — ориентируйтесь на статус вида.'
+            });
         }
-        el.innerHTML = html;
+
+        MiniScroll.show({
+            modalId: 'status-modal',
+            panelId: 'status-info-panel',
+            speciesId: sp.id,
+            data: {
+                title: sp.name,
+                latin: sp.latin || '',
+                status: st ? { value: st.value, color: st.color, label: st.label } : null,
+                blocks: blocks
+            }
+        });
+        const panel = document.getElementById('status-info-panel');
+        if (panel && !panel.querySelector('.ms-open-full')) {
+            panel.appendChild(MiniScroll.footerButton(sp.id, () => this.close()));
+        }
     },
 
     shortText(txt) {
@@ -261,9 +308,10 @@ const StatusGame = {
             resultEl.className = 'status-result bad';
         }
         resultEl.classList.remove('hidden');
-        // Ответ дан — открываем данные из Красной книги, чтобы игрок
-        // мог свериться с источником.
-        this.setInfoVisible(true);
+        // Ответ дан (любой!) — открываем мини-свиток с данными из
+        // Красной книги и подсветкой, чтобы игрок мог свериться с
+        // источником. До ответа свиток скрыт.
+        this.renderInfoPanel(this.currentSpecies);
 
         document.getElementById('status-score-right').textContent = this.score;
         document.getElementById('status-score-wrong').textContent = this.mistakes;
@@ -275,14 +323,37 @@ const StatusGame = {
         this.showNextBtn(last ? 'Итоги игры →' : 'Дальше →');
     },
 
+    // Видимый обратный отсчёт: тонкая полоса НЕ показывала, что время
+    // идёт. Теперь над полем вопроса — круглые часы с числом секунд,
+    // которые краснеют на последних секундах и останавливаются после
+    // ответа/выхода времени.
+    renderTimer() {
+        const el = document.getElementById('status-timer-count');
+        const track = document.getElementById('status-timer-track');
+        const t = Math.max(0, Math.ceil(this.timeLeft || 0));
+        if (el) {
+            el.textContent = `⏳ ${t} с`;
+            const frac = this.TIME_PER_QUESTION ? (t / this.TIME_PER_QUESTION) : 0;
+            el.classList.toggle('st-time-warning', frac <= 0.34);
+        }
+        if (track) track.classList.add('st-timer-running');
+    },
+
+    freezeTimerDisplay() {
+        const track = document.getElementById('status-timer-track');
+        if (track) track.classList.remove('st-timer-running');
+    },
+
     startTimer() {
         this.stopTimer();
         this.timeLeft = this.TIME_PER_QUESTION;
         const bar = document.getElementById('status-timer-bar');
         bar.style.width = '100%';
+        this.renderTimer();
         this._timer = setInterval(() => {
             this.timeLeft -= 0.5;
             bar.style.width = Math.max(0, (this.timeLeft / this.TIME_PER_QUESTION) * 100) + '%';
+            this.renderTimer();
             if (this.timeLeft <= 0) {
                 this.stopTimer();
                 // Время вышло — засчитываем ошибку, но дальше идём только по кнопке
@@ -295,8 +366,8 @@ const StatusGame = {
                 resultEl.textContent = `⏱ Время вышло! Правильный ответ: ${st ? `${st.value} — ${st.label}` : this.correctStatus}`;
                 resultEl.className = 'status-result bad';
                 resultEl.classList.remove('hidden');
-                // Время вышло — тоже открываем панель данных.
-                this.setInfoVisible(true);
+                // Время вышло — тоже открываем мини-свиток с данными.
+                this.renderInfoPanel(this.currentSpecies);
                 const rightBtn = document.querySelector(
                     `#status-options .status-option-btn[data-value="${this.correctStatus}"]`);
                 if (rightBtn) rightBtn.classList.add('st-correct');
@@ -312,6 +383,8 @@ const StatusGame = {
             clearInterval(this._timer);
             this._timer = null;
         }
+        // Отсчёт остановлен — часы «замирают» на последнем значении
+        this.freezeTimerDisplay();
     },
 
     finishGame() {

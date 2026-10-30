@@ -679,17 +679,20 @@ const EruditeGame = {
     const btn = document.getElementById('erudite-next-btn');
     if (!btn) return;
     const skipBtn = document.getElementById('erudite-skip');
+    // Все три кнопки («Убрать», «Пропустить», «Дальше») стоят в одну
+    // строку: «Пропустить» не прячется — она просто отключается, когда
+    // раунд завершён и нужно жать «Дальше».
     if (idle) {
       btn.classList.add('is-idle');
       btn.classList.remove('is-active');
       btn.disabled = true;
       btn.textContent = 'Дальше →';
-      if (skipBtn) skipBtn.classList.remove('hidden');
+      if (skipBtn) { skipBtn.classList.remove('hidden'); skipBtn.disabled = false; }
     } else {
       btn.classList.remove('is-idle');
       btn.classList.add('is-active');
       btn.disabled = false;
-      if (skipBtn) skipBtn.classList.add('hidden'); // «Дальше» заменяет «Пропустить слово»
+      if (skipBtn) { skipBtn.classList.add('hidden'); skipBtn.disabled = true; } // «Дальше» заменяет «Пропустить слово»
       try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     }
   },

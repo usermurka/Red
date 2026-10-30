@@ -514,25 +514,9 @@
     </div>
   </div>
 
-  <!-- Правая панель: Упрощенный свиток -->
-  <div id="quiz-info-panel" class="hidden">
-    <div class="quiz-info-scroll">
-      <h3 id="qi-name">Название</h3>
-      <div id="qi-latin" class="qi-latin">Latin</div>
-  
-      <div class="qi-status" id="qi-status">
-        <span class="qi-status-badge"></span>
-        <span class="qi-status-text"></span>
-      </div>
-  
-      <div class="qi-block open">
-        <div class="qi-block-title">Краткое описание</div>
-        <div id="qi-desc"></div>
-      </div>
-  
-      <button id="qi-open-full" class="quiz-next-btn" style="margin-top: 20px; width: 100%;">📖 Читать в свитке</button>
-    </div>
-  </div>
+  <!-- Правая панель: единый мини-свиток (js/mini-scroll.js).
+       Содержимое строится кодом — разметка одна на все игры. -->
+  <div id="quiz-info-panel" class="mini-scroll-panel hidden"></div>
 </div>
 
   <!-- Модалка: Найди пару -->
@@ -544,7 +528,7 @@
       </div>
       <div class="quiz-header">
         <h2>Найди пару</h2>
-        <div class="quiz-progress">Соедините фото с названием</div>
+        <div class="quiz-progress">Соедините изображение с названием. Двойным кликом можно увеличить изображение</div>
       </div>
       <div id="match-grid"></div>
       <div id="match-end-screen" class="hidden" data-game="match"
@@ -624,18 +608,16 @@
         </div>
         <div id="erudite-slots" class="erudite-slots" aria-label="Слово"></div>
         <div id="erudite-tray" class="erudite-tray" aria-label="Буквы"></div>
+        <!-- Управление в одну строку: «убрать», «пропустить» и «дальше» рядом -->
         <div class="erudite-controls">
-          <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫</button>
-          <!-- «Пропустить слово» живёт в том же слоте, что и «Дальше →»:
-               в конце раунда она скрывается, а её место занимает «Дальше» -->
-          <button id="erudite-skip" type="button" title="Пропустить слово">⏭</button>
+          <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫ Убрать</button>
+          <button id="erudite-skip" type="button" title="Пропустить слово">⏭ Пропустить</button>
+          <!-- Кнопка перехода между раундами всегда на месте (окно не «прыгает»),
+               до конца раунда — бледная и неактивная -->
+          <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
         </div>
         <div id="erudite-hints" class="erudite-hints" aria-label="Подсказки за баллы"></div>
         <div id="erudite-hint" class="erudite-hint"></div>
-        <!-- Кнопка перехода между раундами всегда на месте (окно не «прыгает»),
-             до конца раунда — бледная и неактивная; в конце раунда она
-             заменяет собой «Пропустить слово» и становится «Дальше →» -->
-        <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
         <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong
             id="erudite-streak">0</strong> · Баллы: <strong id="erudite-balance">10</strong>🪙</div>
       </div>
@@ -712,8 +694,10 @@
         <span class="latin-sb" id="habitat-streak-block">🔥 <strong id="habitat-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото. Три окошка: слева — журнал пар, в центре — игра, справа — Красная книга (текст появится после ответа).</p>
-        <!-- Три окошка: журнал пар | игровая зона | данные из Красной книги -->
+        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото. После любого ответа справа откроется мини-свиток с данными из Красной книги и подсветкой — таймер встанет на паузу, чтобы можно было почитать.</p>
+        <!-- Два окошка: журнал пар | игровая зона.
+             Данные из Красной книги — единый мини-свиток справа от панели
+             (js/mini-scroll.js), появляется после любого ответа. -->
         <div class="habitat-main">
           <div id="habitat-log-wrap" class="habitat-pane habitat-log-pane">
             <div class="hp-title">📒 Журнал пар</div>
@@ -724,20 +708,8 @@
             <div class="habitat-play">
               <div id="habitat-card" class="habitat-card"></div>
               <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
-              <!-- Подсказка-выбор: после ответа показываем, какие слова из
-                   Красной книги относятся к выбранной среде (без оценки) -->
-              <div id="habitat-pick-note" class="hp-pick-note hidden" role="status"></div>
             </div>
           </div>
-          <aside id="habitat-info" class="habitat-pane habitat-info habitat-book-pane" aria-label="Данные из Красной книги">
-            <div class="hi-title hp-title">📖 Данные из Красной книги</div>
-            <!-- Заглушка до первого ответа: настоящие данные скрыты,
-                 чтобы не подсказывать игроку верный биом -->
-            <div id="habitat-info-placeholder" class="hp-locked-note">
-                ❒ Данные откроются после того, как ты выберешь среду обитания.
-            </div>
-            <div id="habitat-info-body" class="hi-body is-hidden"></div>
-          </aside>
         </div>
         <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
         <div id="habitat-round-banner" class="habitat-round-banner hidden" role="status"></div>
@@ -769,14 +741,17 @@
         <h2>Статус</h2>
         <div class="quiz-progress">Вопрос <strong id="status-q-num">1</strong> из 10</div>
       </div>
-      <div class="latin-timer-track"><div id="status-timer-bar" class="latin-timer-bar"></div></div>
+      <div id="status-timer-track" class="st-timer-track">
+        <span id="status-timer-count" class="st-timer-count">⏳ 15 с</span>
+        <div class="latin-timer-track st-timer-bar-track"><div id="status-timer-bar" class="latin-timer-bar"></div></div>
+      </div>
       <div class="latin-scoreboard">
         <span class="latin-sb latin-sb-right">✓ <strong id="status-score-right">0</strong></span>
         <span class="latin-sb latin-sb-wrong">✗ <strong id="status-score-wrong">0</strong></span>
         <span class="latin-sb" id="status-streak-block">🔥 <strong id="status-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге</p>
+        <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге. После ответа справа откроется мини-свиток с данными из книги</p>
         <!-- Игровая зона (карточка + варианты) и окно данных из Красной книги — рядом -->
         <div class="status-main">
           <div class="status-play">
@@ -784,15 +759,6 @@
             <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
             <div id="status-result" class="status-result hidden"></div>
           </div>
-          <aside id="status-info" class="status-info" aria-label="Данные о виде из Красной книги">
-            <div class="si-title">📖 Данные из Красной книги</div>
-            <!-- До ответа игрока данные скрыты: иначе категория редкости
-                     читается прямо из панели и игра теряет смысл -->
-            <div id="status-info-placeholder" class="hp-locked-note">
-                ❒ Данные откроются после ответа на вопрос.
-            </div>
-            <div id="status-info-body" class="si-body is-hidden"></div>
-          </aside>
         </div>
         <!-- Баннер между вопросами: итог вопроса остаётся видимым до явного «Дальше» -->
         <div id="status-round-banner" class="status-round-banner hidden" role="status"></div>
@@ -822,7 +788,7 @@
       </div>
       <div class="quiz-header">
         <h2>Систематик</h2>
-        <div class="quiz-progress" id="family-round-label">Раунд <strong id="family-q-num">1</strong> из 3</div>
+        <div class="quiz-progress" id="family-round-label">Раунд <strong id="family-q-num">1</strong> из <span id="family-total-rounds">6</span></div>
       </div>
       <div class="latin-timer-track"><div id="family-timer-bar" class="latin-timer-bar"></div></div>
       <div class="latin-scoreboard">
@@ -866,11 +832,13 @@
   <link rel="stylesheet" href="css/status.css">
   <link rel="stylesheet" href="css/family.css">
   <link rel="stylesheet" href="css/games-mode.css">
+  <link rel="stylesheet" href="css/mini-scroll.css">
 
   <!-- Сначала базовые данные и App (модули app-*.js дополняют window.App),
        затем игры, которые при своём DOMContentLoaded проверяют наличие App.
        Порядок подключения app-*.js важен: core -> ui -> map -> regions ->
        species -> render -> tooltips -> guide (guide содержит App.init). -->
+  <script defer src="js/mini-scroll.js"></script>
   <script defer src="js/species-data.js"></script>
   <script defer src="js/markers-data.js"></script>
   <script defer src="js/config.js"></script>
