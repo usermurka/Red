@@ -1,9 +1,6 @@
-// Экранирование HTML (защита от XSS при выводе названий видов)
-function escHtml(str) {
-  return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-  });
-}
+// Экранирование HTML: используем ЕДИНУЮ глобальную window.escHtml из
+// app-core.js. Собственное объявление escHtml убрано — дубликаты
+// идентификатора в глобальной области ломали загрузку скриптов.
 
 const Quiz = {
     scoreRight: 0,

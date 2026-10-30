@@ -207,35 +207,51 @@ const EruditeGame = {
   renderTray() {
     const trayEl = document.getElementById('erudite-tray');
     trayEl.innerHTML = '';
-    this.tray.forEach((tile, idx) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'erudite-tile' + (tile.used ? ' used' : '');
-      btn.textContent = tile.letter.toUpperCase();
-      btn.disabled = !!tile.used;
-      btn.draggable = !tile.used && !this.locked; // буквы можно тащить на любую позицию
-      btn.dataset.index = idx;
-      btn.title = 'Перетащи на нужную клетку или нажми';
-      // dragstart обязателен: без setDragStart() в Firefox перетаскивание
-      // не запускается вообще (буквы «не перетаскивались»).
-      btn.addEventListener('dragstart', (e) => {
-        if (tile.used || this.locked) { e.preventDefault(); return; }
-        const id = String(idx);
-        try {
-          e.dataTransfer.setData('text/plain', id);
-          e.dataTransfer.setData('application/x-erudite-tile', id);
-          e.dataTransfer.effectAllowed = 'move';
-        } catch (err) { /* noop */ }
-        this._dragFromTray = idx;
-        btn.classList.add('dragging');
+    // Буквы лотка группируются по словам названия: название из двух
+    // слов НЕ показывается «единой кучей» — каждое слово в своём блоке.
+    const groups = (this.words && this.words.length > 1) ? this.words : [null];
+    for (const w of groups) {
+      const group = document.createElement('div');
+      group.className = 'erudite-tray-group';
+      if (w) group.dataset.word = w;
+      const need = w ? Array.from(w).length : null;
+      let taken = 0;
+      this.tray.forEach((tile, idx) => {
+        if (need !== null && taken >= need) return;
+        // Плитки идут по порядку исходного массива; для группировки
+        // берём их последовательно — shuffle уже перемешал буквы всего
+        // слова, разбиение по длине слов сохраняет общую случайность.
+        taken++;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'erudite-tile' + (tile.used ? ' used' : '');
+        btn.textContent = tile.letter.toUpperCase();
+        btn.disabled = !!tile.used;
+        btn.draggable = !tile.used && !this.locked; // буквы можно тащить на любую позицию
+        btn.dataset.index = idx;
+        btn.title = 'Перетащи на нужную клетку или нажми';
+        // dragstart обязателен: без setDragStart() в Firefox перетаскивание
+        // не запускается вообще (буквы «не перетаскивались»).
+        btn.addEventListener('dragstart', (e) => {
+          if (tile.used || this.locked) { e.preventDefault(); return; }
+          const id = String(idx);
+          try {
+            e.dataTransfer.setData('text/plain', id);
+            e.dataTransfer.setData('application/x-erudite-tile', id);
+            e.dataTransfer.effectAllowed = 'move';
+          } catch (err) { /* noop */ }
+          this._dragFromTray = idx;
+          btn.classList.add('dragging');
+        });
+        btn.addEventListener('dragend', () => {
+          btn.classList.remove('dragging');
+          this._dragFromTray = null;
+        });
+        btn.addEventListener('click', () => this.onTileClick(idx));
+        group.appendChild(btn);
       });
-      btn.addEventListener('dragend', () => {
-        btn.classList.remove('dragging');
-        this._dragFromTray = null;
-      });
-      btn.addEventListener('click', () => this.onTileClick(idx));
-      trayEl.appendChild(btn);
-    });
+      trayEl.appendChild(group);
+    }
   },
 
   // Первый свободный слот (для резервного клика по букве)

@@ -151,6 +151,10 @@
     display: none !important;
 }
 
+/* ===== Мобильная раскладка =====
+   Мини-свиток на мобильных появляется НЕ в углу и НЕ под окном игры,
+   а строго НИЖЕ игрового окна по порядку потока (order:-1 убираем,
+   панель переносим в конец модалки). */
 @media (max-width: 900px) {
     #habitat-modal,
     #status-modal {
@@ -167,12 +171,22 @@
     }
 
     .mini-scroll-panel {
+        position: static !important;   /* никаких «углов» и наложений */
         width: 96vw;
         max-width: 720px;
         max-height: none;
         margin-left: 0;
-        margin-top: -10px;
+        margin-top: 14px;              /* свиток ниже окна игры */
         padding-left: 0;
-        z-index: 12;
+        z-index: 20;                   /* поверх подложки, клибелен */
+        order: 99;                     /* всегда последним в flex-колонке */
+    }
+
+    /* Викторина: панель инфо тоже уходит под игровое окно */
+    #quiz-info-panel {
+        position: static !important;
+        order: 99;
+        margin-top: 14px;
+        z-index: 20;
     }
 }
