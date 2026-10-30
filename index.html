@@ -615,20 +615,27 @@
       <div class="erudite-body">
         <div class="erudite-picture">
           <!-- Фото вписывается целиком (object-fit: contain) — без обрезки
-               альбомных/книжных картинок, белые поля по краям -->
-          <img id="erudite-img" src="" alt="" loading="lazy"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="erudite-img-ph latin-photo-placeholder" style="display:none">Фото недоступно</div>
+               альбомных/книжных картинок, белые поля по краям.
+               Плейсхолдер лежит ВНУТРИ контейнера и скрыт через display:none
+               у самого контейнера-заглушки: раньше его показывало через
+               style.display='flex', что перебивало align-items:center у
+               .erudite-picture и «съедало» изображение (оно казалось пропавшим). -->
+          <img id="erudite-img" src="" alt="" loading="lazy">
         </div>
         <div id="erudite-slots" class="erudite-slots" aria-label="Слово"></div>
         <div id="erudite-tray" class="erudite-tray" aria-label="Буквы"></div>
         <div class="erudite-controls">
           <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫</button>
+          <!-- «Пропустить слово» живёт в том же слоте, что и «Дальше →»:
+               в конце раунда она скрывается, а её место занимает «Дальше» -->
           <button id="erudite-skip" type="button" title="Пропустить слово">⏭</button>
         </div>
         <div id="erudite-hints" class="erudite-hints" aria-label="Подсказки за баллы"></div>
         <div id="erudite-hint" class="erudite-hint"></div>
-        <!-- Переход к следующему раунду — только по явной кнопке -->
-        <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Дальше →</button>
+        <!-- Кнопка перехода между раундами всегда на месте (окно не «прыгает»),
+             до конца раунда — бледная и неактивная; в конце раунда она
+             заменяет собой «Пропустить слово» и становится «Дальше →» -->
+        <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
         <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong
             id="erudite-streak">0</strong> · Баллы: <strong id="erudite-balance">10</strong>🪙</div>
       </div>
@@ -670,7 +677,7 @@
         <p class="latin-instruction">Нажми на русское название, затем на соответствующее латинское. Угаданная пара открывает фотографию вида</p>
         <div id="latin-grid" class="latin-grid"></div>
         <div id="latin-photos" class="latin-photos" aria-label="Фотографии видов"></div>
-        <button id="latin-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
+        <button id="latin-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="latin-end-screen" class="hidden" data-game="latin"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -717,16 +724,24 @@
             <div class="habitat-play">
               <div id="habitat-card" class="habitat-card"></div>
               <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
+              <!-- Подсказка-выбор: после ответа показываем, какие слова из
+                   Красной книги относятся к выбранной среде (без оценки) -->
+              <div id="habitat-pick-note" class="hp-pick-note hidden" role="status"></div>
             </div>
           </div>
           <aside id="habitat-info" class="habitat-pane habitat-info habitat-book-pane" aria-label="Данные из Красной книги">
             <div class="hi-title hp-title">📖 Данные из Красной книги</div>
-            <div id="habitat-info-body" class="hi-body"></div>
+            <!-- Заглушка до первого ответа: настоящие данные скрыты,
+                 чтобы не подсказывать игроку верный биом -->
+            <div id="habitat-info-placeholder" class="hp-locked-note">
+                ❒ Данные откроются после того, как ты выберешь среду обитания.
+            </div>
+            <div id="habitat-info-body" class="hi-body is-hidden"></div>
           </aside>
         </div>
         <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
         <div id="habitat-round-banner" class="habitat-round-banner hidden" role="status"></div>
-        <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
+        <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="habitat-end-screen" class="hidden" data-game="habitat"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -771,12 +786,17 @@
           </div>
           <aside id="status-info" class="status-info" aria-label="Данные о виде из Красной книги">
             <div class="si-title">📖 Данные из Красной книги</div>
-            <div id="status-info-body" class="si-body"></div>
+            <!-- До ответа игрока данные скрыты: иначе категория редкости
+                     читается прямо из панели и игра теряет смысл -->
+            <div id="status-info-placeholder" class="hp-locked-note">
+                ❒ Данные откроются после ответа на вопрос.
+            </div>
+            <div id="status-info-body" class="si-body is-hidden"></div>
           </aside>
         </div>
         <!-- Баннер между вопросами: итог вопроса остаётся видимым до явного «Дальше» -->
         <div id="status-round-banner" class="status-round-banner hidden" role="status"></div>
-        <button id="status-next-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Дальше →</button>
+        <button id="status-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
       </div>
       <div id="status-end-screen" class="hidden" data-game="status"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -820,7 +840,7 @@
         </div>
         <!-- Баннер успешного раунда: виден только после «Проверить» -->
         <div id="family-round-banner" class="family-round-banner hidden" role="status"></div>
-        <button id="family-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
+        <button id="family-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="family-end-screen" class="hidden" data-game="family"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">

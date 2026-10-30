@@ -3,6 +3,15 @@
 // Доработки по замечаниям игрока:
 //  • Название из двух слов теперь группируется: слоты собраны в
 //    блоки-слова («красный» и «коршун» — два отдельных блока).
+//  • Фото: при отсутствии файла показываем текстовый плейсхолдер,
+//    картинка больше не «пропадает» (битая иконка вместо фото).
+//  • Кнопка «Дальше →» ВСЕГДА на месте (окно не прыгает): до конца
+//    раунда она бледная и неактивная, а в конце раунда становится
+//    активной и занимает место кнопки «Пропустить слово» (⏭) —
+//    пропускать собранное/проверенное слово уже не нужно.
+//  • Подсказка «Открыть букву» — МНОГОРАЗОВАЯ: пока в слотах есть
+//    незаполненные клетки, кнопка остаётся доступной; каждое
+//    нажатие открывает ещё одну букву за 12🪙 (цена фиксирована).
 //  • Цены подсказок динамические и зависят от длины слова:
 //      - «Первые буквы» — 5 монет за букву (2 слова = 10 монет);
 //      - «Все гласные» — 3 монеты за каждую гласную;
@@ -133,13 +142,46 @@ const EruditeGame = {
     document.getElementById('erudite-hint').textContent = '';
 
     const img = document.getElementById('erudite-img');
+    img.classList.remove('hidden');
+    // Убираем «заглушку» прошлого раунда, иначе новое фото не покажется
+    const picBox = img.parentElement;
+    if (picBox) picBox.classList.remove('has-placeholder');
+    picBox?.querySelector('.erudite-img-ph')?.remove();
     img.src = `img/species/${item.speciesId}.png`;
     img.alt = 'Описание скрыто — угадай вид!'; // не подсвечиваем название заранее
+    if (!img.dataset.phBound) {
+      img.dataset.phBound = '1';
+      // Файла фото нет — вместо битой картинки показываем плейсхолдер,
+      // иначе игроку кажется, что «изображение пропало».
+      img.addEventListener('error', () => this.showPicturePlaceholder());
+    }
 
     this.buildTray();
     this.renderSlots();
     this.renderHintButtons();
+    // Начало раунда: «Дальше →» на месте, но бледная/неактивная,
+    // а «Пропустить слово» — активна (раунд ещё не закончен).
+    this.setNextBtnIdle(true);
     this.updateStats();
+  },
+
+  // Текстовая заглушка вместо отсутствующего файла фото.
+  // Показываем её классом на контейнере (см. css/erudite.css), а не
+  // инлайновым style.display — иначе центрирование «съедается» и
+  // кажется, что изображение пропало.
+  showPicturePlaceholder() {
+    const img = document.getElementById('erudite-img');
+    if (!img) return;
+    const box = img.parentElement;
+    if (!box) return;
+    let ph = box.querySelector('.erudite-img-ph');
+    if (!ph) {
+      ph = document.createElement('div');
+      ph.className = 'erudite-img-ph';
+      ph.textContent = 'Фото недоступно';
+      box.appendChild(ph);
+    }
+    box.classList.add('has-placeholder');
   },
 
   normalizeWord(name) {
@@ -174,6 +216,23 @@ const EruditeGame = {
       btn.draggable = !tile.used && !this.locked; // буквы можно тащить на любую позицию
       btn.dataset.index = idx;
       btn.title = 'Перетащи на нужную клетку или нажми';
+      // dragstart обязателен: без setDragStart() в Firefox перетаскивание
+      // не запускается вообще (буквы «не перетаскивались»).
+      btn.addEventListener('dragstart', (e) => {
+        if (tile.used || this.locked) { e.preventDefault(); return; }
+        const id = String(idx);
+        try {
+          e.dataTransfer.setData('text/plain', id);
+          e.dataTransfer.setData('application/x-erudite-tile', id);
+          e.dataTransfer.effectAllowed = 'move';
+        } catch (err) { /* noop */ }
+        this._dragFromTray = idx;
+        btn.classList.add('dragging');
+      });
+      btn.addEventListener('dragend', () => {
+        btn.classList.remove('dragging');
+        this._dragFromTray = null;
+      });
       btn.addEventListener('click', () => this.onTileClick(idx));
       trayEl.appendChild(btn);
     });
@@ -290,9 +349,12 @@ const EruditeGame = {
 
   attachSlotDnD(slot, i) {
     if (this.locked) return;
-    // Тащим плитку из лотка — drop: ставим в этот слот
+    const canDrag = !this.revealedSlots.has(i);
+    if (canDrag) slot.draggable = true; // уже поставленную букву можно тащить дальше
+    // Тащим плитку из лотка или букву из другого слота — drop: ставим в этот слот
     slot.addEventListener('dragover', (e) => {
       e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch (err) { /* noop */ }
       slot.classList.add('drop-hover');
     });
     slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
@@ -300,16 +362,28 @@ const EruditeGame = {
       e.preventDefault();
       slot.classList.remove('drop-hover');
       let raw = '';
-      try { raw = e.dataTransfer.getData('text/plain'); } catch (err) { /* noop */ }
+      try {
+        raw = e.dataTransfer.getData('application/x-erudite-tile')
+           || e.dataTransfer.getData('text/plain');
+      } catch (err) { /* noop */ }
       const ti = parseInt(raw, 10);
-      if (!Number.isNaN(ti)) this.placeAt(ti, i);
+      if (!Number.isNaN(ti)) { this.placeAt(ti, i); return; }
+      // Перестановка буквы из другого слота
+      let fromSlot = null;
+      try { fromSlot = e.dataTransfer.getData('text/slot'); } catch (err) { /* noop */ }
+      if (fromSlot === null || fromSlot === '') fromSlot = this._dragFromSlot;
+      const fi = parseInt(fromSlot, 10);
+      if (!Number.isNaN(fi)) this.moveSlotToSlot(fi, i);
     });
     // Тащим уже поставленную букву — переставляем/возвращаем в лоток
     slot.addEventListener('dragstart', (e) => {
       const p = this.placed[i];
       if (!p || this.revealedSlots.has(i)) { e.preventDefault(); return; }
       this._dragFromSlot = i;
-      try { e.dataTransfer.setData('text/slot', String(i)); } catch (err) { /* noop */ }
+      try {
+        e.dataTransfer.setData('text/slot', String(i));
+        e.dataTransfer.effectAllowed = 'move';
+      } catch (err) { /* noop */ }
       slot.classList.add('dragging');
     });
     slot.addEventListener('dragend', () => {
@@ -327,6 +401,23 @@ const EruditeGame = {
         this.renderSlots();
       }
     });
+  },
+
+  // Перенести букву из одного слота в другой (освободив прежнюю клетку)
+  moveSlotToSlot(fromIdx, toIdx) {
+    if (this.locked) return false;
+    if (fromIdx === toIdx) return false;
+    const p = this.placed[fromIdx];
+    if (!p || this.revealedSlots.has(fromIdx)) return false;
+    if (this.letters[toIdx] === ' ' || this.revealedSlots.has(toIdx)) return false;
+    this.placed[fromIdx] = null;
+    const prev = this.placed[toIdx];
+    if (prev) this.tray[prev.trayIndex].used = false; // прежнюю букву — в лоток
+    this.placed[toIdx] = p;
+    this.renderTray();
+    this.renderSlots();
+    if (this.isComplete()) this.checkWord();
+    return true;
   },
 
   /* ===== Система подсказок за баллы (цены зависят от слова) ===== */
@@ -348,29 +439,36 @@ const EruditeGame = {
     return res;
   },
 
+  // Сколько букв реально откроет подсказка при текущем состоянии слотов
+  hintUnits(key) {
+    switch (key) {
+      case 'firstLetter':
+        return this.firstLetterIndices().filter(i => !this.revealedSlots.has(i)).length;
+      case 'vowels':
+        return this.vowelIndices().filter(i => !this.revealedSlots.has(i)).length;
+      case 'revealOne': {
+        let free = 0;
+        for (let i = 0; i < this.letters.length; i++) {
+          if (this.letters[i] !== ' ' && !this.revealedSlots.has(i) && !this.placed[i]) free++;
+        }
+        return free;
+      }
+      default:
+        return 1; // «Перемешать» — фиксированная цена за действие
+    }
+  },
+
   // Цена подсказки с учётом уже открытых букв: платим только за новые.
+  // «Открыть букву» — многоразовая: пока есть что открывать, цена
+  // всегда 12🪙 за следующее нажатие.
   hintCost(key) {
     const P = this.HINT_PRICES;
     switch (key) {
-      case 'firstLetter': {
-        const total = this.firstLetterIndices().filter(i => !this.revealedSlots.has(i)).length;
-        return total * P.firstLetter;
-      }
-      case 'vowels': {
-        const total = this.vowelIndices().filter(i => !this.revealedSlots.has(i)).length;
-        return total * P.vowels;
-      }
-      case 'shuffle':
-        return P.shuffle;
-      case 'revealOne': {
-        const free = [];
-        for (let i = 0; i < this.letters.length; i++) {
-          if (this.letters[i] !== ' ' && !this.revealedSlots.has(i) && !this.placed[i]) free.push(i);
-        }
-        return free.length ? P.revealOne : 0;
-      }
-      default:
-        return Infinity;
+      case 'firstLetter': return this.hintUnits('firstLetter') * P.firstLetter;
+      case 'vowels':      return this.hintUnits('vowels') * P.vowels;
+      case 'shuffle':     return P.shuffle;
+      case 'revealOne':   return this.hintUnits('revealOne') > 0 ? P.revealOne : 0;
+      default:            return Infinity;
     }
   },
 
@@ -382,6 +480,14 @@ const EruditeGame = {
       case 'revealOne': return 'Открыть букву';
       default: return key;
     }
+  },
+
+  // Подпись цены на кнопке: для многоразовой подсказки — полная цена,
+  // для «пакетных» — доплата, если часть букв уже открыта ранее.
+  hintPriceText(key, cost, paid, extra) {
+    if (key === 'revealOne') return `${cost}🪙`;
+    if (paid > 0 && extra > 0) return `+${extra}🪙`;
+    return `${cost}🪙`;
   },
 
   renderHintButtons() {
@@ -397,12 +503,14 @@ const EruditeGame = {
       btn.className = 'erudite-hint-btn';
       btn.dataset.hint = key;
       const affordable = this.balance >= extra;
-      const nothingLeft = cost === 0 && key !== 'shuffle';
-      const priceTxt = (paid > 0 && extra > 0) ? `+${extra}🪙` : `${cost}🪙`;
-      btn.innerHTML = `${this.hintLabel(key)} <span class="hint-cost">${priceTxt}</span>`;
+      // «Открыть букву» и «Перемешать» — многоразовые: не «сгорают»
+      const reusable = key === 'revealOne' || key === 'shuffle';
+      const nothingLeft = cost === 0 && !reusable;
+      btn.innerHTML = `${this.hintLabel(key)} <span class="hint-cost">${this.hintPriceText(key, cost, paid, extra)}</span>`;
       btn.disabled = this.locked || !affordable || nothingLeft;
       if (nothingLeft) btn.classList.add('used');
       if (!affordable && !nothingLeft) btn.classList.add('expensive');
+      if (reusable) btn.classList.add('repeatable');
       hintsEl.appendChild(btn);
     }
   },
@@ -452,9 +560,18 @@ const EruditeGame = {
         return;
     }
 
-    // Списываем не больше фактической стоимости новых букв
-    this.balance -= Math.min(extra, this.balance);
-    this.hintPaid[key] = Math.max(paid, cost);
+    // Списываем не больше фактической стоимости новых букв.
+    // Для многоразовой «Открыть букву» платим 12🪙 за каждое нажатие,
+    // а не один раз за раунд.
+    const charge = key === 'revealOne' ? cost : Math.min(extra, this.balance);
+    this.balance -= Math.min(charge, this.balance);
+    this.hintPaid[key] = key === 'revealOne' ? 0 : Math.max(paid, cost);
+    if (key === 'revealOne') {
+      const left = this.hintUnits('revealOne');
+      this.showHintMessage(left
+        ? `Открыта ещё одна буква. Осталось открытых мест: ${left}.`
+        : 'Открыта последняя свободная буква.', 'good');
+    }
     this.updateStats();
     this.renderHintButtons();
     if (this.isComplete()) this.checkWord();
@@ -554,24 +671,38 @@ const EruditeGame = {
   },
 
   // ---------- Переход вперёд только по кнопке ----------
-  showNextBtn() {
+  // Кнопка «Дальше →» никогда не появляется и не исчезает (иначе окно
+  // «прыгает»): она всегда на месте, но до конца раунда — бледная
+  // (класс is-idle) и неактивная. В конце раунда она активируется,
+  // а «Пропустить слово» в это время прячется — её место занимает «Дальше».
+  setNextBtnIdle(idle) {
     const btn = document.getElementById('erudite-next-btn');
     if (!btn) return;
-    const last = this.round >= this.queue.length - 1;
-    btn.textContent = last ? 'Итоги игры →' : 'Дальше →';
-    btn.classList.remove('hidden');
-    try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
+    const skipBtn = document.getElementById('erudite-skip');
+    if (idle) {
+      btn.classList.add('is-idle');
+      btn.classList.remove('is-active');
+      btn.disabled = true;
+      btn.textContent = 'Дальше →';
+      if (skipBtn) skipBtn.classList.remove('hidden');
+    } else {
+      btn.classList.remove('is-idle');
+      btn.classList.add('is-active');
+      btn.disabled = false;
+      if (skipBtn) skipBtn.classList.add('hidden'); // «Дальше» заменяет «Пропустить слово»
+      try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
+    }
   },
 
-  hideNextBtn() {
-    const btn = document.getElementById('erudite-next-btn');
-    if (btn) btn.classList.add('hidden');
-  },
+  showNextBtn() { this.setNextBtnIdle(false); },
+
+  hideNextBtn() { this.setNextBtnIdle(true); },
 
   advanceRound() {
-    this.hideNextBtn();
+    this.setNextBtnIdle(true);
     const hintEl = document.getElementById('erudite-hint');
     hintEl.classList.remove('good', 'bad');
+    hintEl.textContent = '';
     this.checked = false;
     this.round++;
     this.nextRound();

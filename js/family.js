@@ -66,13 +66,21 @@ const FamilyGame = {
         const btn = document.getElementById('family-next-round-btn');
         if (!btn) return;
         btn.textContent = label || ((this.round >= this.TOTAL_ROUNDS) ? 'Итоги игры →' : 'Продолжить →');
-        btn.classList.remove('hidden');
+        // Кнопка всегда на месте (окно не «прыгает»): до конца раунда —
+        // бледная и неактивная, после проверки — активная.
+        btn.classList.remove('hidden', 'is-idle');
+        btn.classList.add('is-active');
+        btn.disabled = false;
         try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
 
     hideNextRoundBtn() {
         const btn = document.getElementById('family-next-round-btn');
-        if (btn) btn.classList.add('hidden');
+        if (!btn) return;
+        btn.textContent = 'Продолжить →';
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
+        btn.disabled = true;
     },
 
     showBanner(text) {

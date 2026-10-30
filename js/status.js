@@ -67,17 +67,25 @@ const StatusGame = {
         return (window.CONFIG && CONFIG.statuses) ? CONFIG.statuses : [];
     },
 
+    // Кнопка «Дальше →» ВСЕГДА на месте (окно не прыгает): до ответа
+    // она бледная (is-idle) и неактивная, после ответа — активная.
     showNextBtn(label) {
         const btn = document.getElementById('status-next-btn');
         if (!btn) return;
         btn.textContent = label || 'Дальше →';
-        btn.classList.remove('hidden');
+        btn.classList.remove('hidden', 'is-idle');
+        btn.classList.add('is-active');
+        btn.disabled = false;
         try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
 
     hideNextBtn() {
         const btn = document.getElementById('status-next-btn');
-        if (btn) btn.classList.add('hidden');
+        if (!btn) return;
+        btn.textContent = 'Дальше →';
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
+        btn.disabled = true;
     },
 
     // ---------- Выбор вида с «анти-трёшкой» ----------
@@ -161,6 +169,9 @@ const StatusGame = {
         });
 
         this.renderInfoPanel(sp);
+        // Данные из Красной книги скрыты до ответа игрока — иначе
+        // категория редкости читается прямо из панели.
+        this.setInfoVisible(false);
 
         // Варианты ответов: все категории из CONFIG + подпись цвета
         const zone = document.getElementById('status-options');
@@ -185,6 +196,15 @@ const StatusGame = {
 
     // Боковая панель с данными из Красной книги, чтобы ответ можно
     // было проверить по источнику (полная формулировка категории).
+    // Панель скрыта (is-hidden) до тех пор, пока игрок не ответит —
+    // иначе правильная категория читается прямо из текста источника.
+    setInfoVisible(visible) {
+        const body = document.getElementById('status-info-body');
+        const ph = document.getElementById('status-info-placeholder');
+        if (body) body.classList.toggle('is-hidden', !visible);
+        if (ph) ph.classList.toggle('hidden', !!visible);
+    },
+
     renderInfoPanel(sp) {
         const el = document.getElementById('status-info-body');
         if (!el) return;
@@ -241,6 +261,9 @@ const StatusGame = {
             resultEl.className = 'status-result bad';
         }
         resultEl.classList.remove('hidden');
+        // Ответ дан — открываем данные из Красной книги, чтобы игрок
+        // мог свериться с источником.
+        this.setInfoVisible(true);
 
         document.getElementById('status-score-right').textContent = this.score;
         document.getElementById('status-score-wrong').textContent = this.mistakes;
@@ -272,6 +295,8 @@ const StatusGame = {
                 resultEl.textContent = `⏱ Время вышло! Правильный ответ: ${st ? `${st.value} — ${st.label}` : this.correctStatus}`;
                 resultEl.className = 'status-result bad';
                 resultEl.classList.remove('hidden');
+                // Время вышло — тоже открываем панель данных.
+                this.setInfoVisible(true);
                 const rightBtn = document.querySelector(
                     `#status-options .status-option-btn[data-value="${this.correctStatus}"]`);
                 if (rightBtn) rightBtn.classList.add('st-correct');

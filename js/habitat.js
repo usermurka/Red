@@ -90,21 +90,40 @@ const HabitatGame = {
 
     // ---------- Переходы между раундами — ТОЛЬКО по кнопке ----------
 
+    // Панель «Данные из Красной книги» скрыта до первого ответа в
+    // текущем вопросе: текст поля «Места обитания» подсказывает биом.
+    setInfoVisible(visible) {
+        const body = document.getElementById('habitat-info-body');
+        const ph = document.getElementById('habitat-info-placeholder');
+        if (body) body.classList.toggle('is-hidden', !visible);
+        if (ph) ph.classList.toggle('hidden', !!visible);
+    },
+
     showNextRoundBtn(label) {
         const btn = document.getElementById('habitat-next-round-btn');
         if (!btn) return;
         btn.textContent = label || 'Продолжить →';
-        btn.classList.remove('hidden');
+        // Кнопка всегда в DOM и занимает место: до конца раунда она
+        // бледная (is-idle) и неактивная, в конце — активная (is-active).
+        btn.classList.remove('hidden', 'is-idle');
+        btn.classList.add('is-active');
+        btn.disabled = false;
         // чтобы игрок точно заметил появление кнопки — прокрутим к ней
         try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
 
     hideNextRoundBtn() {
         const btn = document.getElementById('habitat-next-round-btn');
-        if (btn) btn.classList.add('hidden');
+        if (!btn) return;
+        btn.textContent = 'Продолжить →';
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
+        btn.disabled = true;
     },
 
     continueToNextRound() {
+        const btn = document.getElementById('habitat-next-round-btn');
+        if (btn && btn.disabled) return; // по бледной кнопке не идём вперёд
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
         this.nextRound();
@@ -249,6 +268,9 @@ const HabitatGame = {
         setTimeout(reveal, 450);
         this.questionStartTs = Date.now();
         this.renderInfoPanel(item);
+        // Данные из Красной книги — только после ответа на вопрос.
+        this._lastPickKey = null;
+        this.setInfoVisible(false);
     },
 
     // Боковая панель: настоящий текст «Места обитания» из базы +
@@ -314,6 +336,8 @@ const HabitatGame = {
             setTimeout(() => btn.classList.remove('hab-correct'), 600);
             this._lastPickKey = biomKey;
             this.highlightBiomeWords(biomKey);
+            // Ответ дан — открываем панель данных с подсветкой выбранной среды.
+            this.setInfoVisible(true);
 
             if (firstTry) {
                 this.score++;
@@ -341,6 +365,9 @@ const HabitatGame = {
         } else {
             this._lastPickKey = biomKey;
             this.highlightBiomeWords(biomKey);
+            // Неверный ответ тоже открывает источник: игрок может
+            // свериться по подсвеченным словам и выбрать другой биом.
+            this.setInfoVisible(true);
             if (firstTry) {
                 // Первая ошибка в вопросе: засчитываем, но даём шанс
                 // выбрать другой вариант, глядя на подсвеченный текст.

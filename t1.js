@@ -1,0 +1,21 @@
+const fs=require('fs'),path=require('path');
+const {JSDOM,VirtualConsole}=require('jsdom');
+const root='/workspace';
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const errors=[];
+const vc=new VirtualConsole();
+vc.on('error',(...a)=>errors.push('[console.error] '+a.map(String).join(' ')));
+vc.on('jsdomError',e=>errors.push('[jsdomError] '+e.message));
+const dom=new JSDOM(html,{url:'http://localhost/index.html',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:vc});
+const {window}=dom;
+window.alert=m=>console.log('[alert]',m);
+const re=/<script defer src="([^"]+)"><\/script>/g; let m,files=[];
+while((m=re.exec(html))) files.push(m[1]);
+files.forEach(f=>{ try{ window.eval.call(window, fs.readFileSync(path.join(root,f),'utf8')); }catch(e){ errors.push(`[${f}] ${e.message}`);} });
+setTimeout(()=>{
+  console.log('typeof HabitatGame via eval:', window.eval("typeof HabitatGame"));
+  console.log('window.HabitatGame:', typeof window.HabitatGame);
+  console.log('window.EruditeGame:', typeof window.EruditeGame);
+  console.log('window.App:', typeof window.App);
+  console.log('ERRORS', errors.slice(0,20));
+}, 3000);
