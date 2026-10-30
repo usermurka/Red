@@ -63,21 +63,19 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-        /* Плавный переход для всего */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        /* Плавный переход только для подсветки (без увеличения) */
         overflow: visible;
-        /* Позволяем карточке вылезать при увеличении */
+        /* Позволяем карточке вылезать при увеличении по двойному клику */
         position: relative;
         z-index: 1;
     }
 
+/* Увеличение при наведении УБРАНО: карточки масштабируются только
+   по двойному клику (класс .zoomed добавляет match.js). */
 .match-card:hover {
     border-color: #FBC02D;
     box-shadow: 0 0 15px rgba(251, 192, 45, 0.8);
-    transform: scale(2);
-    /* Увеличиваем всю карточку */
-    z-index: 10;
-    /* Поднимаем над остальными */
 }
 
 .match-card img {
@@ -86,17 +84,21 @@
     object-fit: contain;
     background: #fff;
     padding: 2px;
-    transition: transform 0.3s ease;
     }
 
-.match-card:hover img {
-    transform: scale(1.1);
-    /* Увеличивается только фото внутри карточки */
+/* Двойной клик по карточке с картинкой — временное увеличение,
+   чтобы рассмотреть изображение. Сбрасывается КЛИКОМ В ЛЮБОМ МЕСТЕ
+   (слушатель на document в match.js), авто-сброс по таймеру убран. */
+.match-card.zoomed {
+    transform: scale(2);
+    z-index: 10;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
 }
 
 .match-card span {
     font-family: 'Georgia', serif;
-    font-size: clamp(10px, 1vw, 14px);
+    /* Читаемый размер и на десктопе, и на мобильных (был мелкий) */
+    font-size: clamp(14px, 2.6vw, 18px);
     /* Чуть уменьшили, чтобы влезало */
     text-align: center;
     padding: 2px 4px;
@@ -124,4 +126,13 @@
     pointer-events: none;
     transform: scale(0.8);
     transition: all 0.3s ease;
+}
+/* Мобильная версия «Найди пару»: подписи карточек были слишком
+   мелкими — поднимаем минимальный размер шрифта. */
+@media (max-width: 820px) {
+    .match-card-label,
+    .match-card .card-label {
+        font-size: clamp(14px, 3.6vw, 17px) !important;
+        line-height: 1.25;
+    }
 }

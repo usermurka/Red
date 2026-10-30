@@ -1,0 +1,192 @@
+/* ============================================================
+   ЕДИНЫЙ «МИНИ-СВИТОК» ДЛЯ ИГР (Викторина, Среда обитания, Статус)
+   ------------------------------------------------------------
+   Механика (важно!): после ответа игроку показывается узкий свиток в
+   стиле Красной книги с информацией из книги и кнопкой
+   «📖 Читать в свитке», открывающей полный свиток вида.
+   Панель стоит СПРАВА от игровой панели и слегка заходит под неё
+   (margin-left:-30px), появляется со скольжением справа.
+   Дизайн правится в одном месте — здесь.
+   ============================================================ */
+
+.mini-scroll-panel {
+    background: var(--parchment-light);
+    width: 350px;
+    max-height: 90vh;
+    border: 2px solid var(--gold-deep);
+    box-shadow: var(--shadow-deep);
+    border-radius: 2px;
+    overflow-y: auto;
+    clip-path: var(--torn-edge);
+    animation: slideInRight 0.3s ease-out;
+    flex-shrink: 0;
+    /* «Магия наложения»: сдвигаем влево, чтобы зайти под игровую панель */
+    margin-left: -30px;
+    z-index: 5;          /* ниже, чем у игровой панели (z-index:10) */
+    padding-left: 15px;  /* компенсируем сдвиг, чтобы контент не скрывался */
+}
+
+.mini-scroll-panel.hidden {
+    display: none !important;
+}
+
+.mini-scroll {
+    padding: 24px;
+}
+
+.mini-scroll h3 {
+    margin: 0 0 5px;
+    color: var(--dark-green);
+    font-family: 'Georgia', serif;
+    font-size: 20px;
+}
+
+.ms-latin {
+    font-style: italic;
+    color: var(--ink-faded);
+    font-size: 13px;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed var(--parchment-deep);
+    padding-bottom: 10px;
+}
+
+.ms-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.ms-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: bold;
+    font-size: 13px;
+    font-family: 'Georgia', serif;
+}
+
+.ms-status-text {
+    font-size: 13px;
+    color: var(--dark-green);
+}
+
+.ms-block {
+    margin-bottom: 12px;
+}
+
+.ms-block-title {
+    cursor: default;
+    color: var(--dark-green);
+    font-family: 'Georgia', serif;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 5px 0;
+}
+
+.ms-block-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--dark-green);
+    word-wrap: break-word;
+}
+
+/* Подсветка ключевых слов (например, слов выбранной среды обитания) */
+.ms-block-body mark {
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+    outline: 2px solid rgba(176, 141, 47, 0.55);
+    outline-offset: -2px;
+}
+
+.hl-forest { background: rgba(76, 175, 80, 0.45); }
+.hl-steppe { background: rgba(251, 192, 45, 0.5); }
+.hl-water  { background: rgba(33, 150, 243, 0.4); }
+.hl-bog    { background: rgba(139, 69, 19, 0.35); }
+
+/* Подсветка ключевых слов категории редкости (игра «Статус») */
+.ms-block-body mark.ms-hl {
+    background: rgba(198, 40, 40, 0.28);
+}
+
+.ms-open-full {
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* ===== Раскладка модалок «Среда обитания» и «Статус» =====
+   Игровая панель + мини-свиток — как в викторине: по flex-линии. */
+#habitat-modal,
+#status-modal {
+    gap: 0;
+}
+
+/* Псевдоэлементы-«пружинки» центрируют пару панелей,
+   а не каждую по отдельности (приём из quiz.css). */
+#habitat-modal::before,
+#status-modal::before,
+#habitat-modal::after,
+#status-modal::after {
+    content: '';
+    flex: 1;
+}
+
+#habitat-modal .habitat-scroll,
+#status-modal .status-scroll {
+    z-index: 10;         /* игровая панель поверх мини-свитка */
+    flex-shrink: 0;
+}
+
+/* Старая боковая панель «Данные из Красной книги» заменена
+   общим мини-свитком (js/mini-scroll.js) */
+.habitat-book-pane {
+    display: none !important;
+}
+
+/* ===== Мобильная раскладка =====
+   Мини-свиток на мобильных появляется НЕ в углу и НЕ под окном игры,
+   а строго НИЖЕ игрового окна по порядку потока (order:-1 убираем,
+   панель переносим в конец модалки). */
+@media (max-width: 900px) {
+    #habitat-modal,
+    #status-modal {
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+    }
+
+    #habitat-modal::before,
+    #status-modal::before,
+    #habitat-modal::after,
+    #status-modal::after {
+        display: none;
+    }
+
+    .mini-scroll-panel {
+        position: static !important;   /* никаких «углов» и наложений */
+        width: 96vw;
+        max-width: 720px;
+        max-height: none;
+        margin-left: 0;
+        margin-top: 14px;              /* свиток ниже окна игры */
+        padding-left: 0;
+        z-index: 20;                   /* поверх подложки, клибелен */
+        order: 99;                     /* всегда последним в flex-колонке */
+    }
+
+    /* Викторина: панель инфо тоже уходит под игровое окно */
+    #quiz-info-panel {
+        position: static !important;
+        order: 99;
+        margin-top: 14px;
+        z-index: 20;
+    }
+}
