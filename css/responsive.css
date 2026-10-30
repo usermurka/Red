@@ -461,21 +461,39 @@ body {
     display: none;
   }
 
-  /* инфо-панели игр — поверх, снизу */
+  /* Инфо-панели игр на мобильных — НИЖЕ окна игры по порядку потока.
+     Никакого position:fixed «в углу/под окном»: модалки становятся
+     flex-колонкой, а панель — последним элементом с нормальным
+     прокручиваемым документом. */
+  #quiz-modal,
+  #memo-modal {
+    flex-direction: column !important;
+    align-items: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #quiz-modal::before,
+  #quiz-modal::after,
+  #memo-modal::before,
+  #memo-modal::after {
+    display: none;
+  }
+
   #quiz-info-panel,
   #memo-info-panel {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    max-height: 55dvh;
-    margin-left: 0;
+    position: static !important;
+    width: 96vw;
+    max-width: 720px;
+    max-height: none;
+    height: auto;
+    margin: 14px auto calc(20px + env(safe-area-inset-bottom));
     padding-left: 0;
-    border-radius: 14px 14px 0 0;
-    clip-path: none;
+    border-radius: 2px;
+    clip-path: var(--torn-edge);
     z-index: 20;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
+    order: 99; /* всегда после игрового окна в flex-колонке */
+    box-shadow: var(--shadow-deep);
   }
 
   .quiz-header h2,
@@ -653,17 +671,12 @@ body {
   }
 
   /* --- Свиток викторины на мобильных ---
-     Панель лежит ЗА полноэкранной Викторной (z-index ниже), а её скролл
-     был смещён за пределы окна из-за height/max-height: 100dvh при
-     position: fixed с top:0/bottom:0 — прокрутка оказывалась скрыта
-     окном викторины. Оставляем панель ровно в границах экрана и
-     включаем прокрутку внутри неё. */
+     Панель идёт НИЖЕ окна игры по порядку потока (см. блок выше:
+     position:static + order:99). Здесь только внутренние отступы. */
   #quiz-info-panel {
-    top: 0;
-    bottom: 0;
     height: auto;
     max-height: none;
-    overflow-y: auto;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     padding-left: 0;
     z-index: 30;
@@ -766,5 +779,19 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Кнопка вызова меню (☰) на мобильных поверх игровых модалок.
+   Окна игр (.latin-scroll-модалки) имеют z-index 3100 и раньше
+   полностью перекрывали #mobile-topbar — в режиме игры кнопка
+   меню «пропадала». Поднимаем топбар выше модалок; pointer-events
+   уже настроены (клики проходят сквозь панель, но не сквозь
+   кнопки), так что игра остаётся кликабельной.
+   ============================================================ */
+@media (max-width: 900px) {
+  #mobile-topbar {
+    z-index: 5000; /* выше всех игровых модалок (3100/3200) */
   }
 }

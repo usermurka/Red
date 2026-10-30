@@ -87,9 +87,28 @@ const HabitatGame = {
         this.logEntries = [];  // пары «вид — среда» за всю игру
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
-        document.getElementById('habitat-log').innerHTML = '';
+        // Пустой журнал не должен выглядеть «дырой» в окне —
+        // показываем аккуратную подсказку, пока нет ни одной пары.
+        this.renderEmptyLogNote();
         document.getElementById('habitat-end-screen').classList.add('hidden');
         this.nextRound();
+    },
+
+    renderEmptyLogNote() {
+        const log = document.getElementById('habitat-log');
+        if (!log) return;
+        log.innerHTML = '';
+        const note = document.createElement('div');
+        note.className = 'habitat-log-empty-note';
+        note.textContent = 'Здесь будут появляться пары «вид — среда» по вашим ответам.';
+        log.appendChild(note);
+    },
+
+    removeEmptyLogNote() {
+        const log = document.getElementById('habitat-log');
+        if (!log) return;
+        const note = log.querySelector('.habitat-log-empty-note');
+        if (note) note.remove();
     },
 
     // ---------- Переходы между раундами — ТОЛЬКО по кнопке ----------
@@ -308,9 +327,9 @@ const HabitatGame = {
             blocks.push({ title: 'Места обитания', text: 'Поле «Места обитания» в базе пусто — ориентируйтесь на описание.' });
         }
         if (spread) blocks.push({ title: 'Распространение в Омской области', html: escHtml(spread).replace(/\n/g, '<br>') });
-        if (full && full.description_short) {
-            blocks.push({ title: 'Краткое описание', html: escHtml(String(full.description_short).replace(/\s+/g, ' ').trim()).replace(/\n/g, '<br>') });
-        }
+        // По требованию пользователя из мини-свитка игры «Среда обитания»
+        // блок «Краткое описание» убран — оставляем только справочную
+        // информацию о местах обитания и распространении вида.
 
         const statusConfig = CONFIG.statuses.find(s => s.value === sp.status);
         MiniScroll.show({
@@ -367,11 +386,14 @@ const HabitatGame = {
             }
             this.locked = false;
             this.updateScoreboard();
-            this.addLogPair(item, true);
+            // В журнал пишем ВЫБРАННУЮ игроком среду (биом), а не эталон:
+            // «Стрепет — Лес ✘», затем при верном выборе «Стрепет — Степь ✔».
+            this.addLogPair(item, true, biomKey);
 
             if (this.matchedCount >= this.ROUND_SIZE) {
                 // Раунд завершён: явно говорим об этом и ЖДЁМ нажатия
                 // кнопки «Продолжить» — таймер остаётся на паузе.
+                this.stopTimer(); // не заставляем ждать истечения времени
                 this.showRoundBanner(
                     `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
                     (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
@@ -388,7 +410,10 @@ const HabitatGame = {
                 this.streak = 0;
                 this._answeredCurrent = true;
                 this.updateScoreboard();
-                this.addLogPair(item, false);
+                this.addLogPair(item, false, biomKey);
+            } else {
+                // Повторная ошибка — тоже обновляем запись журнала
+                this.addLogPair(item, false, biomKey);
             }
             btn.classList.add('hab-wrong');
             this.locked = true;
@@ -396,32 +421,38 @@ const HabitatGame = {
                 btn.classList.remove('hab-wrong');
                 this.locked = false;
                 // Ответ разобран, свиток открыт — можно продолжать выбор,
-                // но время НЕ тикает, пока не нажмут «Продолжить» или
-                // не откроется следующая карточка.
+                // но время НЕ тикает, пока игрок читает свиток. Переход к
+                // следующему вопросу — по клику на новую карточку среды.
             }, 600);
         }
     },
 
-    // Журнал пар «вид — среда»: записи остаются до конца игры
-    addLogPair(item, correctFirstTry) {
+    // Журнал пар «вид — среда»: записи остаются до конца игры.
+    // pickKey — биом, который реально выбрал игрок (пишем его, а не
+    // правильный ответ). При верном выборе запись перечёркивается
+    // крестиком и заменяется/подсвечивается галочкой.
+    addLogPair(item, correct, pickKey) {
         const log = document.getElementById('habitat-log');
         if (!log) return;
+        this.removeEmptyLogNote();
         const key = item.sp.id;
         const existing = log.querySelector(`[data-pair="${CSS.escape(key)}"]`);
-        const biomLabel = this.biomeLabel(item.biome);
+        const pickedLabel = this.biomeLabel(pickKey || item.biome);
         if (existing) {
-            if (correctFirstTry) {
+            if (correct) {
                 existing.classList.remove('hl-miss');
                 existing.classList.add('hl-hit');
-                existing.innerHTML = `<span class="hl-mark">✔</span> ${escHtml(item.sp.name)} — <b>${biomLabel}</b>`;
+                existing.innerHTML = `<span class="hl-mark">✔</span> ${escHtml(item.sp.name)} — <b>${pickedLabel}</b>`;
+            } else {
+                existing.innerHTML = `<span class="hl-mark">✘</span> ${escHtml(item.sp.name)} — <b>${pickedLabel}</b>`;
             }
             return;
         }
         const div = document.createElement('div');
-        div.className = 'hl-entry ' + (correctFirstTry ? 'hl-hit' : 'hl-miss');
+        div.className = 'hl-entry ' + (correct ? 'hl-hit' : 'hl-miss');
         div.dataset.pair = key;
-        div.innerHTML = `<span class="hl-mark">${correctFirstTry ? '✔' : '✘'}</span> ` +
-            `${escHtml(item.sp.name)} — <b>${biomLabel}</b>`;
+        div.innerHTML = `<span class="hl-mark">${correct ? '✔' : '✘'}</span> ` +
+            `${escHtml(item.sp.name)} — <b>${pickedLabel}</b>`;
         log.appendChild(div);
     },
 

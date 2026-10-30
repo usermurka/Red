@@ -43,6 +43,10 @@
         <button id="btn-open-status"  class="game-big-btn" type="button"><span class="gbi">🎖️</span> Статус</button>
         <button id="btn-open-family"  class="game-big-btn" type="button"><span class="gbi">🗂️</span> Систематик</button>
 
+        <!-- Разделительная черта под кнопками режимов: отделяет выбор
+             игры от списка игр / прогресса -->
+        <hr class="games-menu-divider" aria-hidden="true">
+
         <h2 style="margin-top: 8px;">Прогресс</h2>
         <div class="sub-btn-group" style="display: flex; gap: 6px;">
           <button id="btn-save-progress" class="sub-btn" type="button" style="flex:1; display:inline-flex;">💾 Сохранить</button>
@@ -710,6 +714,11 @@
               <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
             </div>
           </div>
+          <!-- Мини-свиток «Данные из Красной книги»: справа от игровой
+               зоны на десктопе, НИЖЕ окна игры на мобильных (order:99).
+               js/mini-scroll.js найдёт этот узел по id и вложит свиток
+               сюда — панель больше не создаётся где-то в углу модалки. -->
+          <div id="habitat-info-panel" class="mini-scroll-panel habitat-info-pane hidden" aria-live="polite"></div>
         </div>
         <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
         <div id="habitat-round-banner" class="habitat-round-banner hidden" role="status"></div>
@@ -752,13 +761,16 @@
       </div>
       <div class="latin-body">
         <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге. После ответа справа откроется мини-свиток с данными из книги</p>
-        <!-- Игровая зона (карточка + варианты) и окно данных из Красной книги — рядом -->
+        <!-- Компоновка по замечаниям: слева — крупное изображение и
+             список статусов с кнопкой «Дальше», мини-свиток — справа.
+             На мобильных свиток встаёт ниже окна игры (mini-scroll.css) -->
         <div class="status-main">
           <div class="status-play">
             <div id="status-card" class="status-card"></div>
             <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
             <div id="status-result" class="status-result hidden"></div>
           </div>
+          <div id="status-info-panel" class="status-info-pane" aria-live="polite"></div>
         </div>
         <!-- Баннер между вопросами: итог вопроса остаётся видимым до явного «Дальше» -->
         <div id="status-round-banner" class="status-round-banner hidden" role="status"></div>

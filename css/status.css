@@ -293,3 +293,29 @@
     color: #6b7280;
     animation: none;
 }
+
+/* ============================================================
+   Правая колонка мини-свитка в окне игры «Статус» (desktop).
+   js/mini-scroll.js рендерит свиток внутрь #status-info-panel,
+   поэтому панель справа от игровой зоны — крупное изображение и
+   список статусов слева, свиток справа. На мобильных (.status-main
+   становится column) свиток встаёт НИЖЕ окна игры по порядку DOM.
+   ============================================================ */
+.status-info-pane {
+    flex: 0 1 360px;
+    min-width: 0;
+    align-self: stretch;
+}
+
+.status-info-pane .mini-scroll {
+    position: static;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+@media (max-width: 760px) {
+    .status-info-pane { flex: none; width: 100%; }
+    /* Кнопка «Дальше →» всегда влезает: она в потоке под окном,
+       а не приклеена к низу модалки за пределами экрана. */
+    #status-next-btn { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
+}

@@ -1,9 +1,6 @@
-// Экранирование HTML (защита от XSS при выводе названий видов)
-function escHtml(str) {
-  return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-  });
-}
+// Экранирование HTML: используем ЕДИНУЮ глобальную window.escHtml из
+// app-core.js. Собственное объявление escHtml убрано — дубликаты
+// идентификатора в глобальной области ломали загрузку скриптов.
 
 const MemoGame = {
     init() {
@@ -32,16 +29,19 @@ const MemoGame = {
         const listContainer = document.getElementById('memo-species-list');
         listContainer.innerHTML = '';
 
-        const rows = 4;
-        const cols = 6;
-        const totalCards = rows * cols; // 24
-        const pairs = totalCards / 2;   // 12
-        const size = cols;              // для расчета сетки
+        // Адаптивное число карточек: на мобильных помещаемая на экран сетка
+        // меньше, иначе карточки не влезают («Мемо» на телефоне).
+        const isMobile = window.matchMedia('(max-width: 820px)').matches;
+        let rows, cols;
+        if (isMobile) { rows = 3; cols = 4; }        // 12 карт = 6 пар
+        else            { rows = 4; cols = 6; }      // 24 карты = 12 пар
+        const totalCards = rows * cols;
+        const pairs = totalCards / 2;   // 6 или 12
 
         // Динамический расчет размера карточек
         const maxGridWidth = grid.clientWidth - 40;
         const maxGridHeight = grid.clientHeight - 40;
-        const gap = 10;
+        const gap = isMobile ? 6 : 10;
 
         // Вычисляем максимальный возможный размер карточки по ширине и высоте
         const cardSizeW = Math.floor((maxGridWidth - (cols - 1) * gap) / cols);
@@ -50,6 +50,7 @@ const MemoGame = {
 
         grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
         grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
+        grid.style.gap = gap + 'px';
         grid.style.justifyContent = 'center';
         grid.style.alignContent = 'center';
 

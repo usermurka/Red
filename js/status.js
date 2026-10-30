@@ -233,12 +233,10 @@ const StatusGame = {
         const txt = (s) => escHtml(String(s || '').replace(/\s+/g, ' ').trim()).replace(/\n/g, '<br>');
 
         const blocks = [];
-        if (st) {
-            blocks.push({
-                title: `Категория ${st.value} — ${st.label}`,
-                html: `<div class="si-small">${txt(st.description)}</div>`
-            });
-        }
+        // По требованию пользователя в мини-свитке игры «Статус»
+        // остаются ТОЛЬКО два блока: «Статус вида в базе» и
+        // «Численность и лимитирующие факторы». Блок с описанием
+        // категории редкости убран.
         blocks.push({
             title: 'Статус вида в базе',
             html: `<div class="si-small">${this.highlightStatusText(sp.status_text || (full && full.status_text), sp.status).replace(/\n/g, '<br>')}</div>`
