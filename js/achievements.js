@@ -13,7 +13,7 @@ const Achievements = {
   STORAGE_KEY: 'red_book_games_progress_v1',
 
   // Порядок обхода игр для кнопки «Следующая игра →»
-  GAMES_ORDER: ['quiz', 'match', 'memo', 'erudite', 'latin'],
+  GAMES_ORDER: ['quiz', 'match', 'memo', 'erudite', 'latin', 'habitat', 'status', 'family'],
 
   // Счётчики сыгранных партий (для кросс-игровых медалей) —
   // хранятся отдельно от медалей, обнуляются только при импорте прогресса.
@@ -83,6 +83,28 @@ const Achievements = {
       { id: 'allpairs',   icon: '🏛️', name: 'Магистр латыни',            hint: 'Решить все 15 пар за игру' },
       { id: 'speedlatin', icon: '⚡', name: 'Быстрый систематик',        hint: 'Закрыть раунд за 20 секунд или меньше' },
       { id: 'glossary',   icon: '📜', name: 'Глоссарий',                 hint: 'Решить 50 пар суммарно' }
+    ]},
+    { game: 'habitat', title: 'Среда обитания', icon: '🌍', openBtn: 'btn-habitat', achievements: [
+      { id: 'keeper',   icon: '👑', name: 'Хранитель экосистем',         hint: 'Пройти игру без единой ошибки' },
+      { id: 'expert',   icon: '🏆', name: 'Знаток биотопов',             hint: 'Пройти игру с ≤2 ошибками' },
+      { id: 'ranger',   icon: '🌱', name: 'Лесной рейнджер',             hint: 'Пройти все раунды игры' },
+      { id: 'quick',    icon: '⚡', name: 'Молниеносный эколог',         hint: 'Верный ответ быстрее 2 секунд' },
+      { id: 'serial',   icon: '🔥', name: 'Серия открытий',              hint: '8 верных ответов подряд' }
+    ]},
+    { game: 'status', title: 'Статус', icon: '🎖️', openBtn: 'btn-status', achievements: [
+      { id: 'flawless', icon: '👑', name: 'Канцлер Красной книги',       hint: 'Финиш без единой ошибки' },
+      { id: 'expert',   icon: '🏆', name: 'Знаток категорий',            hint: '90%+ верных ответов' },
+      { id: 'good',     icon: '🌿', name: 'Хороший результат',           hint: '60%+ верных ответов' },
+      { id: 'first_win',icon: '🌱', name: 'Первая категория',            hint: 'Завершить игру' },
+      { id: 'streak5',  icon: '🔥', name: 'Пять статусов подряд',        hint: 'Серия из 5 верных ответов' },
+      { id: 'speed',    icon: '⚡', name: 'Быстрый оценщик',             hint: 'Ответить верно быстрее 2 секунд' },
+      { id: 'centurion',icon: '💯', name: 'Сотник категорий',            hint: '100 верных ответов суммарно' }
+    ]},
+    { game: 'family', title: 'Систематик', icon: '🗂️', openBtn: 'btn-family', achievements: [
+      { id: 'professor',   icon: '👑', name: 'Академик систематике',     hint: 'Ни одной ошибки за игру' },
+      { id: 'practitioner',icon: '🏆', name: 'Систематик-практик',       hint: 'Победа с ≤2 ошибками' },
+      { id: 'systematicist',icon:'🌱', name: 'Юный систематик',          hint: 'Пройти все раунды игры' },
+      { id: 'perfectround',icon: '⚡', name: 'Безупречный раунд',        hint: 'Закрыть раунд без ошибок' }
     ]},
     { game: 'cross', title: 'Общие', icon: '🌍', openBtn: 'btn-games', achievements: [
       { id: 'collector',  icon: '🎖️', name: 'Коллекционер',              hint: 'Медали хотя бы в 4 разных играх' },

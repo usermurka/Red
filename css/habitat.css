@@ -1,0 +1,93 @@
+/* ===== Игра «Среда обитания» (угадай биом вида) ===== */
+
+.habitat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 8px auto 14px;
+}
+
+.habitat-card .latin-photo-card {
+    width: 160px;
+    height: 160px;
+}
+
+.habitat-name {
+    font-family: Georgia, serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--dark-green);
+    text-align: center;
+}
+
+.habitat-latin {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--gold-deep);
+    text-align: center;
+}
+
+/* Кнопки биомов */
+.habitat-biomes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 640px;
+}
+
+.habitat-biom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 74px;
+    padding: 10px 6px;
+    background: var(--parchment, #f0e6cf);
+    border: 2px solid var(--gold-deep);
+    border-radius: 6px;
+    font-family: Georgia, serif;
+    color: var(--dark-green);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.habitat-biom:hover {
+    transform: translateY(-1px);
+    background: #f7efdc;
+}
+
+.hb-icon {
+    font-size: 26px;
+    line-height: 1;
+}
+
+.hb-label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.habitat-biom.hab-correct {
+    background: rgba(46, 107, 62, 0.35);
+    border-color: var(--green);
+}
+
+.habitat-biom.hab-wrong {
+    background: rgba(170, 51, 51, 0.25);
+    border-color: #a33;
+    animation: latin-shake 0.45s;
+}
+
+@media (max-width: 480px) {
+    .habitat-card .latin-photo-card { width: 120px; height: 120px; }
+    .habitat-biomes { gap: 6px; }
+    .habitat-biom { min-height: 62px; }
+    .hb-icon { font-size: 22px; }
+    .hb-label { font-size: 12px; }
+    .habitat-name { font-size: 16px; }
+}
