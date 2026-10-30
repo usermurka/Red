@@ -3,18 +3,26 @@
 // По фотографии и описанию определи категорию редкости вида
 // в Красной книге (0–6). 10 вопросов, таймер на вопрос,
 // серии, достижения.
+//
+// Что исправлено по замечаниям игрока:
+//  • Фото больше не «развёрнуто рубашкой»: карточка сразу
+//    открывается (класс flipped), при отсутствии файла —
+//    текстовый плейсхолдер.
+//  • После ответа результат («✔ Верно… / ✘ Неверно…») остаётся
+//    на экране до явного нажатия кнопки «Дальше →» — никакого
+//    автоматического перекидывания на следующий вопрос.
+//  • Статус «3 — Обычный вид» встречается в базе чаще всего,
+//    поэтому вопросы с ним стали реже (~25% вместо ~40%):
+//    тыкать «три» наугад перестало быть выгодной стратегией.
+//  • Рядом с карточкой — панель с данными из Красной книги
+//    (полная формулировка категории + статус вида в базе).
 // ============================================================
-
-// Локальный экранировщик (в app-core.js есть только window.esc/window.escapeHtml)
-function escHtml(str) {
-    return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
-}
 
 const StatusGame = {
     TOTAL_QUESTIONS: 10,
     TIME_PER_QUESTION: 15, // секунд
+    COMMON_STATUS: 3,      // «обычный» — самый массовый в базе
+    COMMON_SHARE: 0.25,    // целевая доля таких вопросов в партии
 
     init() {
         document.getElementById('btn-status').addEventListener('click', () => this.open());
@@ -23,6 +31,8 @@ const StatusGame = {
         // Крестик на финальном экране — закрыть игру
         document.querySelector('#status-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('status-restart-btn').addEventListener('click', () => this.startGame());
+        const nextBtn = document.getElementById('status-next-btn');
+        if (nextBtn) nextBtn.addEventListener('click', () => this.nextQuestion());
     },
 
     open() {
@@ -45,6 +55,9 @@ const StatusGame = {
         this.streak = 0;
         this.bestStreak = 0;
         this.usedIds = new Set();
+        this.commonUsed = 0; // сколько раз за партию выпал статус «3»
+        this.hideNextBtn();
+        document.getElementById('status-result').classList.add('hidden');
         document.getElementById('status-end-screen').classList.add('hidden');
         this.nextQuestion();
     },
@@ -54,15 +67,57 @@ const StatusGame = {
         return (window.CONFIG && CONFIG.statuses) ? CONFIG.statuses : [];
     },
 
+    showNextBtn(label) {
+        const btn = document.getElementById('status-next-btn');
+        if (!btn) return;
+        btn.textContent = label || 'Дальше →';
+        btn.classList.remove('hidden');
+        try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
+    },
+
+    hideNextBtn() {
+        const btn = document.getElementById('status-next-btn');
+        if (btn) btn.classList.add('hidden');
+    },
+
+    // ---------- Выбор вида с «анти-трёшкой» ----------
+    // В базе видов со статусом 3 значительно больше, чем с другими,
+    // поэтому чисто случайный выбор даёт ~40% таких вопросов, и
+    // нажатие «3» наугад становится выигрышной лотереей. Ограничиваем
+    // долю статуса 3 значением COMMON_SHARE: не более ceil(доля×10)
+    // таких вопросов на партию (остальные слоты — из прочих статусов).
+    pickSpecies(all) {
+        const common = all.filter(sp => sp.status === this.COMMON_STATUS);
+        const other = all.filter(sp => sp.status !== this.COMMON_STATUS);
+        const allowedCommon = Math.ceil(this.COMMON_SHARE * this.TOTAL_QUESTIONS);
+        const canTakeCommon = this.commonUsed < allowedCommon;
+        // Если других видов нет — пусть будет «3», деваться некуда
+        const pool = (canTakeCommon || !other.length) && common.length ? common :
+            (other.length ? other : common);
+        let sp = pool[Math.floor(Math.random() * pool.length)];
+        if (this.usedIds.has(sp.id)) {
+            const fresh = pool.filter(s => !this.usedIds.has(s.id));
+            if (fresh.length) sp = fresh[Math.floor(Math.random() * fresh.length)];
+        }
+        if (sp.status === this.COMMON_STATUS) this.commonUsed++;
+        return sp;
+    },
+
     nextQuestion() {
         if (this.qNum >= this.TOTAL_QUESTIONS) {
             this.stopTimer();
             this.finishGame();
             return;
         }
+        // Переход вперёд — только по кнопке: если на вопрос ещё не
+        // ответили и таймер идёт, повторный вызов игнорируем.
+        if (this.awaitingNext) { this.awaitingNext = false; }
+        else if (this._timer) return;
         this.qNum++;
         this.answered = false;
+        this.awaitingNext = false;
         this.questionStartTs = Date.now();
+        this.hideNextBtn();
 
         const all = App.collectAllSpecies().filter(sp => sp.name &&
             typeof sp.status === 'number' && !this.usedIds.has(sp.id));
@@ -71,12 +126,7 @@ const StatusGame = {
             this.close();
             return;
         }
-        let sp = all[Math.floor(Math.random() * all.length)];
-        // Держим виды уникальными внутри партии (повтор возможен только если база мала)
-        if (this.usedIds.has(sp.id)) {
-            const fresh = all.filter(s => !this.usedIds.has(s.id));
-            if (fresh.length) sp = fresh[Math.floor(Math.random() * fresh.length)];
-        }
+        const sp = this.pickSpecies(all);
         this.usedIds.add(sp.id);
         this.currentSpecies = sp;
 
@@ -86,10 +136,12 @@ const StatusGame = {
         document.getElementById('status-streak-block').style.opacity = this.streak > 0 ? '1' : '0.3';
         document.getElementById('status-score-streak').textContent = this.streak;
 
-        // Карточка вида
+        // Карточка вида. ВАЖНО: класс flipped добавлен сразу — иначе
+        // 3D-переворот из latin.css показывает «рубашку» вместо фото
+        // (в играх «Среда обитания»/«Статус» карточку никто не переворачивает).
         const card = document.getElementById('status-card');
         card.innerHTML = `
-            <div class="latin-photo-card st-photo-card">
+            <div class="latin-photo-card st-photo-card flipped">
                 <div class="latin-photo-inner">
                     <div class="latin-photo-back">КРАСНАЯ<br>КНИГА</div>
                     <div class="latin-photo-front"><img src="img/species/${sp.id}.png" alt="" loading="lazy"></div>
@@ -107,6 +159,8 @@ const StatusGame = {
             ph.textContent = (sp.name || '').split(' ')[0];
             card.querySelector('.latin-photo-front').appendChild(ph);
         });
+
+        this.renderInfoPanel(sp);
 
         // Варианты ответов: все категории из CONFIG + подпись цвета
         const zone = document.getElementById('status-options');
@@ -129,6 +183,28 @@ const StatusGame = {
         this.startTimer();
     },
 
+    // Боковая панель с данными из Красной книги, чтобы ответ можно
+    // было проверить по источнику (полная формулировка категории).
+    renderInfoPanel(sp) {
+        const el = document.getElementById('status-info-body');
+        if (!el) return;
+        const full = (window.SPECIES_DATA && sp.id) ? window.SPECIES_DATA[sp.id] : null;
+        const st = this.statusList().find(s => s.value === sp.status);
+        const txt = (s) => escHtml(String(s || '').replace(/\s+/g, ' ').trim()).replace(/\n/g, '<br>');
+        let html = '';
+        if (st) {
+            html += `<div class="si-section"><div class="si-label">Категория ${st.value} — ${txt(st.label)}</div>` +
+                `<div class="si-text si-small">${txt(st.description)}</div></div>`;
+        }
+        html += `<div class="si-section"><div class="si-label">Статус вида в базе</div>` +
+            `<div class="si-text">${txt(sp.status_text || (full && full.status_text))}</div></div>`;
+        if (full && (full.abundance || full.limiting_factors)) {
+            html += `<div class="si-section"><div class="si-label">Численность и лимитирующие факторы</div>` +
+                `<div class="si-text si-small">${txt(full.abundance)}${full.abundance && full.limiting_factors ? ' ' : ''}${txt(full.limiting_factors)}</div></div>`;
+        }
+        el.innerHTML = html;
+    },
+
     shortText(txt) {
         const s = String(txt || '').replace(/\s+/g, ' ').trim();
         return s.length > 180 ? s.slice(0, 177) + '…' : s;
@@ -137,6 +213,7 @@ const StatusGame = {
     checkAnswer(value, btn) {
         if (this.answered) return;
         this.answered = true;
+        this.awaitingNext = true;
         this.stopTimer();
         const elapsed = (Date.now() - this.questionStartTs) / 1000;
         const correct = value === this.correctStatus;
@@ -170,7 +247,9 @@ const StatusGame = {
         document.getElementById('status-streak-block').style.opacity = this.streak > 0 ? '1' : '0.3';
         document.getElementById('status-score-streak').textContent = this.streak;
 
-        setTimeout(() => this.nextQuestion(), 1600);
+        // Никакого автоследующего вопроса: ждём нажатия «Дальше →»
+        const last = this.qNum >= this.TOTAL_QUESTIONS;
+        this.showNextBtn(last ? 'Итоги игры →' : 'Дальше →');
     },
 
     startTimer() {
@@ -183,19 +262,22 @@ const StatusGame = {
             bar.style.width = Math.max(0, (this.timeLeft / this.TIME_PER_QUESTION) * 100) + '%';
             if (this.timeLeft <= 0) {
                 this.stopTimer();
-                // Время вышло — засчитываем как ошибку и идём дальше
+                // Время вышло — засчитываем ошибку, но дальше идём только по кнопке
                 this.answered = true;
+                this.awaitingNext = true;
                 this.mistakes++;
                 this.streak = 0;
                 const resultEl = document.getElementById('status-result');
-                resultEl.textContent = '⏱ Время вышло!';
+                const st = this.statusList().find(s => s.value === this.correctStatus);
+                resultEl.textContent = `⏱ Время вышло! Правильный ответ: ${st ? `${st.value} — ${st.label}` : this.correctStatus}`;
                 resultEl.className = 'status-result bad';
                 resultEl.classList.remove('hidden');
                 const rightBtn = document.querySelector(
                     `#status-options .status-option-btn[data-value="${this.correctStatus}"]`);
                 if (rightBtn) rightBtn.classList.add('st-correct');
                 document.getElementById('status-score-wrong').textContent = this.mistakes;
-                setTimeout(() => this.nextQuestion(), 1600);
+                const last = this.qNum >= this.TOTAL_QUESTIONS;
+                this.showNextBtn(last ? 'Итоги игры →' : 'Дальше →');
             }
         }, 500);
     },
@@ -208,6 +290,7 @@ const StatusGame = {
     },
 
     finishGame() {
+        this.hideNextBtn();
         this.showEndScreen();
     },
 

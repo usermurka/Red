@@ -1,5 +1,27 @@
 /* ===== Игра «Статус» (угадай категорию редкости вида) ===== */
 
+/* Модалка игры. Без этих правил контейнер не имеет position:fixed и
+   перекрывается картой (#map-area, z-index 10), а класс .hidden его
+   не скрывает — игра «запускается», но остаётся невидимой. */
+#status-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(36, 53, 42, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#status-modal.hidden {
+    display: none;
+}
+
 .status-scroll {
     max-width: 780px;
 }
@@ -117,4 +139,95 @@
     .st-name { font-size: 16px; }
     .st-desc { font-size: 12px; }
     .status-option-btn { font-size: 12px; padding: 7px 8px; }
+}
+
+/* ===== Доработки по замечаниям игрока ===== */
+
+/* Игровая зона + окно данных из Красной книги рядом */
+.status-main {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 980px;
+}
+
+.status-play {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex: 0 1 520px;
+    min-width: 0;
+}
+
+.status-info {
+    flex: 1 1 340px;
+    max-width: 420px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    background: rgba(36, 53, 42, 0.05);
+    border: 2px solid var(--gold-deep);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.si-title {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--dark-green);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.si-body {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green);
+    line-height: 1.45;
+}
+
+.si-section { margin-bottom: 10px; }
+
+.si-label {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gold-deep);
+    margin-bottom: 2px;
+}
+
+.si-text { word-wrap: break-word; }
+.si-small { font-size: 12px; opacity: 0.92; }
+
+/* Фото всегда открыто: рубашка скрыта, передняя сторона повёрнута
+   к зрителю. Без этого правила карточка остаётся «рубашкой вверх». */
+.st-photo-card.flipped .latin-photo-inner {
+    transform: rotateY(180deg);
+}
+
+/* Баннер результата между вопросами (итог не исчезает сам собой) */
+.status-round-banner {
+    margin-top: 14px;
+    width: 100%;
+    max-width: 720px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    background: rgba(46, 107, 62, 0.2);
+    border: 2px solid var(--green, #2e6b3e);
+    color: var(--dark-green);
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+@media (max-width: 760px) {
+    .status-main { flex-direction: column; align-items: stretch; }
+    .status-info { max-width: none; max-height: 240px; }
 }

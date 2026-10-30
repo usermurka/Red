@@ -614,8 +614,10 @@
       </div>
       <div class="erudite-body">
         <div class="erudite-picture">
+          <!-- Фото вписывается целиком (object-fit: contain) — без обрезки
+               альбомных/книжных картинок, белые поля по краям -->
           <img id="erudite-img" src="" alt="" loading="lazy"
-            onerror="this.src='img/species/placeholder.png'">
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="erudite-img-ph latin-photo-placeholder" style="display:none">Фото недоступно</div>
         </div>
         <div id="erudite-slots" class="erudite-slots" aria-label="Слово"></div>
         <div id="erudite-tray" class="erudite-tray" aria-label="Буквы"></div>
@@ -625,6 +627,8 @@
         </div>
         <div id="erudite-hints" class="erudite-hints" aria-label="Подсказки за баллы"></div>
         <div id="erudite-hint" class="erudite-hint"></div>
+        <!-- Переход к следующему раунду — только по явной кнопке -->
+        <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Дальше →</button>
         <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong
             id="erudite-streak">0</strong> · Баллы: <strong id="erudite-balance">10</strong>🪙</div>
       </div>
@@ -701,9 +705,27 @@
         <span class="latin-sb" id="habitat-streak-block">🔥 <strong id="habitat-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото</p>
-        <div id="habitat-card" class="habitat-card"></div>
-        <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
+        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото. Три окошка: слева — журнал пар, в центре — игра, справа — Красная книга (текст появится после ответа).</p>
+        <!-- Три окошка: журнал пар | игровая зона | данные из Красной книги -->
+        <div class="habitat-main">
+          <div id="habitat-log-wrap" class="habitat-pane habitat-log-pane">
+            <div class="hp-title">📒 Журнал пар</div>
+            <div id="habitat-log" class="habitat-log" aria-label="Журнал пар «вид — среда»"></div>
+          </div>
+          <div class="habitat-pane habitat-play-pane">
+            <div class="hp-title">🎲 Игра</div>
+            <div class="habitat-play">
+              <div id="habitat-card" class="habitat-card"></div>
+              <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
+            </div>
+          </div>
+          <aside id="habitat-info" class="habitat-pane habitat-info habitat-book-pane" aria-label="Данные из Красной книги">
+            <div class="hi-title hp-title">📖 Данные из Красной книги</div>
+            <div id="habitat-info-body" class="hi-body"></div>
+          </aside>
+        </div>
+        <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
+        <div id="habitat-round-banner" class="habitat-round-banner hidden" role="status"></div>
         <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
       </div>
       <div id="habitat-end-screen" class="hidden" data-game="habitat"
@@ -740,9 +762,21 @@
       </div>
       <div class="latin-body">
         <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге</p>
-        <div id="status-card" class="status-card"></div>
-        <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
-        <div id="status-result" class="status-result hidden"></div>
+        <!-- Игровая зона (карточка + варианты) и окно данных из Красной книги — рядом -->
+        <div class="status-main">
+          <div class="status-play">
+            <div id="status-card" class="status-card"></div>
+            <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
+            <div id="status-result" class="status-result hidden"></div>
+          </div>
+          <aside id="status-info" class="status-info" aria-label="Данные о виде из Красной книги">
+            <div class="si-title">📖 Данные из Красной книги</div>
+            <div id="status-info-body" class="si-body"></div>
+          </aside>
+        </div>
+        <!-- Баннер между вопросами: итог вопроса остаётся видимым до явного «Дальше» -->
+        <div id="status-round-banner" class="status-round-banner hidden" role="status"></div>
+        <button id="status-next-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Дальше →</button>
       </div>
       <div id="status-end-screen" class="hidden" data-game="status"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -776,9 +810,16 @@
         <span class="latin-sb latin-sb-wrong">✗ <strong id="family-score-wrong">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">Перетащи (или отметь касанием и выбери корзину) карточки видов в их систематические группы</p>
+        <p class="latin-instruction">Перетащи (или отметь касанием и выбери корзину) карточки видов в их систематические группы. Распредели все карточки, затем нажми «Проверить» — ошибки покажутся только после проверки.</p>
         <div id="family-tray" class="family-tray" aria-label="Карточки видов"></div>
         <div id="family-baskets" class="family-baskets" aria-label="Корзины групп"></div>
+        <!-- Итоги проверки раунда: список ошибок вида → группа -->
+        <div id="family-check-result" class="family-check-result hidden" role="status"></div>
+        <div class="family-actions">
+          <button id="family-check-btn" class="quiz-next-btn latin-next-btn" type="button">✔ Проверить</button>
+        </div>
+        <!-- Баннер успешного раунда: виден только после «Проверить» -->
+        <div id="family-round-banner" class="family-round-banner hidden" role="status"></div>
         <button id="family-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
       </div>
       <div id="family-end-screen" class="hidden" data-game="family"

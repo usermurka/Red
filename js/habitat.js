@@ -3,14 +3,19 @@
 // Определи, к какому типу местообитаний относится вид:
 // лес, степь, водоём или болото. Раунды по 5 видов, таймер
 // на раунд, серии без ошибок, достижения.
+//
+// Что исправлено по замечаниям игрока:
+//  • Рядом с карточкой — панель «Данные из Красной книги»:
+//    текст поля «Места обитания» + подсветка ключевых слов
+//    выбранного биома — ответ можно проверить по источнику.
+//  • Конец раунда больше не выглядит «глюком»: появляется
+//    баннер с итогом, а переход — только по кнопке
+//    «Продолжить →» (никаких резких автосмен вида).
+//  • После верного ответа пара «Вид — среда» остаётся в
+//    журнале внизу экрана и не исчезает.
+//  • Карточка показывается рубашкой вверх и открывается по
+//    клику (как в «Латыни») — меньше случайных тычков.
 // ============================================================
-
-// Локальный экранировщик (в app-core.js есть только window.esc/window.escapeHtml)
-function escHtml(str) {
-    return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
-}
 
 const HabitatGame = {
     ROUND_SIZE: 5,          // видов в раунде
@@ -29,12 +34,12 @@ const HabitatGame = {
         water: ['водоём', 'водоем', 'озеро', 'река', 'рек', 'пруда', 'пруд', 'водохранилищ',
             'пойменн', 'заросли тростника', 'надводн', 'прибрежн', 'болотн', 'топи', 'тальник',
             'сыроватн', 'влага', 'гидро', 'русла', 'русле', 'мелководий', 'нерест', 'стрежен',
-            'омут', 'затопл', 'канаў', 'канал', 'ключев'],
+            'омут', 'затопл', 'канал', 'ключев'],
         forest: ['лес', 'дремуч', 'хвойн', 'широколиствен', 'смешанн', 'березов', 'берёзов',
             'соснов', 'осин', 'ивняк', 'кустарников', 'подлесок', 'лесная подстилка',
             'лесов', 'леса', 'лесной', 'олышк', 'ельник', 'пихтов', 'кедров', 'лиственнич'],
         steppe: ['степь', 'полын', 'ковыл', 'разнотравь', 'засушлив', 'сухотняк',
-            'открыт', 'луг', 'сольц', 'барабан', 'типчаков', 'склонов', 'бereg', 'берег',
+            'открыт', 'луг', 'сольц', 'барабан', 'типчаков', 'склонов', 'берег',
             'отлог', 'пустыр', 'солонц', 'степных', 'степной'],
         bog: ['болото', 'торф', 'сфагн', 'осоков', 'кочкар', 'заболочен', 'мокр', 'сыр']
     },
@@ -70,21 +75,28 @@ const HabitatGame = {
     startGame() {
         this.round = 0;
         this.score = 0;        // верные определения за игру
-        this.mistakes = 0;     // всего ошибочных ответов
-        this.streak = 0;       // серия верных ответов подряд
+        this.mistakes = 0;     // всего ошибочных ответов (после первой попытки вопроса)
+        this.streak = 0;       // серия верных ответов с первой попытки
         this.bestStreak = 0;
         this.fastest = null;   // самый быстрый верный ответ (сек)
         this.usedIds = new Set();
+        this.logEntries = [];  // пары «вид — среда» за всю игру
         this.hideNextRoundBtn();
+        document.getElementById('habitat-round-banner').classList.add('hidden');
+        document.getElementById('habitat-log').innerHTML = '';
         document.getElementById('habitat-end-screen').classList.add('hidden');
         this.nextRound();
     },
 
-    showNextRoundBtn() {
+    // ---------- Переходы между раундами — ТОЛЬКО по кнопке ----------
+
+    showNextRoundBtn(label) {
         const btn = document.getElementById('habitat-next-round-btn');
         if (!btn) return;
-        btn.textContent = (this.round >= this.TOTAL_ROUNDS) ? 'Итоги игры →' : 'Продолжить →';
+        btn.textContent = label || 'Продолжить →';
         btn.classList.remove('hidden');
+        // чтобы игрок точно заметил появление кнопки — прокрутим к ней
+        try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
 
     hideNextRoundBtn() {
@@ -94,6 +106,7 @@ const HabitatGame = {
 
     continueToNextRound() {
         this.hideNextRoundBtn();
+        document.getElementById('habitat-round-banner').classList.add('hidden');
         this.nextRound();
     },
 
@@ -190,31 +203,96 @@ const HabitatGame = {
         return this.roundItems[this.currentIdx];
     },
 
+    // Карточка нового вида: сначала «рубашка», клик — открыть фото.
     showNextCard() {
         this.currentIdx++;
+        this._answeredCurrent = false;
         const item = this.currentCard();
         const card = document.getElementById('habitat-card');
-        if (!item) { card.innerHTML = ''; return; }
+        const info = document.getElementById('habitat-info-body');
+        if (!item) { card.innerHTML = ''; if (info) info.innerHTML = ''; return; }
         const sp = item.sp;
         card.innerHTML = `
-            <div class="latin-photo-card">
+            <div class="latin-photo-card habitat-photo">
                 <div class="latin-photo-inner">
                     <div class="latin-photo-back">КРАСНАЯ<br>КНИГА</div>
-                    <div class="latin-photo-front"><img src="img/species/${sp.id}.png" alt="" loading="lazy"></div>
+                    <div class="latin-photo-front"></div>
                 </div>
             </div>
             <div class="habitat-name">${escHtml(sp.name)}</div>
-            <div class="habitat-latin">${escHtml(String(sp.latin || '').split(',')[0].trim())}</div>`;
-        const img = card.querySelector('img');
-        img.addEventListener('error', () => {
-            // Нет фотографии — текстовый плейсхолдер вместо битой картинки
-            img.remove();
-            const ph = document.createElement('div');
-            ph.className = 'latin-photo-placeholder';
-            ph.textContent = (sp.name || '').split(' ')[0];
-            card.querySelector('.latin-photo-front').appendChild(ph);
-        });
+            <div class="habitat-latin">${escHtml(String(sp.latin || '').split(',')[0].trim())}</div>
+            <div class="habitat-tap-hint">👆 Нажми на карточку, чтобы открыть фото</div>`;
+        const photo = card.querySelector('.habitat-photo');
+        const front = card.querySelector('.latin-photo-front');
+        const reveal = () => {
+            if (photo.classList.contains('flipped')) return;
+            photo.classList.add('flipped');
+            card.querySelector('.habitat-tap-hint')?.classList.add('hidden');
+            if (!front.querySelector('img, .latin-photo-placeholder')) {
+                const img = document.createElement('img');
+                img.src = `img/species/${sp.id}.png`;
+                img.alt = '';
+                img.loading = 'lazy';
+                img.addEventListener('error', () => {
+                    // Нет фотографии — текстовый плейсхолдер вместо битой картинки
+                    img.remove();
+                    const ph = document.createElement('div');
+                    ph.className = 'latin-photo-placeholder';
+                    ph.textContent = (sp.name || '').split(' ')[0];
+                    front.appendChild(ph);
+                });
+                front.appendChild(img);
+            }
+        };
+        photo.addEventListener('click', reveal);
+        // Не заставляем ждать анимацию: открываем сразу после короткой паузы
+        setTimeout(reveal, 450);
         this.questionStartTs = Date.now();
+        this.renderInfoPanel(item);
+    },
+
+    // Боковая панель: настоящий текст «Места обитания» из базы +
+    // подсветка совпадений с ключевыми словами выбранного биома.
+    renderInfoPanel(item) {
+        const el = document.getElementById('habitat-info-body');
+        if (!el) return;
+        const full = (window.SPECIES_DATA && item.sp.id) ? window.SPECIES_DATA[item.sp.id] : null;
+        const habitats = String((full && full.habitats) || '').replace(/\s+/g, ' ').trim();
+        const spread = String((full && full.spread_omsk) || '').replace(/\s+/g, ' ').trim();
+        const hl = (txt) => escHtml(txt).replace(/\n/g, '<br>');
+        let html = '';
+        if (habitats) {
+            html += `<div class="hi-section"><div class="hi-label">Места обитания</div>` +
+                `<div class="hi-text" data-hl>${hl(habitats)}</div></div>`;
+        } else {
+            html += `<div class="hi-note">Поле «Места обитания» в базе пусто — ориентируйтесь на описание.</div>`;
+        }
+        if (spread) {
+            html += `<div class="hi-section"><div class="hi-label">Распространение в Омской области</div>` +
+                `<div class="hi-text hi-small">${hl(spread)}</div></div>`;
+        }
+        if (full && full.description_short) {
+            html += `<div class="hi-section"><div class="hi-label">Краткое описание</div>` +
+                `<div class="hi-text hi-small">${hl(String(full.description_short).replace(/\s+/g, ' ').trim())}</div></div>`;
+        }
+        el.innerHTML = html;
+        // Подсветка ключевых слов того биома, на который уже был ответ
+        if (this._lastPickKey) this.highlightBiomeWords(this._lastPickKey);
+    },
+
+    highlightBiomeWords(biomKey) {
+        const body = document.getElementById('habitat-info-body');
+        if (!body) return;
+        body.querySelectorAll('[data-hl]').forEach(node => {
+            let text = node.textContent;
+            const words = this.KEYWORDS[biomKey] || [];
+            // длинные слова раньше — иначе короткие «съедят» вхождения длинных
+            [...words].sort((a, b) => b.length - a.length).forEach(w => {
+                const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[а-яё]*)', 'gi');
+                text = text.replace(re, '<mark class="hl-' + biomKey + '" data-w>$1</mark>');
+            });
+            node.innerHTML = text;
+        });
     },
 
     updateScoreboard() {
@@ -225,38 +303,54 @@ const HabitatGame = {
     },
 
     answer(biomKey, btn) {
-        if (this.locked) return;
         const item = this.currentCard();
         if (!item) return;
-        // Сброс блокировки предыдущего неверного ответа — иначе игра
-        // «замирает» после второй ошибки в одном раунде
-        this.locked = false;
         const correct = biomKey === item.biome;
-        const elapsed = (Date.now() - this.questionStartTs) / 1000;
+        const firstTry = !this._answeredCurrent;
 
         if (correct) {
+            const elapsed = (Date.now() - this.questionStartTs) / 1000;
             btn.classList.add('hab-correct');
             setTimeout(() => btn.classList.remove('hab-correct'), 600);
-            this.score++;
-            this.streak++;
-            this.bestStreak = Math.max(this.bestStreak, this.streak);
-            if (this.fastest == null || elapsed < this.fastest) this.fastest = elapsed;
-            if (elapsed <= 2) this.unlockAch('quick');
-            if (this.streak >= 8) this.unlockAch('serial');
-            this.matchedCount++;
-            this.updateScoreboard();
+            this._lastPickKey = biomKey;
+            this.highlightBiomeWords(biomKey);
 
-            if (this.matchedCount === this.ROUND_SIZE) {
+            if (firstTry) {
+                this.score++;
+                this.streak++;
+                this.bestStreak = Math.max(this.bestStreak, this.streak);
+                if (this.fastest == null || elapsed < this.fastest) this.fastest = elapsed;
+                if (elapsed <= 2) this.unlockAch('quick');
+                if (this.streak >= 8) this.unlockAch('serial');
+                this.matchedCount++;
+            }
+            this.locked = false;
+            this.updateScoreboard();
+            this.addLogPair(item, true);
+
+            if (this.matchedCount >= this.ROUND_SIZE) {
+                // Раунд завершён: явно говорим об этом и ЖДЁМ нажатия кнопки.
                 this.stopTimer();
-                this.showNextRoundBtn();
+                this.showRoundBanner(
+                    `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
+                    (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
+                    this.round >= this.TOTAL_ROUNDS ? 'Итоги игры →' : 'Продолжить →');
             } else {
                 this.showNextCard();
             }
         } else {
-            this.mistakes++;
-            this.roundMistakes++;
-            this.streak = 0;
-            this.updateScoreboard();
+            this._lastPickKey = biomKey;
+            this.highlightBiomeWords(biomKey);
+            if (firstTry) {
+                // Первая ошибка в вопросе: засчитываем, но даём шанс
+                // выбрать другой вариант, глядя на подсвеченный текст.
+                this.mistakes++;
+                this.roundMistakes++;
+                this.streak = 0;
+                this._answeredCurrent = true;
+                this.updateScoreboard();
+                this.addLogPair(item, false);
+            }
             btn.classList.add('hab-wrong');
             this.locked = true;
             setTimeout(() => {
@@ -264,6 +358,41 @@ const HabitatGame = {
                 this.locked = false;
             }, 600);
         }
+    },
+
+    // Журнал пар «вид — среда»: записи остаются до конца игры
+    addLogPair(item, correctFirstTry) {
+        const log = document.getElementById('habitat-log');
+        if (!log) return;
+        const key = item.sp.id;
+        const existing = log.querySelector(`[data-pair="${CSS.escape(key)}"]`);
+        const biomLabel = this.biomeLabel(item.biome);
+        if (existing) {
+            if (correctFirstTry) {
+                existing.classList.remove('hl-miss');
+                existing.classList.add('hl-hit');
+                existing.innerHTML = `<span class="hl-mark">✔</span> ${escHtml(item.sp.name)} — <b>${biomLabel}</b>`;
+            }
+            return;
+        }
+        const div = document.createElement('div');
+        div.className = 'hl-entry ' + (correctFirstTry ? 'hl-hit' : 'hl-miss');
+        div.dataset.pair = key;
+        div.innerHTML = `<span class="hl-mark">${correctFirstTry ? '✔' : '✘'}</span> ` +
+            `${escHtml(item.sp.name)} — <b>${biomLabel}</b>`;
+        log.appendChild(div);
+    },
+
+    biomeLabel(key) {
+        const b = this.BIOMES.find(x => x.key === key);
+        return b ? `${b.icon} ${b.label}` : '?';
+    },
+
+    showRoundBanner(text, btnLabel) {
+        const banner = document.getElementById('habitat-round-banner');
+        banner.textContent = text;
+        banner.classList.remove('hidden');
+        this.showNextRoundBtn(btnLabel);
     },
 
     startTimer() {

@@ -41,6 +41,16 @@ window.xyToGeo = xyToGeo;
 // Порядок загрузки в index.html:
 //     core -> ui -> map -> regions -> species -> render -> tooltips -> guide
 // ------------------------------------------------------------
+// Единый экранировщик HTML для всех игр и модулей.
+// Раньше каждая игра объявляла свою глобальную escHtml(); при загрузке
+// скриптов с defer последней выигрывала одна и та же по имени функция —
+// потенциальный источник неожиданного поведения. Теперь все пользуются этой.
+window.escHtml = function (str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+};
+
 window.App = {
   markers: [],
   developerMode: false,

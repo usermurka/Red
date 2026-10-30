@@ -58,17 +58,43 @@
 .erudite-picture img {
     max-width: 100%;
     max-height: 100%;
+    width: 100%;
+    height: 100%;
+    /* Фото вписывается ЦЕЛИКОМ (как в «Найди пару»), а не обрезается:
+       альбомные и книжные снимки остаются с белыми полями по краям */
     object-fit: contain;
+    background: var(--parchment-light, #faf5e6);
 }
 
-/* Слоты для букв */
+.erudite-img-ph {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Слоты для букв. Название из двух слов группируется: каждая часть
+   слова лежит в отдельном блоке-«капсуле», чтобы визуально было
+   понятно, где заканчивается одно слово и начинается другое. */
 .erudite-slots {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 6px;
+    align-items: center;
+    gap: 10px;
     min-height: 46px;
     max-width: 100%;
+}
+
+.erudite-word-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 7px;
+    border-radius: 8px;
+    background: rgba(36, 53, 42, 0.05);
+    border: 1px dashed rgba(168, 132, 42, 0.55);
 }
 
 .erudite-slot {
@@ -98,11 +124,27 @@
     border-color: var(--gold-deep, #a8842a);
 }
 
-/* Разделитель между словами (пробел) */
+/* Разделитель между словами (пробел) — старый одиночный слот-пустышка
+   больше не нужен: слова разделены блоками .erudite-word-group */
 .erudite-slot.space {
-    width: 16px;
-    border: none;
-    background: transparent;
+    display: none;
+}
+
+/* Слот, в который сейчас что-то перетаскивают */
+.erudite-slot.drop-hover {
+    border-color: var(--green, #2e6b3e);
+    background: rgba(76, 175, 80, 0.25);
+    transform: scale(1.06);
+}
+
+/* Буква, которую тащат из слота */
+.erudite-slot.dragging {
+    opacity: 0.4;
+}
+
+/* Занятый слот кликабелен (клик — снять букву обратно в лоток) */
+.erudite-slot.filled:not(.revealed) {
+    cursor: pointer;
 }
 
 .erudite-slot.correct {
@@ -157,6 +199,11 @@
 .erudite-tile.used {
     opacity: 0.25;
     pointer-events: none;
+}
+
+/* Буквы можно перетаскивать на любые клетки */
+.erudite-tile {
+    -webkit-user-drag: element;
 }
 
 /* Кнопки управления */

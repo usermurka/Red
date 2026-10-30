@@ -1,5 +1,27 @@
 /* ===== Игра «Систематик» (разложи виды по систематическим группам) ===== */
 
+/* Модалка игры. Без этих правил контейнер не имеет position:fixed и
+   перекрывается картой (#map-area, z-index 10), а класс .hidden его
+   не скрывает — игра «запускается», но остаётся невидимой. */
+#family-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(36, 53, 42, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#family-modal.hidden {
+    display: none;
+}
+
 .family-scroll {
     max-width: 820px;
 }
@@ -48,7 +70,10 @@
 .family-card img {
     width: 100%;
     height: 72px;
-    object-fit: cover;
+    /* Фото вписывается целиком (как в «Найди пару») — альбомные и
+       книжные снимки не обрезаются, остаются белые поля */
+    object-fit: contain;
+    background: var(--parchment-light, #faf5e6);
     display: block;
     pointer-events: none;
 }
@@ -119,7 +144,9 @@
 .fb-mini img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    /* Миниатюры тоже вписываются целиком, без обрезки краёв */
+    object-fit: contain;
+    background: var(--parchment-light, #faf5e6);
     display: block;
 }
 
@@ -153,4 +180,120 @@
     .family-card img { height: 58px; }
     .fc-name { font-size: 10px; }
     .family-tray { min-height: 96px; gap: 6px; padding: 6px; }
+}
+
+/* Плитка, уже лежащая в корзине: чуть компактнее карточки из лотка */
+.family-card.fb-in-basket {
+    width: 84px;
+}
+
+.family-card.fb-in-basket img {
+    height: 56px;
+}
+
+.family-card.fb-in-basket .fc-name {
+    font-size: 10px;
+    min-height: 24px;
+    padding: 2px 3px 4px;
+}
+
+/* Верно зафиксированная проверкой плитка — золотая рамка, снять нельзя */
+.family-card.fb-ok {
+    border-color: var(--gold-soft, #d9b45b);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.75);
+    cursor: default;
+}
+
+/* Неверная плитка на мгновение при проверке (красная рамка) */
+.family-card.fb-bad {
+    border-color: #a33;
+    box-shadow: 0 0 0 2px rgba(170, 51, 51, 0.6);
+    opacity: 0.85;
+}
+
+/* Лоток как зона возврата карточек */
+#family-tray.fb-over {
+    background: rgba(212, 180, 90, 0.2);
+    border-style: solid;
+}
+
+@media (max-width: 640px) {
+    .family-card.fb-in-basket { width: 68px; }
+    .family-card.fb-in-basket img { height: 44px; }
+}
+
+/* ===== Проверка раскладки (по замечаниям игрока) ===== */
+
+/* Панель действий: кнопка «✔ Проверить» */
+.family-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+/* Сообщение о результатах проверки (ошибки видны ТОЛЬКО здесь) */
+.family-check-result {
+    margin-top: 12px;
+    width: 100%;
+    max-width: 720px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    line-height: 1.45;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.family-check-result.warn {
+    background: rgba(251, 192, 45, 0.25);
+    border: 2px solid var(--gold-deep);
+    color: var(--dark-green);
+}
+
+.family-check-result.bad {
+    background: rgba(170, 51, 51, 0.15);
+    border: 2px solid #a33;
+    color: #7d1f1f;
+}
+
+/* Баннер успешного завершения раунда (после проверки) */
+.family-round-banner {
+    margin-top: 12px;
+    width: 100%;
+    max-width: 720px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    background: rgba(46, 107, 62, 0.2);
+    border: 2px solid var(--green, #2e6b3e);
+    color: var(--dark-green);
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Заглушка в лотке, когда все карточки разложены */
+.family-tray-empty {
+    margin: auto;
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: rgba(36, 53, 42, 0.6);
+    text-align: center;
+}
+
+/* Верно зафиксированная проверкой плитка — золотая рамка, снять нельзя */
+.fb-mini.fb-ok {
+    border-color: var(--gold-soft, #d9b45b);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.75);
+    cursor: default;
+}
+
+/* Неверные корзины подсвечиваются только на мгновение при проверке */
+.family-basket.fb-wrong-flash {
+    border-color: #a33;
+    background: rgba(170, 51, 51, 0.12);
 }
