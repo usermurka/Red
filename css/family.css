@@ -1,0 +1,156 @@
+/* ===== Игра «Систематик» (разложи виды по систематическим группам) ===== */
+
+.family-scroll {
+    max-width: 820px;
+}
+
+/* Лоток с карточками */
+.family-tray {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    min-height: 120px;
+    width: 100%;
+    max-width: 720px;
+    padding: 10px;
+    border: 2px dashed var(--gold-deep);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.family-card {
+    width: 104px;
+    background: var(--parchment-light, #faf5e6);
+    border: 2px solid var(--gold-deep);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.family-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(36, 53, 42, 0.3);
+}
+
+.family-card.dragging {
+    opacity: 0.55;
+}
+
+.family-card.selected {
+    outline: 3px solid var(--gold-soft, #d9b45b);
+    box-shadow: 0 0 0 2px rgba(36, 53, 42, 0.35);
+}
+
+.family-card img {
+    width: 100%;
+    height: 72px;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+.fc-name {
+    font-family: Georgia, serif;
+    font-size: 11px;
+    line-height: 1.25;
+    color: var(--dark-green);
+    text-align: center;
+    padding: 4px 3px 6px;
+    min-height: 30px;
+}
+
+/* Корзины групп */
+.family-baskets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 720px;
+    margin-top: 14px;
+}
+
+.family-basket {
+    min-height: 130px;
+    padding: 8px 6px;
+    background: rgba(36, 53, 42, 0.06);
+    border: 2px solid var(--gold-deep);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, border-color 0.2s;
+    cursor: pointer;
+}
+
+.family-basket.fb-over {
+    background: rgba(212, 180, 90, 0.25);
+    border-color: var(--dark-green);
+}
+
+.fb-head {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--dark-green);
+    text-align: center;
+}
+
+.fb-slots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+}
+
+.fb-mini {
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--gold-deep);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--parchment-light, #faf5e6);
+}
+
+.fb-mini img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.fb-mini-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    font-size: 9px;
+    font-style: italic;
+    color: var(--dark-green);
+    text-align: center;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.family-basket.fb-shake {
+    animation: latin-shake 0.45s;
+    border-color: #a33;
+}
+
+/* Цветовые акценты корзин — как у категорий на карте */
+.family-basket-animals  { border-color: #1a3a2e; }
+.family-basket-plants   { border-color: #4CAF50; }
+.family-basket-lichens  { border-color: #8BC34A; }
+.family-basket-fungi    { border-color: #8B4513; }
+
+@media (max-width: 640px) {
+    .family-baskets { grid-template-columns: repeat(2, 1fr); }
+    .family-card { width: 84px; }
+    .family-card img { height: 58px; }
+    .fc-name { font-size: 10px; }
+    .family-tray { min-height: 96px; gap: 6px; padding: 6px; }
+}

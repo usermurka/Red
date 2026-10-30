@@ -1,0 +1,120 @@
+/* ===== Игра «Статус» (угадай категорию редкости вида) ===== */
+
+.status-scroll {
+    max-width: 780px;
+}
+
+.status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin: 6px auto 12px;
+}
+
+.status-card .latin-photo-card {
+    width: 150px;
+    height: 150px;
+}
+
+.st-name {
+    font-family: Georgia, serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--dark-green);
+    text-align: center;
+}
+
+.st-latin {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--gold-deep);
+    text-align: center;
+}
+
+.st-desc {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green);
+    text-align: center;
+    max-width: 620px;
+    line-height: 1.45;
+}
+
+/* Варианты ответов — категории редкости */
+.status-options {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 100%;
+    max-width: 620px;
+}
+
+.status-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--parchment, #f0e6cf);
+    border: 2px solid var(--gold-deep);
+    border-radius: 6px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: var(--dark-green);
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.status-option-btn:hover {
+    transform: translateY(-1px);
+    background: #f7efdc;
+}
+
+.st-chip {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(36, 53, 42, 0.5);
+}
+
+.st-num {
+    flex: 0 0 auto;
+    font-weight: bold;
+    min-width: 14px;
+    text-align: center;
+}
+
+.status-option-btn.st-correct {
+    background: rgba(46, 107, 62, 0.3);
+    border-color: var(--green);
+}
+
+.status-option-btn.st-wrong {
+    background: rgba(170, 51, 51, 0.22);
+    border-color: #a33;
+    animation: latin-shake 0.45s;
+}
+
+/* Строка результата под вариантами */
+.status-result {
+    margin-top: 12px;
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.status-result.ok { color: var(--green-dark, #2e6b3e); }
+.status-result.bad { color: #a33; }
+.status-result.hidden { display: none; }
+
+@media (max-width: 480px) {
+    .status-card .latin-photo-card { width: 110px; height: 110px; }
+    .st-name { font-size: 16px; }
+    .st-desc { font-size: 12px; }
+    .status-option-btn { font-size: 12px; padding: 7px 8px; }
+}
