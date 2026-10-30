@@ -87,9 +87,28 @@ const HabitatGame = {
         this.logEntries = [];  // пары «вид — среда» за всю игру
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
-        document.getElementById('habitat-log').innerHTML = '';
+        // Пустой журнал не должен выглядеть «дырой» в окне —
+        // показываем аккуратную подсказку, пока нет ни одной пары.
+        this.renderEmptyLogNote();
         document.getElementById('habitat-end-screen').classList.add('hidden');
         this.nextRound();
+    },
+
+    renderEmptyLogNote() {
+        const log = document.getElementById('habitat-log');
+        if (!log) return;
+        log.innerHTML = '';
+        const note = document.createElement('div');
+        note.className = 'habitat-log-empty-note';
+        note.textContent = 'Здесь будут появляться пары «вид — среда» по вашим ответам.';
+        log.appendChild(note);
+    },
+
+    removeEmptyLogNote() {
+        const log = document.getElementById('habitat-log');
+        if (!log) return;
+        const note = log.querySelector('.habitat-log-empty-note');
+        if (note) note.remove();
     },
 
     // ---------- Переходы между раундами — ТОЛЬКО по кнопке ----------
@@ -308,9 +327,9 @@ const HabitatGame = {
             blocks.push({ title: 'Места обитания', text: 'Поле «Места обитания» в базе пусто — ориентируйтесь на описание.' });
         }
         if (spread) blocks.push({ title: 'Распространение в Омской области', html: escHtml(spread).replace(/\n/g, '<br>') });
-        if (full && full.description_short) {
-            blocks.push({ title: 'Краткое описание', html: escHtml(String(full.description_short).replace(/\s+/g, ' ').trim()).replace(/\n/g, '<br>') });
-        }
+        // По требованию пользователя из мини-свитка игры «Среда обитания»
+        // блок «Краткое описание» убран — оставляем только справочную
+        // информацию о местах обитания и распространении вида.
 
         const statusConfig = CONFIG.statuses.find(s => s.value === sp.status);
         MiniScroll.show({
@@ -415,6 +434,7 @@ const HabitatGame = {
     addLogPair(item, correct, pickKey) {
         const log = document.getElementById('habitat-log');
         if (!log) return;
+        this.removeEmptyLogNote();
         const key = item.sp.id;
         const existing = log.querySelector(`[data-pair="${CSS.escape(key)}"]`);
         const pickedLabel = this.biomeLabel(pickKey || item.biome);

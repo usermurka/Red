@@ -403,3 +403,11 @@ body.games-mode #hint {
     color: #fff;
     transform: scale(1.08);
 }
+
+/* Разделительная черта под кнопками режимов в левой панели:
+   отделяет выбор игры от списка игр/прогресса */
+.games-menu-divider {
+    border: none;
+    border-top: 2px solid rgba(176, 141, 47, 0.55);
+    margin: 14px 4px 10px;
+}
