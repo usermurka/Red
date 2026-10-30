@@ -210,8 +210,21 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 14px;
     max-width: 100%;
+}
+
+/* Блок букв одного слова названия (название из двух слов — два блока) */
+.erudite-tray-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px dashed var(--gold-deep, #a8842a);
+    border-radius: 10px;
 }
 
 .erudite-tile {
@@ -247,26 +260,46 @@
     -webkit-user-drag: element;
 }
 
-/* Кнопки управления */
+/* Кнопки управления: разные по роли и размеру — «Убрать» маленькая
+   вторичная, «Пропустить» средняя нейтральная, «Дальше» крупная
+   акцентная. Больше не «одинаковые и грубые». */
 .erudite-controls {
     display: flex;
+    align-items: stretch;
     gap: 10px;
 }
 
-.erudite-controls button {
+#erudite-backspace {
+    min-width: 44px;
+    padding: 6px 12px;
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid var(--gold-deep, #a8842a);
+    border-radius: 16px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.9;
+}
+
+#erudite-skip {
     min-width: 52px;
-    padding: 8px 14px;
-    font-size: 18px;
+    padding: 7px 14px;
+    font-size: 15px;
     background: var(--parchment);
-    border: 2px solid var(--gold-deep, #a8842a);
-    border-radius: 4px;
+    border: 1px solid var(--gold-deep, #a8842a);
+    border-radius: 16px;
     cursor: pointer;
     color: inherit;
 }
 
-.erudite-controls button:hover {
+.erudite-controls button:hover:not(:disabled) {
     background: var(--gold-soft, #d4b45a);
     color: #fff;
+}
+
+.erudite-controls button:disabled {
+    opacity: 0.4;
+    cursor: default;
 }
 
 /* Панель платных подсказок */

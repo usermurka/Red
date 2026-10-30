@@ -897,6 +897,10 @@ Object.assign(App, {
       sidebar.classList.add('open');
       if (backdrop) backdrop.classList.add('visible');
       document.body.classList.add('sidebar-open');
+      // Поднимаем панель поверх игровых модалок (z-index 2000), чтобы в
+      // режиме «Игры» на мобильном можно было открыть меню и сменить игру.
+      sidebar.style.setProperty('z-index', '2600', 'important');
+      if (backdrop) backdrop.style.setProperty('z-index', '2550', 'important');
     };
 
     const closeSidebar = () => {
@@ -904,6 +908,9 @@ Object.assign(App, {
       sidebar.classList.remove('open');
       if (backdrop) backdrop.classList.remove('visible');
       document.body.classList.remove('sidebar-open');
+      // Возвращаем обычный слой панели (ниже тултипов/подсказок)
+      sidebar.style.removeProperty('z-index');
+      if (backdrop) backdrop.style.removeProperty('z-index');
     };
 
     if (btnToggle) btnToggle.addEventListener('click', openSidebar);

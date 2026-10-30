@@ -57,6 +57,30 @@ body.games-mode #games-menu {
   display: none !important;
 }
 
+/* Разделительная черта под кнопками режимов (переключатель 2×2):
+   отделяет выбор режима от списка игр. */
+.mode-switch.mode-switch-grid {
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.mode-switch.mode-switch-grid::after {
+  content: '';
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+      transparent,
+      var(--gold-soft) 15%,
+      var(--gold-deep) 50%,
+      var(--gold-soft) 85%,
+      transparent);
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
 /* Заголовок панели в режиме игр (текст подменяет Achievements) */
 body.games-mode #sidebar-title {
   color: var(--gold-soft);
@@ -378,4 +402,12 @@ body.games-mode #hint {
     background: var(--gold-deep, #c9a227);
     color: #fff;
     transform: scale(1.08);
+}
+
+/* Разделительная черта под кнопками режимов в левой панели:
+   отделяет выбор игры от списка игр/прогресса */
+.games-menu-divider {
+    border: none;
+    border-top: 2px solid rgba(176, 141, 47, 0.55);
+    margin: 14px 4px 10px;
 }

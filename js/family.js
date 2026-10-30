@@ -1,28 +1,41 @@
 // ============================================================
 // ИГРА «СИСТЕМАТИК» (Family Sort)
 // Разложи виды по систематическим группам: животные, растения,
-// грибы, лишайники. 3 раунда по 6 карточек — перетаскивание
+// грибы, лишайники. 6 раундов по 12 карточек — перетаскивание
 // (drag&drop) и касания (тап по карточке, затем по корзине).
 //
 // Правила по замечаниям игрока:
+//  • В лотке — карточки с изображением и названием; в корзины
+//    («зоны распределения») карточка «встаёт» СТРОКОЙ с одним
+//    названием (без картинки).
 //  • Карточка ложится в ЛЮБУЮ корзину — это просто раскладка,
 //    ошибка НЕ засчитывается и карточка НЕ «отскакивает».
-//  • Раскладывать можно сколько угодно: карточки из корзины
+//  • Раскладывать можно сколько угодно: строки из корзины
 //    возвращаются в лоток тапом/перетаскиванием обратно.
 //  • Результаты видны только после нажатия «✔ Проверить»:
-//      - верные плитки фиксируются (золотая рамка, снять нельзя);
-//      - неверные помечаются красным и возвращаются в лоток —
-//        их можно разложить заново по другим корзинам и снова
-//        нажать «Проверить»;
+//      - верные строки фиксируются (золотая рамка, снять нельзя);
+//      - НЕВЕРНЫЕ строки исчезают из корзин и ВСЕ возвращаются
+//        в лоток (исправлено: раньше при нескольких неверных
+//        в одной корзине часть карточек «терялась», потому что
+//        возврат искал элемент по id вида во всей игре);
 //      - счёт ошибок пополняется только на проверке.
 //  • Если всё верно — раунд НЕ переключается сам: появляется
 //    баннер и кнопка «Продолжить →» (переход только по нажатию).
 // ============================================================
 
+// Экранирование HTML: ЕДИНСТВЕННАЯ глобальная функция объявлена в
+// app-core.js как window.escHtml. Здесь НЕ создаём собственное
+// лексическое объявление `const/function escHtml` — из-за него
+// возникал конфликт идентификаторов в глобальной области видимости
+// (Identifier 'escHtml' has already been declared), который ломал
+// загрузку всех игровых скриптов и «Систематик» не запускался вовсе.
+// Обращение к escHtml через цепочку прототипов global разрешается
+// автоматически.
+
 const FamilyGame = {
-    CARDS_PER_ROUND: 6,
-    TOTAL_ROUNDS: 3,
-    ROUND_TIME: 90, // секунд на раунд
+    CARDS_PER_ROUND: 12,
+    TOTAL_ROUNDS: 6,
+    ROUND_TIME: 150, // секунд на раунд (12 карточек)
 
     init() {
         document.getElementById('btn-family').addEventListener('click', () => this.open());
@@ -132,7 +145,9 @@ const FamilyGame = {
             return;
         }
 
-        // Формируем пул: стараемся взять по 2 вида на группу (детект категории — как на карте)
+        // Формируем пул: по 3 вида на группу (детект категории — как на карте),
+        // всего 12 карточек в раунде при четырёх группах
+        const perGroup = Math.ceil(this.CARDS_PER_ROUND / Math.max(groups.length, 1));
         const all = App.collectAllSpecies().filter(sp => sp.name && !this.usedIds.has(sp.id));
         const byGroup = {};
         groups.forEach(g => byGroup[g.key] = []);
@@ -144,18 +159,30 @@ const FamilyGame = {
         const available = Object.values(byGroup).reduce((n, l) => n + l.length, 0);
         let items = [];
         if (available >= this.CARDS_PER_ROUND) {
-            // Полный набор: по 2 на группу + добор случайными до 6, при этом
-            // в раунде гарантированно представлены минимум 2 разные группы
+            // Базовый набор: по 3 на группу; если где-то не хватает — добираем
+            // из остальных групп и случайными видами до CARDS_PER_ROUND
             const groupKeys = groups.map(g => g.key);
             groupKeys.forEach(k => {
                 const list = this.shuffle(byGroup[k]);
-                items.push(...list.slice(0, 2).map(sp => ({ sp, group: k })));
+                items.push(...list.slice(0, perGroup).map(sp => ({ sp, group: k })));
             });
             if (items.length < this.CARDS_PER_ROUND) {
-                const rest = this.shuffle(all.filter(sp => !items.find(i => i.sp.id === sp.id)));
+                // Добор: сначала «излишками» из групп, затем любыми свежими видами
+                const extra = [];
+                groupKeys.forEach(k => {
+                    extra.push(...this.shuffle(byGroup[k]).slice(perGroup));
+                });
+                const chosenIds = new Set(items.map(i => i.sp.id));
+                const rest = this.shuffle(extra.concat(
+                    all.filter(sp => !chosenIds.has(sp.id) && !extra.find(e => e.id === sp.id))
+                ));
                 for (const sp of rest) {
                     if (items.length >= this.CARDS_PER_ROUND) break;
-                    items.push({ sp, group: App.detectCategory(sp.id) });
+                    if (chosenIds.has(sp.id)) continue;
+                    const key = App.detectCategory(sp.id);
+                    if (!key) continue;
+                    items.push({ sp, group: key });
+                    chosenIds.add(sp.id);
                 }
             }
             if (items.length > this.CARDS_PER_ROUND) {
@@ -247,13 +274,10 @@ const FamilyGame = {
         });
         card.addEventListener('dragend', () => card.classList.remove('dragging'));
         // Тап-режим (мобильные): выделить карточку, затем нажать на корзину.
-        // Тап по карточке, уже лежащей в корзине, — вернуть её в лоток.
+        // Тап по строке в корзине — вернуть её в лоток (обработчик навешивается
+        // отдельно в buildBasketRow).
         card.addEventListener('click', () => {
             if (this.lockedAfterCheck) return;
-            if (!inTray) {
-                this.returnToTray(item, card);
-                return;
-            }
             if (card.classList.contains('selected')) {
                 card.classList.remove('selected');
                 this.selectedCard = null;
@@ -267,10 +291,42 @@ const FamilyGame = {
         return card;
     },
 
-    // Вернуть карточку из корзины в лоток (тап или перетаскивание в лоток)
-    returnToTray(item, cardEl) {
+    // Строка с названием вида — так карточка «встаёт» в зоне распределения
+    // (без изображения, только название; клик — вернуть в лоток).
+    buildBasketRow(item) {
+        const row = document.createElement('div');
+        row.className = 'family-card fb-row';
+        row.dataset.speciesId = item.sp.id;
+        row.draggable = !this.lockedAfterCheck;
+
+        const name = document.createElement('div');
+        name.className = 'fc-name fb-row-name';
+        name.textContent = item.sp.name || '';
+        row.appendChild(name);
+
+        row.addEventListener('dragstart', (e) => {
+            if (this.lockedAfterCheck) { e.preventDefault(); return; }
+            this.selectedCard = item;
+            row.classList.add('dragging');
+            try {
+                e.dataTransfer.setData('text/plain', String(item.sp.id));
+                e.dataTransfer.effectAllowed = 'move';
+            } catch (err) { /* noop */ }
+        });
+        row.addEventListener('dragend', () => row.classList.remove('dragging'));
+        row.addEventListener('click', () => {
+            if (this.lockedAfterCheck) return;
+            this.returnToTray(item, row);
+        });
+        return row;
+    },
+
+    // Вернуть карточку из корзины в лоток (тап или перетаскивание в лоток).
+    // tileEl — конкретный элемент строки: удаляем именно его (важно для
+    // возврата нескольких неверных строк из одной корзины за проверку).
+    returnToTray(item, tileEl) {
         delete this.placement[item.sp.id];
-        if (cardEl && cardEl.parentElement) cardEl.parentElement.remove();
+        if (tileEl && tileEl.parentElement) tileEl.parentElement.removeChild(tileEl);
         this.selectedCard = null;
         this.renderTray();
         this.refreshBasketEmptiness();
@@ -372,8 +428,8 @@ const FamilyGame = {
         }
         this.placement[item.sp.id] = groupKey;
 
-        // Плитка внутри корзины: клик/дроп в лоток — вернуть карточку назад
-        const tile = this.buildCard(item, false);
+        // Строка внутри корзины: только название; клик/дроп в лоток — вернуть карточку назад
+        const tile = this.buildBasketRow(item);
         tile.title = (item.sp.name || '') + ' — нажми, чтобы вернуть в лоток';
         basketEl.querySelector('.fb-slots').appendChild(tile);
 
@@ -410,14 +466,18 @@ const FamilyGame = {
 
         let wrong = 0, right = 0;
         const wrongList = [];
+        const wrongIds = [];      // id неверных карточек — для возврата в лоток
+        // Собираем элементы строк по data-атрибуту: id вида уникальны в раунде,
+        // поэтому каждая неверная строка найдётся явно (в т.ч. несколько
+        // неверных строк из одной корзины — раньше они «терялись»).
+        const tiles = Array.from(
+            document.querySelectorAll('#family-baskets .family-card[data-species-id]'));
         items.forEach(item => {
             const gkey = this.placement[item.sp.id];
             if (!gkey) return; // карточка осталась в лотке — не считаем
-            const basketEl = document.querySelector(
-                `#family-baskets .family-basket[data-group="${CSS.escape(gkey)}"]`);
-            const tileEl = basketEl
-                ? basketEl.querySelector(`.family-card[data-species-id="${CSS.escape(String(item.sp.id))}"]`)
-                : null;
+            const tileEl = tiles.find(el =>
+                String(el.dataset.speciesId) === String(item.sp.id));
+            const basketEl = tileEl ? tileEl.closest('.family-basket') : null;
             if (gkey === item.group) {
                 right++;
                 item.done = true;               // фиксируем: снять нельзя
@@ -432,6 +492,7 @@ const FamilyGame = {
                 }
             } else {
                 wrong++;
+                wrongIds.push(String(item.sp.id));
                 wrongList.push(`${item.sp.name} → не «${this.groupLabel(gkey)}», а «${this.groupLabel(item.group)}»`);
                 if (tileEl) tileEl.classList.add('fb-bad');
                 if (basketEl) {
@@ -447,11 +508,18 @@ const FamilyGame = {
         this.updateScoreboard();
 
         if (wrong > 0) {
-            // Неверные плитки возвращаем в лоток — можно разложить заново
+            // Неверные строки возвращаем в лоток ВСЕ до единой — можно
+            // разложить заново. Сначала синхронно чистим placement по
+            // списку wrongIds (надёжнее, чем поиск элементов), затем
+            // удаляем сами строки из DOM корзин и перерисовываем лоток.
+            const wrongIdSet = new Set(wrongIds);
+            wrongIdSet.forEach(id => {
+                const it = this.cardById(id);
+                if (it && !it.done) delete this.placement[it.sp.id];
+            });
             setTimeout(() => {
                 document.querySelectorAll('#family-baskets .family-card.fb-bad').forEach(el => {
-                    const item = this.cardById(el.dataset.speciesId);
-                    if (item) this.returnToTray(item, el);
+                    if (el.parentElement) el.parentElement.removeChild(el);
                 });
                 this.renderTray();
                 this.refreshBasketEmptiness();
