@@ -229,7 +229,7 @@ const HabitatGame = {
         const item = this.currentCard();
         if (!item) return;
         // Сброс блокировки предыдущего неверного ответа — иначе игра
-        «замирает» после второй ошибки в одном раунде
+        // «замирает» после второй ошибки в одном раунде
         this.locked = false;
         const correct = biomKey === item.biome;
         const elapsed = (Date.now() - this.questionStartTs) / 1000;
