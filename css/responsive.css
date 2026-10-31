@@ -491,6 +491,41 @@ body {
     z-index: 20;
   }
 
+  /* --- Мемо на мобильных: игра занимает экран, панель видов — снизу --- */
+  #memo-modal .memo-scroll {
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    overflow: hidden;           /* сама колонка не скроллит — только панель */
+  }
+  #memo-grid {
+    flex: 1 1 auto;             /* сетка растягивается на всю доступную высоту */
+    min-height: 0;
+  }
+  #memo-info-panel {
+    position: static !important;
+    order: 99;                  /* всегда ПОСЛЕ игрового окна (не поверх него) */
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;    /* панель не занимает 94vh */
+    max-height: 38dvh;          /* снизу экрана — компактный список с прокруткой */
+    overflow-y: auto;
+    margin: 10px 0 calc(16px + env(safe-area-inset-bottom)) !important;
+    padding-left: 0 !important;
+    border-radius: 2px;
+    clip-path: var(--torn-edge);
+    z-index: 5;
+    box-shadow: var(--shadow-deep);
+    flex-shrink: 0;
+  }
+  /* Список видов — ровно три столбца по четыре вида (12 шт. на мобильной сетке) */
+  #memo-species-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px 8px;
+    line-height: 1.4 !important;
+  }
+  .memo-species-item { font-size: 12px; }
+
   /* Викторина: окно игры + мини-свиток — ОДНА колонка (как в «Статусе»).
      Свиток — часть игрового окна на всю ширину экрана; «лифт» к нему
      и возврат делает js/mini-scroll.js / js/quiz.js. */
@@ -538,20 +573,8 @@ body {
     display: none;
   }
 
-  #memo-info-panel {
-    position: static !important;
-    width: 96vw;
-    max-width: 720px;
-    max-height: none;
-    height: auto;
-    margin: 14px auto calc(20px + env(safe-area-inset-bottom));
-    padding-left: 0;
-    border-radius: 2px;
-    clip-path: var(--torn-edge);
-    z-index: 20;
-    order: 99; /* всегда после игрового окна в flex-колонке */
-    box-shadow: var(--shadow-deep);
-  }
+  /* Старое дублирующее правило #memo-info-panel убрано — актуальное
+     определение выше (в блоке «Мемо на мобильных»). */
 
   .quiz-header h2,
   .match-scroll .quiz-header h2,

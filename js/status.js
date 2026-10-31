@@ -239,7 +239,9 @@ const StatusGame = {
         // категории редкости убран.
         blocks.push({
             title: 'Статус вида в базе',
-            html: `<div class="si-small">${this.highlightStatusText(sp.status_text || (full && full.status_text), sp.status).replace(/\n/g, '<br>')}</div>`
+            // По требованию: в игре «Статус» мини-свиток БЕЗ подсветок —
+            // обычный экранированный текст.
+            html: `<div class="si-small">${txt(sp.status_text || (full && full.status_text))}</div>`
         });
         if (full && (full.abundance || full.limiting_factors)) {
             blocks.push({
@@ -299,13 +301,14 @@ const StatusGame = {
             this.bestStreak = Math.max(this.bestStreak, this.streak);
             if (elapsed <= 2) this.unlockAch('speed');
             if (this.streak >= 5) this.unlockAch('streak5');
-            resultEl.textContent = `✔ Верно! ${st ? st.label : ''} (${elapsed.toFixed(1)} с)`;
+            // По требованию: после ответа — только «верно/неверно», без пояснений.
+            resultEl.textContent = '✔ Верно!';
             resultEl.className = 'status-result ok';
         } else {
             this.mistakes++;
             this.streak = 0;
             btn.classList.add('st-wrong');
-            resultEl.textContent = `✘ Неверно. Правильный ответ: ${st ? st.label : this.correctStatus}`;
+            resultEl.textContent = '✘ Неверно';
             resultEl.className = 'status-result bad';
         }
         resultEl.classList.remove('hidden');

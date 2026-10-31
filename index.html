@@ -714,21 +714,22 @@
              Данные из Красной книги — единый мини-свиток справа от панели
              (js/mini-scroll.js), появляется после любого ответа. -->
         <div class="habitat-main">
-          <div id="habitat-log-wrap" class="habitat-pane habitat-log-pane">
-            <div class="hp-title">📒 Журнал пар</div>
-            <div id="habitat-log" class="habitat-log" aria-label="Журнал пар «вид — среда»"></div>
-          </div>
-          <div class="habitat-pane habitat-play-pane">
-            <div class="hp-title">🎲 Игра</div>
-            <div class="habitat-play">
-              <div id="habitat-card" class="habitat-card"></div>
-              <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
+          <!-- Два столбца: слева журнал пар, справа карточка + выбор среды -->
+          <div class="habitat-cols">
+            <div id="habitat-log-wrap" class="habitat-pane habitat-log-pane">
+              <div class="hp-title">📒 Журнал пар</div>
+              <div id="habitat-log" class="habitat-log" aria-label="Журнал пар «вид — среда»"></div>
+            </div>
+            <div class="habitat-pane habitat-play-pane">
+              <div class="hp-title">🎲 Игра</div>
+              <div class="habitat-play">
+                <div id="habitat-card" class="habitat-card"></div>
+                <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
+              </div>
             </div>
           </div>
-          <!-- Мини-свиток «Данные из Красной книги»: справа от игровой
-               зоны на десктопе, НИЖЕ окна игры на мобильных (order:99).
-               js/mini-scroll.js найдёт этот узел по id и вложит свиток
-               сюда — панель больше не создаётся где-то в углу модалки. -->
+          <!-- Мини-свиток «Данные из Красной книги»: НИЖЕ обоих столбцов,
+               на всю ширину окна игры (js/mini-scroll.js вложит свиток сюда). -->
           <div id="habitat-info-panel" class="mini-scroll-panel habitat-info-pane hidden" aria-live="polite"></div>
         </div>
         <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
@@ -771,10 +772,9 @@
         <span class="latin-sb" id="status-streak-block">🔥 <strong id="status-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге. После ответа справа откроется мини-свиток с данными из книги</p>
-        <!-- Компоновка по замечаниям: слева — крупное изображение и
-             список статусов с кнопкой «Дальше», мини-свиток — справа.
-             На мобильных свиток встаёт ниже окна игры (mini-scroll.css) -->
+        <!-- Компоновка по замечаниям: на мобильных два столбца —
+             слева изображение, справа список статусов; мини-свиток —
+             ниже на всю ширину (css/status.css + responsive.css) -->
         <div class="status-main">
           <div class="status-play">
             <div id="status-card" class="status-card"></div>
