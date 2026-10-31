@@ -964,3 +964,104 @@ body {
     margin: 14px auto calc(8px + env(safe-area-inset-bottom));
   }
 }
+
+/* ============================================================
+   АБСОЛЮТНО ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — «ВИКТОРИНА» + «СРЕДА ОБИТАНИЯ»
+   ------------------------------------------------------------
+   Идёт ПОСЛЕДНИМ во всём каскаде (responsive.css подключён в <head>,
+   но этот блок — конец файла; ниже него в index.html идут quiz.css,
+   status.css и mini-scroll.css). Поэтому правила здесь дублируют
+   сбросы с !important и повышенной специфичностью:
+    • .status-main из css/status.css при @media 760px ставит
+      flex-direction:row!important — именно из-за него свиток
+      «Викторины» вставал СПРАВА от игры; перебиваем более
+      специфичным селектором .status-main.quiz-main с !important;
+    • width:350px + margin-left:-30px + анимация slideInRight
+      (translateX(30px)) из quiz.css/mini-scroll.css — из-за них текст
+      свитка «съезжал вбок»;
+    • окно игры центрируется: у #quiz-modal/#habitat-modal остаются
+      только align-items:center, ::before/::after-спейсеры отключены.
+   ============================================================ */
+@media (max-width: 900px) {
+  /* --- Центрирование окна викторины --- */
+  #quiz-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 6px 0 calc(12px + env(safe-area-inset-bottom)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #quiz-modal::before,
+  #quiz-modal::after {
+    content: none !important;
+    display: none !important;
+  }
+  .quiz-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    flex-shrink: 0;
+  }
+
+  /* Свиток — СТРОГО ПОД игровой зоной, на всю ширину.
+     Двойной класс (.status-main.quiz-main) специфичнее одиночного
+     .status-main из status.css; !important страхует от порядка файлов. */
+  .status-main.quiz-main {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .status-play.quiz-play {
+    flex: 0 0 auto !important;
+    width: 100%;
+  }
+  #quiz-modal #quiz-info-panel {
+    position: static !important;
+    order: 99;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 14px 0 0 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    flex: none !important;
+    clip-path: var(--torn-edge);
+    box-shadow: var(--shadow-deep);
+    z-index: 20;
+  }
+
+  /* --- «Среда обитания»: тот же принцип — свиток под игрой --- */
+  #habitat-modal .habitat-main {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  #habitat-modal #habitat-info-panel {
+    position: static !important;
+    order: 99;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 14px 0 0 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    flex: none !important;
+    clip-path: var(--torn-edge);
+    box-shadow: var(--shadow-deep);
+    z-index: 20;
+  }
+}

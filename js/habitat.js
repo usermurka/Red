@@ -262,24 +262,21 @@ const HabitatGame = {
     },
 
     pickRoundSpecies() {
-        // Пул строим по всем видам справочника, объединяя краткую запись
-        // из SPECIES с подробной карточкой из SPECIES_DATA
-        const all = App.collectAllSpecies()
-            .filter(sp => sp.name && !this.usedIds.has(sp.id))
-            .map(sp => ({ sp, biome: this.biomeOf(sp) }))
-            .filter(e => e.biome);
-        const pool = this.shuffle(all);
-        const selected = pool.slice(0, this.ROUND_SIZE);
-        // Если пригодных видов мало — допускаем повторное использование
-        if (selected.length < this.ROUND_SIZE) {
-            const any = this.shuffle(App.collectAllSpecies()
-                .map(sp => ({ sp, biome: this.biomeOf(sp) }))
-                .filter(e => e.biome));
-            while (selected.length < this.ROUND_SIZE && any.length) {
-                const cand = any.pop();
-                if (!selected.find(s => s.sp.id === cand.sp.id)) selected.push(cand);
+        // Пул строим по ВСЕМ видам справочника SPECIES_DATA (в них есть
+        // «habitats»), объединяя с краткой записью из SPECIES ради имени/статуса.
+        const byId = new Map(App.collectAllSpecies().map(sp => [sp.id, sp]));
+        const entries = [];
+        if (window.SPECIES_DATA) {
+            for (const id of Object.keys(window.SPECIES_DATA)) {
+                if (this.usedIds.has(id)) continue;
+                const sp = byId.get(id) || { id, name: window.SPECIES_DATA[id].name || '' };
+                if (!sp.name) continue;
+                const biome = this.biomeOf(sp);
+                if (biome) entries.push({ sp, biome });
             }
         }
+        const pool = this.shuffle(entries);
+        const selected = pool.slice(0, this.ROUND_SIZE);
         selected.forEach(e => this.usedIds.add(e.sp.id));
         return selected;
     },

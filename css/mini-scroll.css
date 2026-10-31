@@ -190,22 +190,25 @@
          • анимация slideInRight с translateX(30px) — стартовое смещение
            панели вправо;
          • flex-shrink:0 при column-контейнере не давал панели тянуться.
-       ВАЖНО: селекторы без !important — иначе это правило перебивает
-       более специфичные блоки в css/responsive.css (для #quiz-info-panel). */
+       ВАЖНО: селекторы с !important — раньше эти правила терялись в
+       каскаде: css/status.css подключается ПОСЛЕ mini-scroll.css и его
+       строковые @media (max-width:760px) перебивали обычные объявления.
+       .hidden для панелей остаётся рабочим: display:none!important у
+       селектора .mini-scroll-panel.hidden сильнее обычного !important. */
     #quiz-info-panel,
     #habitat-info-panel,
     #status-info-panel {
-        position: static;
-        width: 100%;
-        max-width: none;
-        height: auto;
-        max-height: none;
-        overflow: visible;
-        margin: 14px 0 0 0;
-        padding-left: 0;
-        flex: none;
-        animation: none;
-        transform: none;
+        position: static !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        margin: 14px 0 0 0 !important;
+        padding-left: 0 !important;
+        flex: none !important;
+        animation: none !important;
+        transform: none !important;
         clip-path: var(--torn-edge);
         box-shadow: var(--shadow-deep);
         z-index: 20;
@@ -214,6 +217,6 @@
 
     /* Викторина: панель инфо — ЧАСТЬ игрового окна (колонка
        .status-main.quiz-main), а не отдельный элемент модалки.
-       order/margin здесь её бы ломали — правила в css/responsive.css. */
+       Порядок задаёт responsive.css; здесь общие сбросы выше. */
 
 }
