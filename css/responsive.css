@@ -494,28 +494,13 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Викторина: весь скролл — ВНУТРИ окна игры (.quiz-scroll): игровая
-     колонка + мини-свиток под ней (как в эталонном «Статусе»). Сама
-     модалка не скроллит — иначе scrollIntoView утаскивает заголовок
-     и игровую зону вверх, и от свитка остаётся одна шапка. */
-  #quiz-modal {
-    overflow: hidden !important;
-  }
-
-  /* Единое поведение мини-свитка на мобильных: строго ПОД окном игры.
-     Сбрасываем desktop-наследие: margin-left:-30px (заход «под панель»),
-     padding-left:15px (компенсация сдвига) и анимацию slideInRight со
-     сдвигом translateX(30px) — из-за них свиток «съезжал вбок». */
-  .mini-scroll-panel,
-  #memo-info-panel {
-    position: static !important;
-    order: 99;
-    margin: 14px auto 0 !important;
-    padding-left: 0 !important;
-    animation: none !important;
-    transform: none !important;
-    z-index: 20;
-  }
+  /* КРИТИЧНО: центрирование викторины и положение свитка живут в
+     ФИНАЛЬНОМ блоке @media (max-width: 900px) в конце этого файла —
+     он подключается к каскаду ПОСЗДИ css/quiz.css, css/habitat.css и
+     css/mini-scroll.css (строки ~849–858 в index.html) и гарантированно
+     их перебивает. Правила здесь (внутри блока 820px) ранее терялись
+     из-за равной специфичности и более позднего подключения quiz.css —
+     поэтому окно «съезжало» влево, а свиток открывался «где-то справа». */
 
   /* Игровые окна latin/erudite не перечислены в блоке выше — добавляем
      сброс clip-path, чтобы свитки внутри них не обрезались по «рваному
@@ -566,98 +551,15 @@ body {
   .memo-cell-empty { visibility: hidden; pointer-events: none; }
   .memo-species-item { font-size: 12px; }
 
-  /* Викторина: окно игры + мини-свиток — ОДНА колонка (как в «Статусе»).
-     Свиток — часть игрового окна на всю ширину экрана; «лифт» к нему
-     и возврат делает js/mini-scroll.js / js/quiz.js. */
-
-  /* КРИТИЧНО: у панели свитка НЕТ класса .hidden в HTML по умолчанию,
-     поэтому пока игра не ответила, она рендерилась как flex-элемент
-     модалки с шириной 350px из quiz.css и уезжала ВПРАВО от окна игры.
-     На мобильныхforcing width:100% + display:flex/column гарантирует,
-     что свиток стоит строго ПОД окном игры, а не сбоку. */
-  #quiz-info-panel {
-    position: static !important;
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;     /* КРИТИЧНО: панель растёт по содержимому —
-                                   иначе схлопывается до заголовка (старый баг) */
-    max-height: none !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    /* Сброс desktop-наследия (.mini-scroll-panel / #quiz-info-panel из
-       quiz.css): отрицательный margin-left:-30px, padding-left:15px,
-       flex-shrink:0 и анимация slideInRight сдвигали свиток «вбок» на
-       мобильных. Панель обязана стоять строго под окном игры. */
-    margin: 14px 0 0 0 !important;
-    padding-left: 0 !important;
-    flex: none !important;
-    flex-shrink: 0;
-    animation: none !important;
-    transform: none !important;
-    border-radius: 2px;
-    clip-path: var(--torn-edge);
-    box-shadow: var(--shadow-deep);
-    z-index: 20;
-    order: 99; /* всегда после игрового окна в flex-колонке */
-  }
-
-  /* Когда свиток скрыт (класс .hidden), он обязан реально исчезнуть:
-     force-display выше перебивает обычное .hidden без !important. */
-  #quiz-info-panel.hidden {
-    display: none !important;
-  }
-
-  /* Содержимое мини-свитка — тоже на всю ширину колонки */
-  #quiz-info-panel .mini-scroll {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Игровая колонка викторины: stretch + сброс 980px из status.css,
-     чтобы свиток и кнопка «Дальше» гарантированно были видны. */
-  #quiz-modal .status-main.quiz-main {
-    width: 100%;
-    display: flex;               /* ЯВНО: колонка внутри окна игры */
-    flex-direction: column !important;
-    align-items: stretch !important;
-    max-width: none !important;
-    padding: 0;                  /* сброс боковых отступов — свиток во всю ширину */
-    margin: 0;
-  }
-
-  /* Игровая зона викторины (#quiz-play) — на всю ширину колонки окна:
-     раньше наследовала flex:0 1 520px из status.css и центрировалась,
-     из-за чего само окно игры казалось «не отцентрированным», а
-     пустая панель свитка торчала справа. */
-  #quiz-modal .status-main.quiz-main .status-play.quiz-play {
-    flex: 1 1 auto !important;
-    width: 100%;
-    max-width: none;
-    align-items: stretch;
-  }
-
-  /* Кнопка «Дальше» — ВНУТРЬ окна игры (следом за колонкой), иначе при
-     overflow:hidden модалки она уходит за нижний край экрана. */
-  #quiz-modal .quiz-scroll > #quiz-next-btn {
-    order: 100;
-    margin: 12px auto calc(16px + env(safe-area-inset-bottom));
-    flex-shrink: 0;
-  }
-
-  #quiz-modal::before,
-  #quiz-modal::after {
-    display: none;
-  }
+  /* Правила «Викторины» (окно + свиток) перенесены в ФИНАЛЬНЫЙ блок
+     @media (max-width: 900px) в конце файла — там они гарантированно
+     перебивают quiz.css / habitat.css / mini-scroll.css. */
 
   /* Инфо-панели игр на мобильных — НИЖЕ окна игры по порядку потока.
      Никакого position:fixed «в углу/под окном»: модалки становятся
      flex-колонкой, а панель — последним элементом с нормальным
      прокручиваемым документом. */
-  #quiz-modal,
   #memo-modal {
-    flex-direction: column !important;
     align-items: center;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
