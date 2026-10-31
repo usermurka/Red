@@ -1261,4 +1261,21 @@ body {
     margin-left: auto;
     margin-right: auto;
   }
+
+  /* 3) ОКНО ЗАКРЫТИЯ (финальный экран «Викторины»): два крестика.
+     На игровом экране в правом верхнем углу живёт пара ↺/✕
+     (.quiz-top-controls). Финальный экран (#quiz-end-screen) несёт
+     СОБСТВЕННЫЙ крестик .game-close-x в тех же координатах — на
+     мобильных они накладывались друг на друга («два крестика»).
+     Решение: пока открыт финальный экран, прячем игровые ↺/✕ —
+     остаётся ровно один крестик (круглый .game-close-x), он и
+     закрывает игру (обработчик навешан в js/quiz.js init()). */
+  #quiz-modal:not(.hidden) #quiz-end-screen:not(.hidden) ~ * .quiz-top-controls,
+  body:has(#quiz-modal #quiz-end-screen:not(.hidden)) #quiz-modal .quiz-top-controls {
+    display: none !important;
+  }
+  /* Круглый крестик финала не должен залезать на заголовок результата */
+  #quiz-modal #quiz-end-screen {
+    padding-top: 56px;
+  }
 }
