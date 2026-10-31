@@ -1377,3 +1377,76 @@ body.game-end-active #quiz-modal > #quiz-next-btn {
     z-index: 95;
   }
 }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН ВО ВСЕХ ИГРАХ — ОДИН МЕХАНИЗМ (мобильная версия)
+   ------------------------------------------------------------
+   Разметка финалов отличается от игры к игре:
+     • «Викторина» — #quiz-end-screen ЛЕЖИТ ВНЕ игрового «скролла»
+       и не имеет инлайн-стилей;
+     • «Эрудит», «Латынь», «Среда обитания», «Статус», «Систематика»,
+       «Пары», «Мемо» — экран итогов ВНУТРИ контейнера и размечен
+       инлайн-стилем position:absolute + height:100% +
+       background:rgba(...). Инлайн перебивает обычные правила CSS,
+       поэтому на мобильных финал рисовался absolutely по контенту:
+       под ним оставалось видно поле игры (карточку, таймер, счёт), а
+       полупрозрачная подложка делала итоговый текст нечитаемым —
+       игрок видел это как «финальный экран не появился».
+
+   Решение единое для всех восьми игр: финал становится обычным
+   блоком колонки модалки (position:static), непрозрачным и на всю
+   высоту окна. Игровое поле к этому моменту уже скрыто правилом
+   body.game-end-active выше, поэтому финал занимает всё окно сам.
+   Селектор [data-game] ловит все шесть «инлайновых» финалов разом и
+   не трогает ничего innego (атрибут data-game есть только у них).
+   ============================================================ */
+@media (max-width: 900px) {
+  #quiz-modal #quiz-end-screen,
+  #match-modal #match-end-screen,
+  #memo-modal #memo-end-screen,
+  #erudite-modal #erudite-end-screen,
+  #latin-modal #latin-end-screen,
+  #habitat-modal #habitat-end-screen,
+  #status-modal #status-end-screen,
+  #family-modal #family-end-screen {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 78vh;
+    background: var(--parchment-light, #f7efdc) !important;
+    padding: 56px 16px 40px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  /* Крестик ровно один. Игровая пара ↺/✕ скрыта правилом
+     body.game-end-<игра> ... .quiz-top-controls выше; круглый крестик
+     финала сажаем в правый верхний угол окна — туда, где стоял ✕.
+     position:fixed + z-index 95 поднимают его над содержимым финала
+     (внутри финала он был absolutely при position:relative контейнера). */
+  #quiz-modal #quiz-end-screen .game-close-x,
+  #match-modal #match-end-screen .game-close-x,
+  #memo-modal #memo-end-screen .game-close-x,
+  #erudite-modal #erudite-end-screen .game-close-x,
+  #latin-modal #latin-end-screen .game-close-x,
+  #habitat-modal #habitat-end-screen .game-close-x,
+  #status-modal #status-end-screen .game-close-x,
+  #family-modal #family-end-screen .game-close-x {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 95;
+  }
+
+  /* Подзаголовки/текст финала не должны залезать под крестик */
+  #quiz-modal #quiz-end-screen > h2,
+  [id$="-end-screen"] > h2 {
+    margin-top: 0;
+    padding-right: 40px;
+  }
+}
