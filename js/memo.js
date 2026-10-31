@@ -37,7 +37,7 @@ const MemoGame = {
         // меньше, иначе карточки не влезают («Мемо» на телефоне).
         const isMobile = window.matchMedia('(max-width: 820px)').matches;
         let rows, cols;
-        if (isMobile) { rows = 3; cols = 4; }        // 12 карт = 6 пар
+        if (isMobile) { rows = 6; cols = 4; }        // 24 карты = 12 пар (как на десктопе, но вертикально)
         else            { rows = 4; cols = 6; }      // 24 карты = 12 пар
         const totalCards = rows * cols;
         const pairs = totalCards / 2;   // 6 или 12

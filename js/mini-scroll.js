@@ -19,6 +19,10 @@ window.MiniScroll = {
     // панелью-«скроллом» по flex-линии, а не внутрь неё.
     ensurePanel(id, modalId) {
         let panel = document.getElementById(id);
+        // Если панель уже размечена в HTML внутри игрового окна — НЕ
+        // перемещаем её (иначе она вырезается из своей flex-колонки и
+        // CSS-правила раскладки к ней перестают применяться).
+        if (panel && panel.parentElement) return panel;
         if (!panel) {
             panel = document.createElement('div');
             panel.id = id;

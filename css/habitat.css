@@ -317,6 +317,23 @@
         flex: 1 1 auto;
         min-width: 0;
     }
+    /* Высота столбцов — одинаковая (по журналу пар): правый столбец
+       не должен быть выше левого. Карточка и биомы уплотнены так,
+       чтобы «вид + выбор среды» занимали ровно свою колонку. */
+    .habitat-cols { align-items: stretch; }
+    .habitat-play-pane .habitat-play { flex: 0 1 auto; }
+    .habitat-card { margin: 2px auto 8px; }
+    .habitat-card .latin-photo-card {
+        width: clamp(96px, 26vw, 130px);
+        height: clamp(96px, 26vw, 130px);
+    }
+    .habitat-biomes {
+        grid-template-columns: repeat(2, 1fr); /* 4 среды — 2×2 вместо длинной строки */
+        gap: 6px;
+    }
+    .habitat-biom { min-height: 52px; padding: 6px 4px; }
+    .hb-icon { font-size: 20px; }
+    .hb-label { font-size: 11px; }
     .habitat-log {
         max-height: none;
         overflow: visible;      /* журнал растёт в высоту по мере добавления пар */
@@ -385,4 +402,12 @@
 /* Панель-«книга»: единая рамка для боковых панелей игр */
 .habitat-book-pane {
     position: relative;
+}
+
+/* Мобильные столбцы «Среды обитания»: убрать минимальную высоту 380px —
+   именно она делала столбцы одинаково огромными, а содержимое правого
+   (фото+среды)看起来 меньше фиксированной высоты. Теперь оба столбца
+   равны по высоте и тянутся по журналу пар (align-items:stretch выше). */
+@media (max-width: 760px) {
+    .habitat-pane { min-height: 0; }
 }

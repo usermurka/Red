@@ -42,6 +42,15 @@ const Quiz = {
         if (play && content && !content.parentElement.classList.contains('quiz-play')) {
             play.appendChild(content);
         }
+
+        // Кнопка «Дальше» — ВНУТРЬ окна игры (.quiz-scroll), сразу после
+        // колонки «игра + свиток»: на мобильных скроллится именно окно,
+        // и кнопка должна быть доступна прокруткой внутри него.
+        const nextBtnEl = document.getElementById('quiz-next-btn');
+        const scrollBox = document.querySelector('#quiz-modal .quiz-scroll');
+        if (nextBtnEl && scrollBox && nextBtnEl.parentElement !== scrollBox) {
+            scrollBox.appendChild(nextBtnEl);
+        }
     },
 
     showNextBtn(label) {
@@ -69,9 +78,11 @@ const Quiz = {
     // мини-свитку (это делает MiniScroll.show), а возврат к началу —
     // при переходе к следующему вопросу / рестарте.
     scrollToGameTop() {
-        const modal = document.getElementById('quiz-modal');
-        if (modal && window.matchMedia('(max-width: 900px)').matches) {
-            try { modal.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* noop */ }
+        // Скролл живёт внутри окна игры (.quiz-scroll), модалка не скроллит.
+        const box = document.querySelector('#quiz-modal .quiz-scroll')
+                 || document.getElementById('quiz-modal');
+        if (box && window.matchMedia('(max-width: 900px)').matches) {
+            try { box.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* noop */ }
         }
     },
 

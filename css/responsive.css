@@ -482,6 +482,14 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Викторина: весь скролл — ВНУТРИ окна игры (.quiz-scroll): игровая
+     колонка + мини-свиток под ней (как в эталонном «Статусе»). Сама
+     модалка не скроллит — иначе scrollIntoView утаскивает заголовок
+     и игровую зону вверх, и от свитка остаётся одна шапка. */
+  #quiz-modal {
+    overflow: hidden !important;
+  }
+
   /* Единое поведение мини-свитка на мобильных: строго ПОД окном игры. */
   .mini-scroll-panel,
   #memo-info-panel {
@@ -535,11 +543,14 @@ body {
 
   #quiz-info-panel {
     position: static !important;
+    display: block !important;   /* на всякий случай: не наследовать hidden-механику */
     width: 100% !important;
     max-width: none !important;
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
+    height: auto !important;     /* КРИТИЧНО: панель растёт по содержимому —
+                                   иначе схлопывается до заголовка (старый баг) */
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     margin-left: 0 !important;
     padding-left: 0;
     border-radius: 2px;
@@ -547,6 +558,22 @@ body {
     box-shadow: var(--shadow-deep);
     z-index: 20;
     order: 99; /* всегда после игрового окна в flex-колонке */
+  }
+
+  /* Игровая колонка викторины: stretch + сброс 980px из status.css,
+     чтобы свиток и кнопка «Дальше» гарантированно были видны. */
+  #quiz-modal .status-main.quiz-main {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    max-width: none !important;
+  }
+
+  /* Кнопка «Дальше» — ВНУТРЬ окна игры (следом за колонкой), иначе при
+     overflow:hidden модалки она уходит за нижний край экрана. */
+  #quiz-modal .quiz-scroll > #quiz-next-btn {
+    order: 100;
+    margin: 12px auto calc(16px + env(safe-area-inset-bottom));
+    flex-shrink: 0;
   }
 
   #quiz-modal::before,

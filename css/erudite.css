@@ -281,11 +281,18 @@
     white-space: normal; /* на узких экранах текст переносится, а не вылезает за кнопку */
 }
 
-/* Очень узкие экраны: уменьшаем шрифт кнопок управления,
-   чтобы «⏭ Пропустить» целиком влезало в свою треть строки. */
+/* Очень узкие экраны: кнопки управления — в одну строку. Текст «⏭ Пропустить»
+   целиком не влезает в свою треть, поэтому на мобильных подпись сокращается
+   до «⏭ Пропуск» (title остаётся полным). white-space:nowrap гарантирует
+   одну строку; шрифт и отступы уменьшены. */
 @media (max-width: 420px) {
     .erudite-controls { gap: 6px; }
-    .erudite-controls button { font-size: 12px; padding: 7px 5px; }
+    .erudite-controls button {
+        font-size: 12px;
+        padding: 7px 4px;
+        white-space: nowrap;
+    }
+    #erudite-skip::after { content: none; } /* без подстрочника */
 }
 
 #erudite-backspace {
@@ -408,4 +415,43 @@
         width: min(200px, 70vw);
         height: min(200px, 70vw);
     }
+}
+
+/* ============================================================
+   ФИНАЛЬНЫЕ МОБИЛЬНЫЕ ПРАВИЛА (в конце файла — перебивают любой
+   каскад, включая блок @media 520px выше).
+   ------------------------------------------------------------
+   1) Буквы лотка НЕ должны исчезать: окно игры скроллится целиком
+      (.erudite-scroll), внутренние контейнеры не обрезают контент.
+   2) Кнопки управления — строго в одну строку; на узких экранах
+      подпись «⏭ Пропустить» сокращается до «Пропуск» (title полный).
+   ============================================================ */
+@media (max-width: 820px) {
+    .erudite-scroll { overflow-y: auto; }
+    .erudite-body,
+    .erudite-tray,
+    .erudite-tray-group {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    .erudite-tile {
+        width: clamp(26px, 7vw, 34px);
+        height: clamp(32px, 8.5vw, 40px);
+        font-size: clamp(15px, 4.2vw, 19px);
+    }
+    .erudite-controls button { white-space: nowrap; }
+}
+
+@media (max-width: 420px) {
+    /* «Пропустить» не влезало в треть кнопки — меняем подпись на короткую. */
+    #erudite-skip { font-size: 12px; padding: 7px 4px; }
+}
+
+/* Переключение подписи кнопки «Пропустить»: полная — на широких
+   экранах, короткая («Пропуск») — на узких, чтобы влезала в одну
+   строку без переноса. */
+#erudite-skip .skip-short { display: none; }
+@media (max-width: 480px) {
+    #erudite-skip .skip-full { display: none; }
+    #erudite-skip .skip-short { display: inline; }
 }
