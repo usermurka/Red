@@ -344,6 +344,23 @@
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
+
+    /* Мини-свиток «Среды обитания» — ПОД окном игры, на всю ширину.
+       Сбрасываем desktop-наследие .mini-scroll-panel (margin-left:-30px,
+       padding-left:15px, анимация slideInRight с translateX(30px)) —
+       из-за них свиток на мобильных «съезжал вбок». Панель стоит в
+       flex-колонке (.habitat-main) последним элементом — строго под
+       игровой зоной. */
+    #habitat-info-panel {
+        position: static !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding-left: 0 !important;
+        transform: none !important;
+        animation: none !important;
+        order: 99;
+    }
 }
 
 /* ===== Панель данных и заглушка до ответа ===== */

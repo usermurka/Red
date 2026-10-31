@@ -85,6 +85,7 @@ const HabitatGame = {
         this.fastest = null;   // самый быстрый верный ответ (сек)
         this.usedIds = new Set();
         this.logEntries = [];  // пары «вид — среда» за всю игру
+        this.waitingContinue = false; // пауза после ответа до «Продолжить →»
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
         // Пустой журнал не должен выглядеть «дырой» в окне —
@@ -130,6 +131,10 @@ const HabitatGame = {
         btn.classList.remove('hidden', 'is-idle');
         btn.classList.add('is-active');
         btn.disabled = false;
+        // Если модалка «закрыта» для приложения (app), клики по кнопке
+        // не пройдут — на время паузы открываем ей pointer-events.
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.style.pointerEvents = 'auto';
         // чтобы игрок точно заметил появление кнопки — прокрутим к ней
         try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
@@ -141,11 +146,28 @@ const HabitatGame = {
         btn.classList.remove('hidden', 'is-active');
         btn.classList.add('is-idle');
         btn.disabled = true;
+        // Возвращаем обычное поведение модального окна игры
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.style.pointerEvents = '';
     },
 
     continueToNextRound() {
         const btn = document.getElementById('habitat-next-round-btn');
         if (btn && btn.disabled) return; // по бледной кнопке не идём вперёд
+
+        // Пауза ПОСЛЕ ОТВЕТА (не путать с паузой между раундами):
+        // игра стоит, открыт мини-свиток. «Продолжить →» — просто
+        // снять паузу и вернуться к текущему вопросу/раунду, БЕЗ
+        // перехода в новый раунд.
+        if (this.waitingContinue) {
+            this.waitingContinue = false;
+            this.locked = false;   // снова принимаем ответы по текущему вопросу
+            this.hideNextRoundBtn();
+            MiniScroll.hide('habitat-info-panel');
+            this.resumeTimer();
+            return;
+        }
+
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
         // Игрок нажал «Продолжить» — читаем мини-свиток больше не нужно:
@@ -366,16 +388,18 @@ const HabitatGame = {
     answer(biomKey, btn) {
         const item = this.currentCard();
         if (!item) return;
+        // Игра на паузе до нажатия «Продолжить →» — ответы не принимаем
+        if (this.waitingContinue || this.locked) return;
         const correct = biomKey === item.biome;
         const firstTry = !this._answeredCurrent;
 
-        // Любой ответ: ставим таймер на паузу, чтобы игрок мог спокойно
-        // прочитать мини-свиток с данными из Красной книги. Пауза
-        // снимается в continueToNextRound() («Продолжить →») или при
-        // переходе к следующему вопросу (showNextCard -> resumeTimer).
+        // Любой ответ: ставим игру на паузу (таймер заморожен), чтобы
+        // игрок мог спокойно прочитать мини-свиток с данными из
+        // Красной книги. Снимается пауза кнопкой «Продолжить →».
         this.pauseTimer();
         this._lastPickKey = biomKey;
-        // Свиток показываем при ЛЮБОМ ответе; подсветка — только при верном.
+        // Свиток показываем при ЛЮБОМ ответе (верном и неверном);
+        // подсветка ключевых слов — только при верном.
         this.renderInfoPanel(item, biomKey, correct); // свиток + подсветка выбранной среды
 
         if (correct) {
@@ -412,12 +436,14 @@ const HabitatGame = {
                         'Продолжить →');
                 }
             } else {
-                this.showNextCard();
+                // НЕ показываем следующую карточку сразу: игра встаёт на
+                // паузу до нажатия «Продолжить →» — есть время изучить свиток.
+                this.showAnswerPauseBtn();
             }
         } else {
             if (firstTry) {
                 // Первая ошибка в вопросе: засчитываем, но даём шанс
-                // выбрать другой вариант, глядя на подсвеченный текст.
+                // выбрать другой вариант, глядя на текст в свитке.
                 this.mistakes++;
                 this.roundMistakes++;
                 this.streak = 0;
@@ -429,15 +455,20 @@ const HabitatGame = {
                 this.addLogPair(item, false, biomKey);
             }
             btn.classList.add('hab-wrong');
-            this.locked = true;
-            setTimeout(() => {
-                btn.classList.remove('hab-wrong');
-                this.locked = false;
-                // Ответ разобран, свиток открыт — можно продолжать выбор,
-                // но время НЕ тикает, пока игрок читает свиток. Переход к
-                // следующему вопросу — по клику на новую карточку среды.
-            }, 600);
+            setTimeout(() => btn.classList.remove('hab-wrong'), 600);
+            // Пауза после любого ответа: ждём «Продолжить →». После
+            // снятия паузы можно выбрать другую среду для этого же вида.
+            this.showAnswerPauseBtn();
         }
+    },
+
+    // Активировать кнопку «Продолжить →» как сигнал ПАУЗЫ ПОСЛЕ ОТВЕТА:
+    // таймер стоит, свиток открыт, новые ответы не принимаются, пока
+    // игрок не нажмёт кнопку (см. continueToNextRound -> waitingContinue).
+    showAnswerPauseBtn() {
+        this.waitingContinue = true;
+        this.locked = true;
+        this.showNextRoundBtn('Продолжить →');
     },
 
     // Журнал пар «вид — среда»: записи остаются до конца игры.

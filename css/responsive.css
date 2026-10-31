@@ -551,13 +551,19 @@ body {
     box-shadow: var(--shadow-deep);
     flex-shrink: 0;
   }
-  /* Список видов — ровно три столбца по четыре вида (12 шт. на мобильной сетке) */
+  /* Список видов — ровно три столбца (12 пар в «Мемо» на мобильных) */
   #memo-species-list {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr);
     gap: 2px 8px;
     line-height: 1.4 !important;
   }
+
+  /* Мобильная сетка «Мемо» 5×5: карточки чуть мельче, чтобы 5 колонок
+     гарантированно влезали в ширину экрана; пустая центральная ячейка
+     (.memo-cell-empty) невидима и не ловит клики. */
+  .memo-card { font-size: 10px; }
+  .memo-cell-empty { visibility: hidden; pointer-events: none; }
   .memo-species-item { font-size: 12px; }
 
   /* Викторина: окно игры + мини-свиток — ОДНА колонка (как в «Статусе»).
