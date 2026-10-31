@@ -569,21 +569,16 @@ body {
   /* Викторина: окно игры + мини-свиток — ОДНА колонка (как в «Статусе»).
      Свиток — часть игрового окна на всю ширину экрана; «лифт» к нему
      и возврат делает js/mini-scroll.js / js/quiz.js. */
-  #quiz-modal .status-main.quiz-main {
-    width: 100%;
-    display: flex;               /* ЯВНО: колонка внутри окна игры */
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0;                  /* сброс боковых отступов — свиток во всю ширину */
-    margin: 0;
-  }
 
+  /* КРИТИЧНО: у панели свитка НЕТ класса .hidden в HTML по умолчанию,
+     поэтому пока игра не ответила, она рендерилась как flex-элемент
+     модалки с шириной 350px из quiz.css и уезжала ВПРАВО от окна игры.
+     На мобильныхforcing width:100% + display:flex/column гарантирует,
+     что свиток стоит строго ПОД окном игры, а не сбоку. */
   #quiz-info-panel {
     position: static !important;
-    /* НЕ форсируем display:block — иначе правило перебивает
-       .mini-scroll-panel.hidden{display:none} и пустой свиток
-       «торчит» заголовком между вопросами. Скрытие/показ делает
-       js/mini-scroll.js классом hidden. */
+    display: flex !important;
+    flex-direction: column !important;
     width: 100% !important;
     max-width: none !important;
     height: auto !important;     /* КРИТИЧНО: панель растёт по содержимому —
@@ -608,12 +603,39 @@ body {
     order: 99; /* всегда после игрового окна в flex-колонке */
   }
 
+  /* Когда свиток скрыт (класс .hidden), он обязан реально исчезнуть:
+     force-display выше перебивает обычное .hidden без !important. */
+  #quiz-info-panel.hidden {
+    display: none !important;
+  }
+
+  /* Содержимое мини-свитка — тоже на всю ширину колонки */
+  #quiz-info-panel .mini-scroll {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   /* Игровая колонка викторины: stretch + сброс 980px из status.css,
      чтобы свиток и кнопка «Дальше» гарантированно были видны. */
   #quiz-modal .status-main.quiz-main {
+    width: 100%;
+    display: flex;               /* ЯВНО: колонка внутри окна игры */
     flex-direction: column !important;
     align-items: stretch !important;
     max-width: none !important;
+    padding: 0;                  /* сброс боковых отступов — свиток во всю ширину */
+    margin: 0;
+  }
+
+  /* Игровая зона викторины (#quiz-play) — на всю ширину колонки окна:
+     раньше наследовала flex:0 1 520px из status.css и центрировалась,
+     из-за чего само окно игры казалось «не отцентрированным», а
+     пустая панель свитка торчала справа. */
+  #quiz-modal .status-main.quiz-main .status-play.quiz-play {
+    flex: 1 1 auto !important;
+    width: 100%;
+    max-width: none;
+    align-items: stretch;
   }
 
   /* Кнопка «Дальше» — ВНУТРЬ окна игры (следом за колонкой), иначе при
