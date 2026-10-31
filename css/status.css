@@ -135,7 +135,8 @@
 .status-result.hidden { display: none; }
 
 @media (max-width: 480px) {
-    .status-card .latin-photo-card { width: 110px; height: 110px; }
+    /* Изображение крупнее — место в двухколоночной раскладке позволяет */
+    .status-card .latin-photo-card { width: min(44vw, 200px); height: min(44vw, 200px); }
     .st-name { font-size: 16px; }
     .st-desc { font-size: 12px; }
     .status-option-btn { font-size: 12px; padding: 7px 8px; }
@@ -349,4 +350,9 @@
     /* Кнопка «Дальше →» всегда влезает: она в потоке под окном,
        а не приклеена к низу модалки за пределами экрана. */
     #status-next-btn { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
+}
+
+/* Промежуточная ширина: фото крупнее базовых 150px, если экран позволяет */
+@media (max-width: 760px) and (min-width: 481px) {
+    .status-card .latin-photo-card { width: min(42vw, 220px); height: min(42vw, 220px); }
 }

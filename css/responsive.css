@@ -466,6 +466,18 @@ body {
     flex-shrink: 0;
   }
 
+  /* КРИТИЧНО: у игрового окна должен ЖИТЬ скролл. В quiz.css стоит
+     overflow-y:auto, но в memo.css — overflow:hidden, а порядок
+     подключения файлов делает его перебивающим: без этого правила
+     на мобильных контент ниже сгиба (свиток викторины, кнопка
+     «Дальше») просто отрезалось — «виден только заголовок свитка». */
+  .quiz-scroll,
+  .match-scroll,
+  .latin-scroll {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Все игровые модалки — вертикальная прокручиваемая колонка:
      окно игры, затем журнал/мини-свиток под ним. */
   #quiz-modal,
@@ -543,7 +555,10 @@ body {
 
   #quiz-info-panel {
     position: static !important;
-    display: block !important;   /* на всякий случай: не наследовать hidden-механику */
+    /* НЕ форсируем display:block — иначе правило перебивает
+       .mini-scroll-panel.hidden{display:none} и пустой свиток
+       «торчит» заголовком между вопросами. Скрытие/показ делает
+       js/mini-scroll.js классом hidden. */
     width: 100% !important;
     max-width: none !important;
     height: auto !important;     /* КРИТИЧНО: панель растёт по содержимому —
