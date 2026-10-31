@@ -260,7 +260,10 @@ const StatusGame = {
             data: {
                 title: sp.name,
                 latin: sp.latin || '',
-                status: st ? { value: st.value, color: st.color, label: st.label } : null,
+                // По требованию пользователя строка «номер статуса + его
+                // название» из мини-свитка убрана (информация о статусе
+                // и так есть в блоках ниже).
+                status: null,
                 blocks: blocks
             }
         });

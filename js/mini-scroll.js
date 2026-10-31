@@ -36,6 +36,10 @@ window.MiniScroll = {
 
     // Построение содержимого свитка.
     // data = { title, latin, status:{value,color,label}, blocks:[{title, html, text}] }
+    // Флаг window.__MS_NO_STATUS_BADGE — временный: игры, которым строка
+    // «номер статуса + его название» в мини-свитке не нужна (по требованию
+    // пользователя убрана из «Статуса», а за ней и из «Среды обитания»),
+    // устанавливают его перед MiniScroll.show() и сбрасывают сразу после.
     build(data) {
         const wrap = document.createElement('div');
         wrap.className = 'mini-scroll';
@@ -49,7 +53,7 @@ window.MiniScroll = {
         lat.textContent = data.latin || '';
         wrap.appendChild(lat);
 
-        if (data.status) {
+        if (data.status && !window.__MS_NO_STATUS_BADGE) {
             const st = document.createElement('div');
             st.className = 'ms-status';
             const badge = document.createElement('span');

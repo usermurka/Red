@@ -690,7 +690,11 @@
         <h2>Среда обитания</h2>
         <div class="quiz-progress" id="habitat-round-label">Раунд <strong id="habitat-q-num">1</strong> из 3</div>
       </div>
-      <div class="latin-timer-track"><div id="habitat-timer-bar" class="latin-timer-bar"></div></div>
+      <!-- Таймер как эталон из игры «Статус»: видимый числовой отсчёт + полоса -->
+      <div id="habitat-timer-track" class="st-timer-track">
+        <span id="habitat-timer-count" class="st-timer-count">⏳ 40 с</span>
+        <div class="latin-timer-track st-timer-bar-track"><div id="habitat-timer-bar" class="latin-timer-bar"></div></div>
+      </div>
       <div class="latin-scoreboard">
         <span class="latin-sb latin-sb-right">✓ <strong id="habitat-score-right">0</strong></span>
         <span class="latin-sb latin-sb-wrong">✗ <strong id="habitat-score-wrong">0</strong></span>

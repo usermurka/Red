@@ -32,7 +32,7 @@ const HabitatGame = {
         { key: 'forest', label: 'Лес', icon: '🌲' },
         { key: 'steppe', label: 'Степь', icon: '🌾' },
         { key: 'water', label: 'Водоём', icon: '💧' },
-        { key: 'bog', label: 'Болото', icon: '🪷' }
+        { key: 'bog', label: 'Болото', icon: '🌾' }
     ],
     KEYWORDS: {
         water: ['водоём', 'водоем', 'озеро', 'река', 'рек', 'пруда', 'пруд', 'водохранилищ',
@@ -302,15 +302,18 @@ const HabitatGame = {
     // «Викторине», js/mini-scroll.js): настоящий текст «Места
     // обитания» из базы + подсветка совпадений с ключевыми словами
     // выбранного биома. Показывается при ЛЮБОМ ответе.
-    renderInfoPanel(item, biomKey) {
+    renderInfoPanel(item, biomKey, correct) {
         if (!item) return;
         const sp = item.sp;
         const full = (window.SPECIES_DATA && sp.id) ? window.SPECIES_DATA[sp.id] : null;
         const habitats = String((full && full.habitats) || '').replace(/\s+/g, ' ').trim();
         const spread = String((full && full.spread_omsk) || '').replace(/\s+/g, ' ').trim();
 
+        // Подсветка ключевых слов — ТОЛЬКО при правильном ответе.
+        // При ошибке свиток показывается чистым текстом, без подсветок.
         const hlText = (txt) => {
             let html = escHtml(txt).replace(/\n/g, '<br>');
+            if (!correct) return html;
             const words = this.KEYWORDS[biomKey] || [];
             // длинные слова раньше — иначе короткие «съедят» вхождения длинных
             [...words].sort((a, b) => b.length - a.length).forEach(w => {
@@ -332,6 +335,9 @@ const HabitatGame = {
         // информацию о местах обитания и распространении вида.
 
         const statusConfig = CONFIG.statuses.find(s => s.value === sp.status);
+        // По требованию пользователя строка «номер статуса + название»
+        // из мини-свитков убрана (см. также js/status.js).
+        window.__MS_NO_STATUS_BADGE = true;
         MiniScroll.show({
             modalId: 'habitat-modal',
             panelId: 'habitat-info-panel',
@@ -343,6 +349,7 @@ const HabitatGame = {
                 blocks: blocks
             }
         });
+        window.__MS_NO_STATUS_BADGE = false;
         const panel = document.getElementById('habitat-info-panel');
         if (panel && !panel.querySelector('.ms-open-full')) {
             panel.appendChild(MiniScroll.footerButton(sp.id, () => this.close()));
@@ -368,7 +375,8 @@ const HabitatGame = {
         // переходе к следующему вопросу (showNextCard -> resumeTimer).
         this.pauseTimer();
         this._lastPickKey = biomKey;
-        this.renderInfoPanel(item, biomKey); // свиток + подсветка выбранной среды
+        // Свиток показываем при ЛЮБОМ ответе; подсветка — только при верном.
+        this.renderInfoPanel(item, biomKey, correct); // свиток + подсветка выбранной среды
 
         if (correct) {
             const elapsed = (Date.now() - this.questionStartTs) / 1000;
@@ -391,13 +399,18 @@ const HabitatGame = {
             this.addLogPair(item, true, biomKey);
 
             if (this.matchedCount >= this.ROUND_SIZE) {
-                // Раунд завершён: явно говорим об этом и ЖДЁМ нажатия
-                // кнопки «Продолжить» — таймер остаётся на паузе.
+                // Все пары раунда собраны. Если это был последний раунд —
+                // игра заканчивается СРАЗУ (раньше нужно было ждать
+                // истечения таймера). Иначе — баннер о завершении раунда.
                 this.stopTimer(); // не заставляем ждать истечения времени
-                this.showRoundBanner(
-                    `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
-                    (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
-                    this.round >= this.TOTAL_ROUNDS ? 'Итоги игры →' : 'Продолжить →');
+                if (this.round >= this.TOTAL_ROUNDS) {
+                    this.showEndScreen('🏆 Игра окончена!');
+                } else {
+                    this.showRoundBanner(
+                        `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
+                        (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
+                        'Продолжить →');
+                }
             } else {
                 this.showNextCard();
             }
@@ -474,10 +487,12 @@ const HabitatGame = {
         this.timeLeft = this.ROUND_TIME;
         const bar = document.getElementById('habitat-timer-bar');
         bar.style.width = '100%';
+        this.renderTimer();
         this._timer = setInterval(() => {
             if (this.paused) return; // пауза до нажатия «Продолжить» — можно почитать
             this.timeLeft--;
             bar.style.width = Math.max(0, (this.timeLeft / this.ROUND_TIME) * 100) + '%';
+            this.renderTimer();
             if (this.timeLeft <= 0) {
                 this.stopTimer();
                 this.showEndScreen('⏱ Время вышло!');
@@ -485,14 +500,39 @@ const HabitatGame = {
         }, 1000);
     },
 
+    // Видимый обратный отсчёт — как в эталонной игре «Статус»:
+    // число секунд краснеет на последних секундах, после ответа/паузы
+    // таймер «замораживается» (пунктирная рамка, серый цвет).
+    renderTimer() {
+        const el = document.getElementById('habitat-timer-count');
+        const track = document.getElementById('habitat-timer-track');
+        const t = Math.max(0, Math.ceil(this.timeLeft || 0));
+        if (el) {
+            el.textContent = `⏳ ${t} с`;
+            const frac = this.ROUND_TIME ? (t / this.ROUND_TIME) : 0;
+            el.classList.toggle('st-time-warning', frac <= 0.34);
+        }
+        if (track) track.classList.add('st-timer-running');
+    },
+
+    freezeTimerDisplay() {
+        const track = document.getElementById('habitat-timer-track');
+        if (track) track.classList.remove('st-timer-running');
+    },
+
     // Таймер встаёт на паузу при ЛЮБОМ ответе (игрок читает мини-свиток)
     // и продолжается при переходе к следующему вопросу или раунду.
     pauseTimer() {
         this.paused = true;
+        this.freezeTimerDisplay();
     },
 
     resumeTimer() {
-        if (this.paused && this._timer) this.paused = false;
+        if (this.paused && this._timer) {
+            this.paused = false;
+            const track = document.getElementById('habitat-timer-track');
+            if (track) track.classList.add('st-timer-running');
+        }
     },
 
     stopTimer() {
@@ -500,6 +540,7 @@ const HabitatGame = {
             clearInterval(this._timer);
             this._timer = null;
         }
+        this.freezeTimerDisplay();
     },
 
     finishGame() {
