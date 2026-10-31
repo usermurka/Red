@@ -524,10 +524,10 @@ const FamilyGame = {
                 this.renderTray();
                 this.refreshBasketEmptiness();
             }, 800);
+            // Без расшифровки ошибок — только общее сообщение (ТЗ)
             resultEl.innerHTML =
-                `<strong>Найдено ошибок: ${wrong}.</strong><br>` +
-                escHtml(wrongList.join(' · ')) +
-                '<br>Неверные карточки вернулись в лоток — разложи их по другим корзинам и снова нажми «✔ Проверить».';
+                `<strong>Найдено ошибок: ${wrong}.</strong> ` +
+                'Неверные карточки вернулись в лоток — разложи их по другим корзинам и снова нажми «✔ Проверить».';
             resultEl.className = 'family-check-result bad';
             return;
         }

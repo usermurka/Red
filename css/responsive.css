@@ -538,7 +538,6 @@ body {
     display: none;
   }
 
-  #quiz-info-panel,
   #memo-info-panel {
     position: static !important;
     width: 96vw;

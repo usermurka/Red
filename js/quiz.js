@@ -51,6 +51,9 @@ const Quiz = {
         btn.classList.remove('hidden', 'is-idle');
         btn.classList.add('is-active');
         btn.disabled = false;
+        // Как в эталонном «Статусе»: кнопка «Дальше» под свитком должна
+        // попасть в поле зрения — подводим её видимой частью экрана.
+        try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
 
     hideNextBtn() {

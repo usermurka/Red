@@ -32,7 +32,7 @@ const HabitatGame = {
         { key: 'forest', label: 'Лес', icon: '🌲' },
         { key: 'steppe', label: 'Степь', icon: '🌾' },
         { key: 'water', label: 'Водоём', icon: '💧' },
-        { key: 'bog', label: 'Болото', icon: '🌾' }
+        { key: 'bog', label: 'Болото', icon: '🥀' }
     ],
     KEYWORDS: {
         water: ['водоём', 'водоем', 'озеро', 'река', 'рек', 'пруда', 'пруд', 'водохранилищ',
