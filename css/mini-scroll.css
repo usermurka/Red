@@ -182,6 +182,36 @@
         order: 99;                     /* всегда последним в flex-колонке */
     }
 
+    /* Викторина / Среда обитания / Статус: свиток стоит ВНУТРИ окна
+       игры (или сразу под игровой зоной) и обязан быть строго ПОД ним,
+       на всю ширину. Сбрасываем desktop-наследие:
+         • margin-left:-30px + padding-left:15px («заход под панель») —
+           из-за них текст съезжал вбок;
+         • анимация slideInRight с translateX(30px) — стартовое смещение
+           панели вправо;
+         • flex-shrink:0 при column-контейнере не давал панели тянуться.
+       ВАЖНО: селекторы без !important — иначе это правило перебивает
+       более специфичные блоки в css/responsive.css (для #quiz-info-panel). */
+    #quiz-info-panel,
+    #habitat-info-panel,
+    #status-info-panel {
+        position: static;
+        width: 100%;
+        max-width: none;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        margin: 14px 0 0 0;
+        padding-left: 0;
+        flex: none;
+        animation: none;
+        transform: none;
+        clip-path: var(--torn-edge);
+        box-shadow: var(--shadow-deep);
+        z-index: 20;
+        order: 99;
+    }
+
     /* Викторина: панель инфо — ЧАСТЬ игрового окна (колонка
        .status-main.quiz-main), а не отдельный элемент модалки.
        order/margin здесь её бы ломали — правила в css/responsive.css. */

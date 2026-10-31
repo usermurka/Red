@@ -502,13 +502,27 @@ body {
     overflow: hidden !important;
   }
 
-  /* Единое поведение мини-свитка на мобильных: строго ПОД окном игры. */
+  /* Единое поведение мини-свитка на мобильных: строго ПОД окном игры.
+     Сбрасываем desktop-наследие: margin-left:-30px (заход «под панель»),
+     padding-left:15px (компенсация сдвига) и анимацию slideInRight со
+     сдвигом translateX(30px) — из-за них свиток «съезжал вбок». */
   .mini-scroll-panel,
   #memo-info-panel {
     position: static !important;
     order: 99;
-    margin-top: 14px;
+    margin: 14px auto 0 !important;
+    padding-left: 0 !important;
+    animation: none !important;
+    transform: none !important;
     z-index: 20;
+  }
+
+  /* Игровые окна latin/erudite не перечислены в блоке выше — добавляем
+     сброс clip-path, чтобы свитки внутри них не обрезались по «рваному
+     краю» и не смещались. */
+  .latin-scroll,
+  .erudite-scroll {
+    clip-path: none;
   }
 
   /* --- Мемо на мобильных: игра занимает экран, панель видов — снизу --- */
@@ -551,6 +565,11 @@ body {
      и возврат делает js/mini-scroll.js / js/quiz.js. */
   #quiz-modal .status-main.quiz-main {
     width: 100%;
+    display: flex;               /* ЯВНО: колонка внутри окна игры */
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;                  /* сброс боковых отступов — свиток во всю ширину */
+    margin: 0;
   }
 
   #quiz-info-panel {
@@ -566,8 +585,16 @@ body {
     max-height: none !important;
     min-height: 0 !important;
     overflow: visible !important;
-    margin-left: 0 !important;
-    padding-left: 0;
+    /* Сброс desktop-наследия (.mini-scroll-panel / #quiz-info-panel из
+       quiz.css): отрицательный margin-left:-30px, padding-left:15px,
+       flex-shrink:0 и анимация slideInRight сдвигали свиток «вбок» на
+       мобильных. Панель обязана стоять строго под окном игры. */
+    margin: 14px 0 0 0 !important;
+    padding-left: 0 !important;
+    flex: none !important;
+    flex-shrink: 0;
+    animation: none !important;
+    transform: none !important;
     border-radius: 2px;
     clip-path: var(--torn-edge);
     box-shadow: var(--shadow-deep);
@@ -799,7 +826,10 @@ body {
     max-height: none;
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
-    padding-left: 0;
+    padding-left: 0 !important;
+    margin-left: 0 !important;   /* финальный сброс сдвига «вбок» */
+    transform: none !important;
+    animation: none !important;
     z-index: 30;
   }
 
