@@ -29,6 +29,57 @@ const Quiz = {
 
         // Единый мини-свиток (js/mini-scroll.js): панель #quiz-info-panel
         // строится кодом, кнопка «📖 Читать в свитке» — общая для всех игр.
+
+        // Механика как в игре «Статус»: одна постоянная кнопка «Дальше →»
+        // под окном игры; до ответа она бледная и неактивная.
+        const nextBtn = document.getElementById('quiz-next-btn');
+        if (nextBtn) nextBtn.addEventListener('click', () => this.onNextClick());
+
+        // Перенос игрового контента внутрь игровой колонки новой
+        // раскладки (окно игры + мини-свиток рядом/под ним).
+        const play = document.getElementById('quiz-play');
+        const content = document.getElementById('quiz-content');
+        if (play && content && !content.parentElement.classList.contains('quiz-play')) {
+            play.appendChild(content);
+        }
+    },
+
+    showNextBtn(label) {
+        const btn = document.getElementById('quiz-next-btn');
+        if (!btn) return;
+        btn.textContent = label || 'Дальше →';
+        btn.classList.remove('hidden', 'is-idle');
+        btn.classList.add('is-active');
+        btn.disabled = false;
+    },
+
+    hideNextBtn() {
+        const btn = document.getElementById('quiz-next-btn');
+        if (!btn) return;
+        btn.textContent = 'Дальше →';
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
+        btn.disabled = true;
+    },
+
+    // «Лифт» по эталону «Статуса»: после ответа прокручиваем окно к
+    // мини-свитку (это делает MiniScroll.show), а возврат к началу —
+    // при переходе к следующему вопросу / рестарте.
+    scrollToGameTop() {
+        const modal = document.getElementById('quiz-modal');
+        if (modal && window.matchMedia('(max-width: 900px)').matches) {
+            try { modal.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* noop */ }
+        }
+    },
+
+    onNextClick() {
+        if (this.currentQuestionNum >= this.totalQuestions) {
+            this.finishGame();
+            return;
+        }
+        this.currentQuestionNum++;
+        this.scrollToGameTop();
+        this.startNewQuestion();
     },
 
     open() {
@@ -69,7 +120,8 @@ const Quiz = {
 
         document.getElementById('quiz-end-screen').classList.add('hidden');
         document.getElementById('quiz-content').classList.remove('hidden');
-        document.getElementById('quiz-info-panel').classList.add('hidden');
+        MiniScroll.hide('quiz-info-panel');
+        this.hideNextBtn();
 
         this.startNewQuestion();
     },
@@ -86,7 +138,10 @@ const Quiz = {
         const resultContainer = document.getElementById('quiz-result');
         optionsContainer.innerHTML = '';
         resultContainer.classList.add('hidden');
-        document.getElementById('quiz-info-panel').classList.add('hidden');
+        // Свиток скрыт до ответа + возврат экрана к окну игры (лифт наверх)
+        MiniScroll.hide('quiz-info-panel');
+        this.scrollToGameTop();
+        this.hideNextBtn();
 
         document.getElementById('quiz-q-num').textContent = this.currentQuestionNum;
 
@@ -229,23 +284,11 @@ const Quiz = {
         this.showNextButton(resultContainer);
     },
 
-    showNextButton(container) {
-        if (this.currentQuestionNum >= this.totalQuestions) {
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'quiz-next-btn';
-            nextBtn.textContent = 'Показать результаты 🏆';
-            nextBtn.addEventListener('click', () => this.finishGame());
-            container.appendChild(nextBtn);
-        } else {
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'quiz-next-btn';
-            nextBtn.textContent = 'Следующий вопрос →';
-            nextBtn.addEventListener('click', () => {
-                this.currentQuestionNum++;
-                this.startNewQuestion();
-            });
-            container.appendChild(nextBtn);
-        }
+    showNextButton() {
+        // Постоянная кнопка «Дальше →» под окном игры (как в «Статусе»):
+        // после ответа она активна; на последнем вопросе — «Итоги игры 🏆».
+        const last = this.currentQuestionNum >= this.totalQuestions;
+        this.showNextBtn(last ? 'Показать результаты 🏆' : 'Следующий вопрос →');
     },
 
     showInfoPanel() {
@@ -286,7 +329,8 @@ const Quiz = {
         this.stopTimer();
         this.isGameActive = false; // Игра завершена
         document.getElementById('quiz-content').classList.add('hidden');
-        document.getElementById('quiz-info-panel').classList.add('hidden');
+        MiniScroll.hide('quiz-info-panel');
+        this.hideNextBtn();
         const endScreen = document.getElementById('quiz-end-screen');
         endScreen.classList.remove('hidden');
 

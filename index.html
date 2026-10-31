@@ -508,6 +508,18 @@
       <div id="quiz-result" class="hidden"></div>
     </div>
 
+    <!-- Мини-свиток — ЧАСТЬ игрового окна (как в игре «Статус»):
+         на мобильных это flexколонка (.status-main → column), свиток
+         встаёт под игровой зоной на всю ширину; «лифт» к нему и
+         возврат делает js/mini-scroll.js. Кнопка «Дальше» — вне
+         #quiz-content, чтобы не скрываться вместе с контентом на
+         финальном экране. -->
+    <div class="status-main quiz-main">
+      <div class="status-play quiz-play" id="quiz-play"></div>
+      <div id="quiz-info-panel" class="status-info-pane mini-scroll-panel hidden" aria-live="polite"></div>
+    </div>
+    <button id="quiz-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
+
     <!-- Экран победы/поражения -->
     <div id="quiz-end-screen" class="hidden">
       <button class="game-close-x" type="button" title="Закрыть игру" aria-label="Закрыть игру">✕</button>
@@ -516,10 +528,6 @@
       <button id="quiz-restart" class="quiz-next-btn">Играть снова</button>
     </div>
   </div>
-
-  <!-- Правая панель: единый мини-свиток (js/mini-scroll.js).
-       Содержимое строится кодом — разметка одна на все игры. -->
-  <div id="quiz-info-panel" class="mini-scroll-panel hidden"></div>
 </div>
 
   <!-- Модалка: Найди пару -->

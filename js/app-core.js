@@ -226,3 +226,38 @@ window.App = {
     });
   },
 };
+
+// ============================================================
+// Флаг «идёт игра» для мобильной вёрстки.
+// Когда открыто любое игровое модальное окно (*-modal без класса
+// .hidden), на body навешивается класс game-active — по нему CSS
+// прячет кнопку вызова бокового меню ☰ (см. css/responsive.css).
+// Отслеживаем через MutationObserver: игры открывают/закрывают
+// окна, меняя только класс hidden.
+// ============================================================
+(function () {
+    const GAME_MODAL_IDS = [
+        'quiz-modal', 'match-modal', 'memo-modal', 'latin-modal',
+        'erudite-modal', 'habitat-modal', 'status-modal', 'family-modal'
+    ];
+
+    function anyGameOpen() {
+        return GAME_MODAL_IDS.some(id => {
+            const el = document.getElementById(id);
+            return el && !el.classList.contains('hidden');
+        });
+    }
+
+    function syncGameActive() {
+        document.body.classList.toggle('game-active', anyGameOpen());
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        syncGameActive();
+        const mo = new MutationObserver(syncGameActive);
+        GAME_MODAL_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) mo.observe(el, { attributes: true, attributeFilter: ['class'] });
+        });
+    });
+})();

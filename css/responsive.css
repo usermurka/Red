@@ -217,8 +217,15 @@ body {
     margin-bottom: 12px;
   }
 
-  /* Кнопка вызова меню видна только когда панель скрыта */
+  /* Кнопка вызова меню видна только когда панель скрыта ... */
   body.sidebar-open #btn-sidebar-toggle {
+    display: none !important;
+  }
+
+  /* ...и полностью убирается, когда запущена ЛЮБАЯ игра (открыто
+     игровое модальное окно). Игра — полноэкранная, боковая панель
+     в ней не нужна. */
+  body.game-active #btn-sidebar-toggle {
     display: none !important;
   }
 
@@ -477,12 +484,34 @@ body {
 
   /* Единое поведение мини-свитка на мобильных: строго ПОД окном игры. */
   .mini-scroll-panel,
-  #quiz-info-panel,
   #memo-info-panel {
     position: static !important;
     order: 99;
     margin-top: 14px;
     z-index: 20;
+  }
+
+  /* Викторина: окно игры + мини-свиток — ОДНА колонка (как в «Статусе»).
+     Свиток — часть игрового окна на всю ширину экрана; «лифт» к нему
+     и возврат делает js/mini-scroll.js / js/quiz.js. */
+  #quiz-modal .status-main.quiz-main {
+    width: 100%;
+  }
+
+  #quiz-info-panel {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    margin-left: 0 !important;
+    padding-left: 0;
+    border-radius: 2px;
+    clip-path: var(--torn-edge);
+    box-shadow: var(--shadow-deep);
+    z-index: 20;
+    order: 99; /* всегда после игрового окна в flex-колонке */
   }
 
   #quiz-modal::before,

@@ -364,7 +364,12 @@ const StatusGame = {
                 this.streak = 0;
                 const resultEl = document.getElementById('status-result');
                 const st = this.statusList().find(s => s.value === this.correctStatus);
-                resultEl.textContent = `⏱ Время вышло! Правильный ответ: ${st ? `${st.value} — ${st.label}` : this.correctStatus}`;
+                // По требованию пользователя: при истечении времени —
+                // только «⏱ Время вышло!» (правильный ответ показан
+                // подсветкой кнопки и в мини-свитке). Переменная st
+                // сохранена для совместимости.
+                void st;
+                resultEl.textContent = '⏱ Время вышло!';
                 resultEl.className = 'status-result bad';
                 resultEl.classList.remove('hidden');
                 // Время вышло — тоже открываем мини-свиток с данными.
