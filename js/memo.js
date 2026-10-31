@@ -23,10 +23,12 @@ const MemoGame = {
     },
     close() {
         document.getElementById('memo-modal').classList.add('hidden');
+        GameEnd.leave('memo');
         document.getElementById('app').style.pointerEvents = '';
     },
     startGame() {
         document.getElementById('memo-end-screen').classList.add('hidden');
+        GameEnd.leave('memo');
         const grid = document.getElementById('memo-grid');
         grid.innerHTML = '';
         document.getElementById('memo-info-panel').classList.remove('hidden');
@@ -178,6 +180,7 @@ const MemoGame = {
                         this.unlockAch('firststep');
 
                         document.getElementById('memo-end-screen').classList.remove('hidden');
+                        GameEnd.enter('memo'); // скрыть поле игры и ↺/✕
                     }, 500);
                 }
             } else {

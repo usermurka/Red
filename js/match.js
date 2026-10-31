@@ -33,10 +33,12 @@ const MatchGame = {
     },
     close() {
         document.getElementById('match-modal').classList.add('hidden');
+        GameEnd.leave('match');
         document.getElementById('app').style.pointerEvents = '';
     },
     startGame() {
         document.getElementById('match-end-screen').classList.add('hidden');
+        GameEnd.leave('match');
         const grid = document.getElementById('match-grid');
         grid.innerHTML = '';
 
@@ -147,6 +149,7 @@ const MatchGame = {
                         this.unlockAch('persistent');
 
                         document.getElementById('match-end-screen').classList.remove('hidden');
+                        GameEnd.enter('match'); // скрыть поле игры и ↺/✕
                     }, 500);
                 }
             } else {

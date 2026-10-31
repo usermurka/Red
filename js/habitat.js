@@ -182,6 +182,7 @@ const HabitatGame = {
 
     close() {
         document.getElementById('habitat-modal').classList.add('hidden');
+        GameEnd.leave('habitat');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -204,6 +205,7 @@ const HabitatGame = {
         // показываем аккуратную подсказку, пока нет ни одной пары.
         this.renderEmptyLogNote();
         document.getElementById('habitat-end-screen').classList.add('hidden');
+        GameEnd.leave('habitat'); // игровое поле снова видимо
         this.nextRound();
     },
 
@@ -895,6 +897,9 @@ const HabitatGame = {
         } catch (e) { /* noop */ }
 
         document.getElementById('habitat-end-screen').classList.remove('hidden');
+        // Финал: прячем игровые ↺/✕ (было «двоение крестиков») и всё
+        // игровое поле под полупрозрачной подложкой экрана итогов.
+        GameEnd.enter('habitat');
     },
 
     unlockAch(achId) {

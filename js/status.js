@@ -44,6 +44,7 @@ const StatusGame = {
 
     close() {
         document.getElementById('status-modal').classList.add('hidden');
+        GameEnd.leave('status');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -59,6 +60,7 @@ const StatusGame = {
         this.hideNextBtn();
         document.getElementById('status-result').classList.add('hidden');
         document.getElementById('status-end-screen').classList.add('hidden');
+        GameEnd.leave('status');
         this.nextQuestion();
     },
 
@@ -432,6 +434,7 @@ const StatusGame = {
         } catch (e) { /* noop */ }
 
         document.getElementById('status-end-screen').classList.remove('hidden');
+        GameEnd.enter('status'); // скрыть поле игры и ↺/✕
     },
 
     unlockAch(achId) {

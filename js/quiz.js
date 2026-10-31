@@ -127,6 +127,9 @@ const Quiz = {
     close() {
         this.stopTimer();
         document.getElementById('quiz-modal').classList.add('hidden');
+        // Финал закрыт вместе с окном — снимаем классы финального экрана
+        // (иначе при повторном открытии игры поле осталось бы скрытым).
+        GameEnd.leave('quiz');
         document.body.classList.remove('quiz-end-open'); // страховка: не «светить» классом после выхода
         document.getElementById('app').style.pointerEvents = '';
         // НЕ сбрасываем isGameActive, чтобы сохранить прогресс
@@ -146,6 +149,7 @@ const Quiz = {
         document.getElementById('quiz-q-num').textContent = '1';
 
         document.getElementById('quiz-end-screen').classList.add('hidden');
+        GameEnd.leave('quiz'); // снова видно игровое поле и ↺/✕
         // Возвращаем игровые ↺/✕: на финальном экране body несёт класс
         // quiz-end-open, по которому responsive.css прячет .quiz-top-controls
         // (иначе круглый крестик финала ложился ПОВЕРХ игрового ✕ — «два
@@ -366,6 +370,7 @@ const Quiz = {
         this.hideNextBtn();
         const endScreen = document.getElementById('quiz-end-screen');
         endScreen.classList.remove('hidden');
+        GameEnd.enter('quiz'); // скрыть игровое поле + ↺/✕ на финале
         // Прячем игровые ↺/✕ (см. responsive.css, body.quiz-end-open),
         // чтобы на финале остался ровно один крестик — круглый .game-close-x.
         document.body.classList.add('quiz-end-open');
