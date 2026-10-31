@@ -1,5 +1,27 @@
 /* ===== Игра «Среда обитания» (угадай биом вида) ===== */
 
+/* Модалка игры. Без этих правил контейнер не имеет position:fixed и
+   перекрывается картой (#map-area, z-index 10), а класс .hidden его
+   не скрывает — игра «запускается», но остаётся невидимой. */
+#habitat-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(36, 53, 42, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#habitat-modal.hidden {
+    display: none;
+}
+
 .habitat-card {
     display: flex;
     flex-direction: column;
@@ -90,4 +112,248 @@
     .hb-icon { font-size: 22px; }
     .hb-label { font-size: 12px; }
     .habitat-name { font-size: 16px; }
+}
+
+/* ===== Доработки по замечаниям игрока ===== */
+
+/* Игровая зона: карточка с вариантами слева, окно данных из Красной
+   книги справа — чтобы ответ можно было проверить по источнику. */
+.habitat-main {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 980px;
+}
+
+.habitat-play {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex: 0 1 520px;
+    min-width: 0;
+}
+
+/* Боковая панель «Данные из Красной книги» */
+.habitat-info {
+    flex: 1 1 340px;
+    max-width: 420px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    background: rgba(36, 53, 42, 0.05);
+    border: 2px solid var(--gold-deep);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.hi-title {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--dark-green);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.hi-body {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green);
+    line-height: 1.45;
+}
+
+.hi-section { margin-bottom: 10px; }
+
+.hi-label {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gold-deep);
+    margin-bottom: 2px;
+}
+
+.hi-text { word-wrap: break-word; }
+.hi-small { font-size: 12px; opacity: 0.92; }
+
+.hi-note {
+    font-style: italic;
+    font-size: 12px;
+    color: rgba(36, 53, 42, 0.65);
+}
+
+/* Подсветка ключевых слов биома в тексте источника */
+#habitat-info-body mark {
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+.hl-forest { background: rgba(76, 175, 80, 0.45); }
+.hl-steppe { background: rgba(251, 192, 45, 0.5); }
+.hl-water  { background: rgba(33, 150, 243, 0.4); }
+.hl-bog    { background: rgba(139, 69, 19, 0.35); }
+
+/* Подсказка «нажми на карточку» */
+.habitat-tap-hint {
+    font-family: Georgia, serif;
+    font-size: 12px;
+    font-style: italic;
+    color: rgba(36, 53, 42, 0.7);
+    text-align: center;
+}
+
+/* Баннер конца раунда — чтобы завершение не выглядело «глюком» */
+.habitat-round-banner {
+    margin-top: 14px;
+    width: 100%;
+    max-width: 720px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    background: rgba(46, 107, 62, 0.2);
+    border: 2px solid var(--green, #2e6b3e);
+    color: var(--dark-green);
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Панели игрового окна: журнал пар (слева) и игровая зона (справа).
+   Одинаковая базовая высота и выравнивание по верху — при пустом
+   журнале окно не выглядит «кривым»: изображение и среды стоят
+   ровно, а не смещаются вниз. */
+.habitat-pane {
+    min-height: 380px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    background: rgba(36, 53, 42, 0.05);
+    border: 2px solid var(--gold-deep);
+    border-radius: 8px;
+}
+
+.habitat-log-pane {
+    flex: 0 1 300px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.hp-title {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--dark-green);
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+/* Пустой журнал — аккуратная подсказка вместо «дыры» в окне */
+.habitat-log-empty-note {
+    font-family: Georgia, serif;
+    font-size: 12px;
+    font-style: italic;
+    color: rgba(36, 53, 42, 0.6);
+    text-align: center;
+    padding: 18px 6px;
+    line-height: 1.4;
+}
+
+.habitat-play-pane {
+    flex: 1 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Журнал пар «вид — среда»: пары остаются до конца игры */
+.habitat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.hl-entry {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border-left: 4px solid transparent;
+    background: rgba(36, 53, 42, 0.05);
+    color: var(--dark-green);
+}
+
+.hl-entry.hl-hit { border-left-color: var(--green, #2e6b3e); }
+.hl-entry.hl-miss { border-left-color: #a33; opacity: 0.85; }
+.hl-mark { font-weight: bold; margin-right: 4px; }
+
+@media (max-width: 760px) {
+    .habitat-main { flex-direction: column; align-items: stretch; }
+    .habitat-info { max-width: none; max-height: 240px; }
+}
+
+/* ===== Панель данных и заглушка до ответа ===== */
+
+/* is-hidden — класс, который JS (habitat.js: setInfoVisible) вешает на
+   тело панели «Данные из Красной книги», пока игрок не ответит.
+   Дублируем правило здесь, чтобы скрытие работало даже при загрузке
+   только habitat.css (в full-сборке покрыто style.css). */
+.is-hidden {
+    display: none !important;
+}
+
+/* Заглушка «данные откроются после ответа» внутри боковой панели */
+.hp-locked-note {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: rgba(36, 53, 42, 0.65);
+    text-align: center;
+    padding: 14px 8px;
+    line-height: 1.4;
+}
+
+.hp-locked-note.hidden {
+    display: none;
+}
+
+/* Подсветка выбранного биома в тексте источника (после ответа):
+   класс hl-<биом> добавляется к каждому <mark> в highlightBiomeWords(),
+   поэтому выбранный биом выделяется рамкой по всей площади текста. */
+#habitat-info-body mark[class*="hl-"] {
+    outline: 2px solid rgba(176, 141, 47, 0.55);
+    outline-offset: -2px;
+}
+
+/* Совместимость: если класс hl-selected навешивается на кнопку биома */
+.habitat-biom.hl-selected {
+    outline: 3px solid var(--gold-deep, #b08d2f);
+    outline-offset: -3px;
+}
+
+/* Подсказка-выбор под сеткой биомов (index.html: habitat-pick-note).
+   Скрыта по умолчанию — класс .hidden покрыт правилом в style.css. */
+.hp-pick-note {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(212, 193, 156, 0.25);
+    color: rgba(36, 53, 42, 0.85);
+}
+
+/* Панель-«книга»: единая рамка для боковых панелей игр */
+.habitat-book-pane {
+    position: relative;
 }

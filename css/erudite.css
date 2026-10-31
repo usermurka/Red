@@ -58,17 +58,84 @@
 .erudite-picture img {
     max-width: 100%;
     max-height: 100%;
+    width: 100%;
+    height: 100%;
+    /* Фото вписывается ЦЕЛИКОМ (как в «Найди пару»), а не обрезается:
+       альбомные и книжные снимки остаются с белыми полями по краям */
     object-fit: contain;
+    background: var(--parchment-light, #faf5e6);
 }
 
-/* Слоты для букв */
+/* Заглушка вместо отсутствующего файла фото.
+   ВАЖНО: display задаём здесь (а не инлайном из JS), а саму картинку
+   скрываем классом .hidden — иначеRules вроде `.latin-photo-card img`
+   или инлайн-стили перебивают центрирование и кажется, что «фото пропало». */
+.erudite-img-ph {
+    display: none;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: Georgia, serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--dark-green, #24352a);
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.erudite-picture.has-placeholder img {
+    display: none !important;
+}
+
+.erudite-picture.has-placeholder .erudite-img-ph {
+    display: flex;
+}
+
+/* Скрытая картинка (заглушка активна) */
+#erudite-img.hidden {
+    display: none;
+}
+
+/* Многоразовые подсказки («Открыть букву», «Перемешать») — помечаются
+   классом repeatable: они не должны выглядеть «использованными» */
+.erudite-hint-btn.repeatable {
+    border-style: solid;
+}
+
+.erudite-hint-btn.repeatable .hint-cost::after {
+    content: ' ↻';
+    font-size: 11px;
+}
+
+/* Буква, которую тащат из лотка */
+.erudite-tile.dragging {
+    opacity: 0.4;
+}
+
+/* Слоты для букв. Название из двух слов группируется: каждая часть
+   слова лежит в отдельном блоке-«капсуле», чтобы визуально было
+   понятно, где заканчивается одно слово и начинается другое. */
 .erudite-slots {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 6px;
+    align-items: center;
+    gap: 10px;
     min-height: 46px;
     max-width: 100%;
+}
+
+.erudite-word-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 7px;
+    border-radius: 8px;
+    background: rgba(36, 53, 42, 0.05);
+    border: 1px dashed rgba(168, 132, 42, 0.55);
 }
 
 .erudite-slot {
@@ -98,11 +165,27 @@
     border-color: var(--gold-deep, #a8842a);
 }
 
-/* Разделитель между словами (пробел) */
+/* Разделитель между словами (пробел) — старый одиночный слот-пустышка
+   больше не нужен: слова разделены блоками .erudite-word-group */
 .erudite-slot.space {
-    width: 16px;
-    border: none;
-    background: transparent;
+    display: none;
+}
+
+/* Слот, в который сейчас что-то перетаскивают */
+.erudite-slot.drop-hover {
+    border-color: var(--green, #2e6b3e);
+    background: rgba(76, 175, 80, 0.25);
+    transform: scale(1.06);
+}
+
+/* Буква, которую тащат из слота */
+.erudite-slot.dragging {
+    opacity: 0.4;
+}
+
+/* Занятый слот кликабелен (клик — снять букву обратно в лоток) */
+.erudite-slot.filled:not(.revealed) {
+    cursor: pointer;
 }
 
 .erudite-slot.correct {
@@ -127,8 +210,21 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 14px;
     max-width: 100%;
+}
+
+/* Блок букв одного слова названия (название из двух слов — два блока) */
+.erudite-tray-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px dashed var(--gold-deep, #a8842a);
+    border-radius: 10px;
 }
 
 .erudite-tile {
@@ -159,26 +255,51 @@
     pointer-events: none;
 }
 
-/* Кнопки управления */
+/* Буквы можно перетаскивать на любые клетки */
+.erudite-tile {
+    -webkit-user-drag: element;
+}
+
+/* Кнопки управления: разные по роли и размеру — «Убрать» маленькая
+   вторичная, «Пропустить» средняя нейтральная, «Дальше» крупная
+   акцентная. Больше не «одинаковые и грубые». */
 .erudite-controls {
     display: flex;
+    align-items: stretch;
     gap: 10px;
 }
 
-.erudite-controls button {
+#erudite-backspace {
+    min-width: 44px;
+    padding: 6px 12px;
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid var(--gold-deep, #a8842a);
+    border-radius: 16px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.9;
+}
+
+#erudite-skip {
     min-width: 52px;
-    padding: 8px 14px;
-    font-size: 18px;
+    padding: 7px 14px;
+    font-size: 15px;
     background: var(--parchment);
-    border: 2px solid var(--gold-deep, #a8842a);
-    border-radius: 4px;
+    border: 1px solid var(--gold-deep, #a8842a);
+    border-radius: 16px;
     cursor: pointer;
     color: inherit;
 }
 
-.erudite-controls button:hover {
+.erudite-controls button:hover:not(:disabled) {
     background: var(--gold-soft, #d4b45a);
     color: #fff;
+}
+
+.erudite-controls button:disabled {
+    opacity: 0.4;
+    cursor: default;
 }
 
 /* Панель платных подсказок */

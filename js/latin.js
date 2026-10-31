@@ -46,21 +46,35 @@ const LatinGame = {
         this.nextRound();
     },
 
-    showNextRoundBtn() {
+    showNextRoundBtn(label) {
         const btn = document.getElementById('latin-next-round-btn');
         if (!btn) return;
         btn.textContent = (this.round >= this.TOTAL_ROUNDS)
             ? 'Итоги игры →' : 'Продолжить →';
-        btn.classList.remove('hidden');
+        if (label) btn.textContent = label;
+        // Кнопка ВСЕГДА на месте (окно не «прыгает»): просто снимаем
+        // состояние «бледная/неактивная».
+        btn.classList.remove('hidden', 'is-idle');
+        btn.classList.add('is-active');
+        btn.disabled = false;
+        try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
 
     hideNextRoundBtn() {
         const btn = document.getElementById('latin-next-round-btn');
-        if (btn) btn.classList.add('hidden');
+        if (!btn) return;
+        // Не прячем совсем — делаем бледной и неактивной, чтобы место
+        // под кнопку сохранялось весь раунд.
+        btn.textContent = 'Продолжить →';
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
+        btn.disabled = true;
     },
 
     // Игра останавливается после раунда и ждёт нажатия «Продолжить»
     continueToNextRound() {
+        const btn = document.getElementById('latin-next-round-btn');
+        if (btn && btn.disabled) return; // по бледной кнопке не играем
         this.hideNextRoundBtn();
         this.nextRound();
     },

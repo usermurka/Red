@@ -1,1 +1,5 @@
 (empty output)
+
+# Generated docx artifacts are not tracked
+Индивидуальный_проект_Файт_ГЛАВА2_*.docx
+__pycache__/
