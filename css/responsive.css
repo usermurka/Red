@@ -209,19 +209,17 @@ body {
     display: none;
   }
 
-  /* шапка панели с кнопкой закрытия */
+  /* шапка панели с кнопкой закрытия (без лишней надписи — только ✕) */
   .sidebar-topbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-bottom: 12px;
   }
 
-  .sidebar-topbar-title {
-    font-family: 'Georgia', serif;
-    font-size: 15px;
-    color: var(--gold-soft);
-    letter-spacing: 0.5px;
+  /* Кнопка вызова меню видна только когда панель скрыта */
+  body.sidebar-open #btn-sidebar-toggle {
+    display: none !important;
   }
 
   #btn-sidebar-close {
@@ -443,17 +441,48 @@ body {
     gap: 0;
   }
 
+  /* Игровое окно на мобильных — ЦЕЛИКО по высоте экрана (без «задирания»
+     за верхнюю границу). Мини-свиток идёт следующим элементом flex-колонки
+     под окном; до него модалка прокручивается плавно («лифт»). */
   .quiz-scroll,
   .match-scroll,
-  .memo-scroll {
+  .memo-scroll,
+  .latin-scroll {
     width: 100vw;
     max-width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: auto;
+    max-height: calc(100dvh - 12px);
     border-radius: 0;
     border-left: none;
     border-right: none;
     clip-path: none;
+    flex-shrink: 0;
+  }
+
+  /* Все игровые модалки — вертикальная прокручиваемая колонка:
+     окно игры, затем журнал/мини-свиток под ним. */
+  #quiz-modal,
+  #memo-modal,
+  #match-modal,
+  #habitat-modal,
+  #status-modal,
+  #latin-modal,
+  #erudite-modal,
+  #family-modal {
+    flex-direction: column !important;
+    align-items: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Единое поведение мини-свитка на мобильных: строго ПОД окном игры. */
+  .mini-scroll-panel,
+  #quiz-info-panel,
+  #memo-info-panel {
+    position: static !important;
+    order: 99;
+    margin-top: 14px;
+    z-index: 20;
   }
 
   #quiz-modal::before,

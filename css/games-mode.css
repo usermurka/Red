@@ -38,6 +38,11 @@ body.games-mode #sidebar h2 {
   display: none !important;
 }
 
+/* В режиме «Игры» мобильные кнопки зума/разворота карты не нужны */
+body.games-mode .mobile-zoom-controls {
+  display: none !important;
+}
+
 /* Кнопка «Дневник» — с золотым акцентом */
 #btn-journal {
   border-color: var(--gold-soft);

@@ -242,14 +242,34 @@ const LatinGame = {
 
             if (this.matchedCount === this.PAIRS_PER_ROUND) {
                 this.stopTimer();
+                const streakBlock = document.getElementById('latin-streak-block');
                 if (this.roundMistakes === 0) {
+                    const hadStreak = this.streak > 0;
                     this.streak++;
                     this.perfectRounds++;
                     this.bestStreak = Math.max(this.bestStreak, this.streak);
+                    // «Огонёк» 🔥 включается по завершении раунда БЕЗ единой
+                    // ошибки. Раньше это было неочевидно — теперь показываем
+                    // явное сообщение и вспышку блока серии.
+                    const instr = document.querySelector('#latin-modal .latin-instruction');
+                    if (instr) {
+                        instr.textContent = hadStreak
+                            ? `🔥 Раунд без ошибок! Серия продолжается: ${this.streak} подряд.`
+                            : `🔥 Огонёк включён! Раунд пройден без ошибок — серия: 1.`;
+                    }
+                    if (streakBlock && !hadStreak) {
+                        streakBlock.classList.remove('ms-streak-flash');
+                        void streakBlock.offsetWidth; // рестарт анимации
+                        streakBlock.classList.add('ms-streak-flash');
+                    }
                 } else {
                     this.streak = 0;
+                    const instr = document.querySelector('#latin-modal .latin-instruction');
+                    if (instr) {
+                        instr.textContent = 'Раунд завершён с ошибками — огонёк 🔥 погас. Серия обнулена.';
+                    }
                 }
-                document.getElementById('latin-streak-block').style.opacity = this.streak > 0 ? '1' : '0.3';
+                streakBlock.style.opacity = this.streak > 0 ? '1' : '0.3';
                 document.getElementById('latin-score-streak').textContent = this.streak;
                 // Игра останавливается: новый раунд — только по кнопке «Продолжить»
                 this.showNextRoundBtn();

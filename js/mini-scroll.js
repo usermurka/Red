@@ -108,11 +108,23 @@ window.MiniScroll = {
         // Разрешаем клики по свитку, даже если модалка «закрыта» для app
         panel.style.pointerEvents = 'auto';
         if (opts.speciesId != null) this._speciesId = opts.speciesId;
+        // «Лифт»: на мобильных мини-свиток стоит ПОД окном игры —
+        // плавно прокручиваем модалку к нему (как в игре «Статус»).
+        if (window.matchMedia('(max-width: 900px)').matches) {
+            setTimeout(() => {
+                try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* noop */ }
+            }, 60);
+        }
     },
 
     hide(panelId) {
         const panel = document.getElementById(panelId);
         if (panel) panel.classList.add('hidden');
+        // При закрытии свитка возвращаем экран к окну игры
+        const modal = panel ? panel.closest('.game-modal, [id$="-modal"]') : null;
+        if (modal && window.matchMedia('(max-width: 900px)').matches) {
+            try { modal.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* noop */ }
+        }
     },
 
     // Общий переход «Читать в свитке» → полный свиток вида + закрытие игры.

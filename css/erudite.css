@@ -260,36 +260,48 @@
     -webkit-user-drag: element;
 }
 
-/* Кнопки управления: разные по роли и размеру — «Убрать» маленькая
-   вторичная, «Пропустить» средняя нейтральная, «Дальше» крупная
-   акцентная. Больше не «одинаковые и грубые». */
+/* Кнопки управления: ОДИНАКОВЫЕ по размеру — «Убрать», «Пропустить»
+   и «Дальше» в одну строку равными компактивными плитками (на мобильных
+   «Дальше» больше не раздувается до 34px отступов из latin.css). */
 .erudite-controls {
     display: flex;
     align-items: stretch;
     gap: 10px;
 }
 
-#erudite-backspace {
-    min-width: 44px;
-    padding: 6px 12px;
+.erudite-controls button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px;
     font-size: 14px;
-    background: transparent;
-    border: 1px solid var(--gold-deep, #a8842a);
     border-radius: 16px;
     cursor: pointer;
     color: inherit;
+    margin: 0; /* отмена margin:18px auto у .latin-next-btn */
+    white-space: nowrap;
+}
+
+#erudite-backspace {
+    background: transparent;
+    border: 1px solid var(--gold-deep, #a8842a);
     opacity: 0.9;
 }
 
 #erudite-skip {
-    min-width: 52px;
-    padding: 7px 14px;
-    font-size: 15px;
     background: var(--parchment);
     border: 1px solid var(--gold-deep, #a8842a);
-    border-radius: 16px;
-    cursor: pointer;
-    color: inherit;
+}
+
+.erudite-controls .latin-next-btn {
+    display: inline-block;
+    padding: 8px 10px;
+    font-size: 14px;
+    margin: 0;
+}
+
+.erudite-controls .latin-next-btn.is-idle,
+.erudite-controls .latin-next-btn:disabled {
+    display: inline-block;
 }
 
 .erudite-controls button:hover:not(:disabled) {

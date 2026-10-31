@@ -38,15 +38,22 @@ const MemoGame = {
         const totalCards = rows * cols;
         const pairs = totalCards / 2;   // 6 или 12
 
-        // Динамический расчет размера карточек
+        // Динамический расчет размера карточек.
+        // ВАЖНО: на мобильных окно игры имеет height:auto, поэтому
+        // clientHeight грида до раскладки ≈ 0 — сетка превращалась в
+        // «тонкую полосу». Если высоты нет, считаем размер от ширины.
         const maxGridWidth = grid.clientWidth - 40;
         const maxGridHeight = grid.clientHeight - 40;
         const gap = isMobile ? 6 : 10;
 
         // Вычисляем максимальный возможный размер карточки по ширине и высоте
         const cardSizeW = Math.floor((maxGridWidth - (cols - 1) * gap) / cols);
-        const cardSizeH = Math.floor((maxGridHeight - (rows - 1) * gap) / rows);
-        const cardSize = Math.min(cardSizeW, cardSizeH);
+        let cardSize = cardSizeW;
+        if (maxGridHeight > 120) {
+            const cardSizeH = Math.floor((maxGridHeight - (rows - 1) * gap) / rows);
+            cardSize = Math.min(cardSizeW, cardSizeH);
+        }
+        cardSize = Math.max(56, Math.min(cardSize, isMobile ? 92 : 130));
 
         grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
         grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;

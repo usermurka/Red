@@ -209,19 +209,20 @@ const EruditeGame = {
     trayEl.innerHTML = '';
     // Буквы лотка группируются по словам названия: название из двух
     // слов НЕ показывается «единой кучей» — каждое слово в своём блоке.
+    // ВАЖНО: плитки распределяются ПОСЛЕДОВАТЕЛЬНО одним курсором, а не
+    // перебором всего массива на каждую группу (старый код заново
+    // проходил this.tray для каждого слова и выдавал в обоих блоках
+    // одни и те же первые буквы, а клик «гасил» их сразу в двух).
     const groups = (this.words && this.words.length > 1) ? this.words : [null];
+    let cursor = 0;
     for (const w of groups) {
       const group = document.createElement('div');
       group.className = 'erudite-tray-group';
       if (w) group.dataset.word = w;
-      const need = w ? Array.from(w).length : null;
-      let taken = 0;
-      this.tray.forEach((tile, idx) => {
-        if (need !== null && taken >= need) return;
-        // Плитки идут по порядку исходного массива; для группировки
-        // берём их последовательно — shuffle уже перемешал буквы всего
-        // слова, разбиение по длине слов сохраняет общую случайность.
-        taken++;
+      const need = w ? Array.from(w).length : this.tray.length;
+      for (let k = 0; k < need && cursor < this.tray.length; k++) {
+        const idx = cursor++;
+        const tile = this.tray[idx];
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'erudite-tile' + (tile.used ? ' used' : '');
@@ -249,7 +250,7 @@ const EruditeGame = {
         });
         btn.addEventListener('click', () => this.onTileClick(idx));
         group.appendChild(btn);
-      });
+      }
       trayEl.appendChild(group);
     }
   },
