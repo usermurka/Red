@@ -23,32 +23,36 @@ const MemoGame = {
     },
     close() {
         document.getElementById('memo-modal').classList.add('hidden');
+        GameEnd.leave('memo');
         document.getElementById('app').style.pointerEvents = '';
     },
     startGame() {
         document.getElementById('memo-end-screen').classList.add('hidden');
+        GameEnd.leave('memo');
         const grid = document.getElementById('memo-grid');
         grid.innerHTML = '';
         document.getElementById('memo-info-panel').classList.remove('hidden');
         const listContainer = document.getElementById('memo-species-list');
         listContainer.innerHTML = '';
 
-        // Адаптивное число карточек: на мобильных помещаемая на экран сетка
-        // меньше, иначе карточки не влезают («Мемо» на телефоне).
+        // Адаптивная раскладка: на мобильных — сетка 5×5, из них 24
+        // карточки (12 пар) и одна ПУСТАЯ ячейка ровно по центру
+        // (row 3, col 3) — по требованию игрока. На десктопе — 4×6.
         const isMobile = window.matchMedia('(max-width: 820px)').matches;
         let rows, cols;
-        if (isMobile) { rows = 6; cols = 4; }        // 24 карты = 12 пар (как на десктопе, но вертикально)
+        if (isMobile) { rows = 5; cols = 5; }        // 25 ячеек: 24 карты + пустой центр
         else            { rows = 4; cols = 6; }      // 24 карты = 12 пар
-        const totalCards = rows * cols;
-        const pairs = totalCards / 2;   // 6 или 12
+        const totalCells = rows * cols;              // 25 или 24
+        const emptyCellIndex = isMobile ? Math.floor(totalCells / 2) : -1; // индекс центра (12)
+        const pairs = (totalCells - (isMobile ? 1 : 0)) / 2;   // всегда 12 пар
 
         // Динамический расчет размера карточек.
         // ВАЖНО: на мобильных окно игры имеет height:auto, поэтому
-        // clientHeight грида до раскладки ≈ 0 — сетка превращалась в
+        // clientHeight грида до раскладки ≈ 0 — сетка схлопывалась в
         // «тонкую полосу». Если высоты нет, считаем размер от ширины.
-        const maxGridWidth = grid.clientWidth - 40;
+        const maxGridWidth = grid.clientWidth - 24;
         const maxGridHeight = grid.clientHeight - 40;
-        const gap = isMobile ? 6 : 10;
+        const gap = isMobile ? 5 : 10;
 
         // Вычисляем максимальный возможный размер карточки по ширине и высоте
         const cardSizeW = Math.floor((maxGridWidth - (cols - 1) * gap) / cols);
@@ -57,7 +61,7 @@ const MemoGame = {
             const cardSizeH = Math.floor((maxGridHeight - (rows - 1) * gap) / rows);
             cardSize = Math.min(cardSizeW, cardSizeH);
         }
-        cardSize = Math.max(56, Math.min(cardSize, isMobile ? 110 : 130));
+        cardSize = Math.max(48, Math.min(cardSize, isMobile ? 96 : 130));
 
         grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
         grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
@@ -106,6 +110,19 @@ const MemoGame = {
             el.addEventListener('click', () => this.flipCard(el));
             grid.appendChild(el);
         });
+
+        // Мобильная сетка 5×5: одна ячейка по центру — БЕЗ карточки.
+        // Пустая заглушка ставится ровно в центр (grid-row/column),
+        // поэтому порядок карт в DOM не меняется, а в центре грида
+        // остаётся пустое место.
+        if (emptyCellIndex >= 0) {
+            const blank = document.createElement('div');
+            blank.className = 'memo-cell-empty';
+            blank.setAttribute('aria-hidden', 'true');
+            blank.style.gridRow = Math.floor(emptyCellIndex / cols) + 1;
+            blank.style.gridColumn = (emptyCellIndex % cols) + 1;
+            grid.appendChild(blank);
+        }
     },
     flipCard(el) {
         if (this.lockBoard || el.classList.contains('flipped') || el.classList.contains('matched')) return;
@@ -131,7 +148,9 @@ const MemoGame = {
                 // Передаём speciesId в showMatchedSpecies, он сам найдёт строку.
                 const speciesId = first.dataset.speciesId;
                 this.showMatchedSpecies(speciesId);
-                const totalPairs = 12; // 6x4 = 24 карточки = 12 пар
+                // 24 карточки = 12 пар (мобильная сетка 5×5 с пустым
+                // центром и десктопная 4×6 — обе на 12 пар)
+                const totalPairs = 12;
                 if (this.matchedPairs === totalPairs) {
                     setTimeout(() => {
                         document.getElementById('memo-final-moves').textContent = this.moves;
@@ -161,6 +180,7 @@ const MemoGame = {
                         this.unlockAch('firststep');
 
                         document.getElementById('memo-end-screen').classList.remove('hidden');
+                        GameEnd.enter('memo'); // скрыть поле игры и ↺/✕
                     }, 500);
                 }
             } else {

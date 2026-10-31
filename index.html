@@ -622,7 +622,11 @@
         <!-- Управление в одну строку: «убрать», «пропустить» и «дальше» рядом -->
         <div class="erudite-controls">
           <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫ Убрать</button>
-          <button id="erudite-skip" type="button" title="Пропустить слово">⏭ <span class="skip-full">Пропустить</span><span class="skip-short">Пропуск</span></button>
+          <!-- Текст кнопки — ПРОСТЫМ узлом (без span'ов): класс .hidden
+               в style.css задан как «display:none!important», а правило
+               «#erudite-skip .skip-* {display:...!important}» перебивал
+               скрытие всей кнопки — при смене раунда слова «исчезали». -->
+          <button id="erudite-skip" type="button" title="Пропустить слово">⏭ Пропустить</button>
           <!-- Кнопка перехода между раундами всегда на месте (окно не «прыгает»),
                до конца раунда — бледная и неактивная -->
           <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
@@ -709,7 +713,7 @@
         <span class="latin-sb" id="habitat-streak-block">🔥 <strong id="habitat-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото. После любого ответа справа откроется мини-свиток с данными из Красной книги и подсветкой — таймер встанет на паузу, чтобы можно было почитать.</p>
+        <!-- Подсказка-инструкция убрана по замечанию игрока -->
         <!-- Два окошка: журнал пар | игровая зона.
              Данные из Красной книги — единый мини-свиток справа от панели
              (js/mini-scroll.js), появляется после любого ответа. -->

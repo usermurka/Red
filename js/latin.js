@@ -29,6 +29,7 @@ const LatinGame = {
 
     close() {
         document.getElementById('latin-modal').classList.add('hidden');
+        GameEnd.leave('latin');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -43,6 +44,7 @@ const LatinGame = {
         this.usedIds = new Set();
         this.hideNextRoundBtn();
         document.getElementById('latin-end-screen').classList.add('hidden');
+        GameEnd.leave('latin');
         this.nextRound();
     },
 
@@ -352,6 +354,7 @@ const LatinGame = {
         achieveEl.textContent = achieve;
 
         document.getElementById('latin-end-screen').classList.remove('hidden');
+        GameEnd.enter('latin'); // скрыть поле игры и ↺/✕
     },
 
     // Выдача медали через общий реестр достижений (если тот загружен)

@@ -17,7 +17,19 @@ const Quiz = {
 
     init() {
         document.getElementById('btn-quiz').addEventListener('click', () => this.open());
-        document.getElementById('quiz-close').addEventListener('click', () => this.close());
+        // Крестик: ДЕЛЕГИРОВАННЫЙ обработчик на всей модалке. Прямой
+        // addEventListener на #quiz-close мог не навешиваться, если init()
+        // вызывался раньше появления кнопки в DOM — из-за этого «крестик
+        // не закрывал окно». Теперь клик по любому .game-close-x /
+        // #quiz-close внутри #quiz-modal гарантированно закрывает игру.
+        const modal = document.getElementById('quiz-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                const t = e.target.closest ? e.target.closest('#quiz-close, .game-close-x') : null;
+                if (t && modal.contains(t)) this.close();
+            });
+        }
+        document.getElementById('quiz-close')?.addEventListener('click', () => this.close());
         document.getElementById('quiz-restart').addEventListener('click', () => this.startGame());
         // Крестик на финальном экране — закрыть игру
         document.querySelector('#quiz-end-screen .game-close-x')?.addEventListener('click', () => this.close());
@@ -115,6 +127,10 @@ const Quiz = {
     close() {
         this.stopTimer();
         document.getElementById('quiz-modal').classList.add('hidden');
+        // Финал закрыт вместе с окном — снимаем классы финального экрана
+        // (иначе при повторном открытии игры поле осталось бы скрытым).
+        GameEnd.leave('quiz');
+        document.body.classList.remove('quiz-end-open'); // страховка: не «светить» классом после выхода
         document.getElementById('app').style.pointerEvents = '';
         // НЕ сбрасываем isGameActive, чтобы сохранить прогресс
     },
@@ -133,6 +149,13 @@ const Quiz = {
         document.getElementById('quiz-q-num').textContent = '1';
 
         document.getElementById('quiz-end-screen').classList.add('hidden');
+        GameEnd.leave('quiz'); // снова видно игровое поле и ↺/✕
+        // Возвращаем игровые ↺/✕: на финальном экране body несёт класс
+        // quiz-end-open, по которому responsive.css прячет .quiz-top-controls
+        // (иначе круглый крестик финала ложился ПОВЕРХ игрового ✕ — «два
+        // крестика»). Класс снимаем здесь, т.к. :has() в CSS ненадёжен
+        // на мобильных браузерах.
+        document.body.classList.remove('quiz-end-open');
         document.getElementById('quiz-content').classList.remove('hidden');
         MiniScroll.hide('quiz-info-panel');
         this.hideNextBtn();
@@ -347,6 +370,10 @@ const Quiz = {
         this.hideNextBtn();
         const endScreen = document.getElementById('quiz-end-screen');
         endScreen.classList.remove('hidden');
+        GameEnd.enter('quiz'); // скрыть игровое поле + ↺/✕ на финале
+        // Прячем игровые ↺/✕ (см. responsive.css, body.quiz-end-open),
+        // чтобы на финале остался ровно один крестик — круглый .game-close-x.
+        document.body.classList.add('quiz-end-open');
 
         const title = document.getElementById('quiz-end-title');
         const desc = document.getElementById('quiz-end-desc');

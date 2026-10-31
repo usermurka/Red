@@ -35,6 +35,45 @@ function xyToGeo(x, y) {
 window.xyToGeo = xyToGeo;
 
 // ------------------------------------------------------------
+// Единый «переключатель финального экрана» для ВСЕХ игр.
+// Проблема (мобильная версия): на заключительном экране его круглый
+// крестик .game-close-x лежал ровно в тех же координатах, что и
+// игровой ✕ из пары ↺/✕ (.quiz-top-controls) — визуально «двоилось».
+// Кроме того, само игровое поле (карточка, таймер, счёт, кнопки
+// раунда) оставалось видно под полупрозрачной подложкой финала.
+//
+// Решение: игры вызывают GameEnd.enter(gameId) при показе финала и
+// GameEnd.leave(gameId) при старте новой партии / закрытии окна.
+// По классу game-end-open responsive.css прячет игровые ↺/✕, а по
+// body.game-end-active <css> скрывает всё игровое поле модалки.
+// Классы живут на <body>: селекторы через :has() не используем —
+// он не поддерживается частью мобильных браузеров и правило просто
+// отбрасывалось парсером.
+// ------------------------------------------------------------
+const GameEnd = {
+  GAMES: ['quiz', 'match', 'memo', 'erudite', 'latin', 'habitat', 'status', 'family'],
+
+  enter(gameId) {
+    document.body.classList.add('game-end-active');
+    this.GAMES.forEach(g => document.body.classList.toggle('game-end-' + g, g === gameId));
+    // Обратная совместимость: у «Викторины» этот класс уже используется
+    // в responsive.css (и снимается в quiz.js).
+    if (gameId === 'quiz') document.body.classList.add('quiz-end-open');
+  },
+
+  leave(gameId) {
+    document.body.classList.remove('game-end-' + gameId);
+    // Если ни одна игра не держит финал открытым — снимаем общий класс.
+    const stillOpen = this.GAMES.some(g => document.body.classList.contains('game-end-' + g));
+    if (!stillOpen) document.body.classList.remove('game-end-active');
+    if (gameId === 'quiz' && !document.body.classList.contains('game-end-quiz')) {
+      document.body.classList.remove('quiz-end-open');
+    }
+  }
+};
+window.GameEnd = GameEnd;
+
+// ------------------------------------------------------------
 // Базовый объект приложения: поля состояния + init().
 // Остальные модули дополняют его методами так:
 //     Object.assign(App, { method() { ... }, ... });

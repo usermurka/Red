@@ -48,9 +48,119 @@ const HabitatGame = {
         bog: ['болото', 'торф', 'сфагн', 'осоков', 'кочкар', 'заболочен', 'мокр', 'сыр']
     },
 
+    /* ============================================================
+       ВЗВЕШЕННОЕ ОПРЕДЕЛЕНИЕ БИОМА (по замечанию игрока)
+       ------------------------------------------------------------
+       Подсчёт «сколько ключевых слов встретилось» устарел: редкие,
+       но точные слова («дерево», «берег») весели столько же, сколько
+       расплывчатые («открыт»). Теперь каждое слово имеет вес, а
+       бонусные группы засчитываются ОДИН РАЗ на текст.
+
+       Пример из замечания: «Предпочитает отдельные ДЕРЕВЬЯ у северной
+       границы ЛЕСА, обрывы в долинах РЕК и ОЗЁР, скалы морских
+       ПОБЕРЕЖИЙ.» → лес: 2+1 = 3; водоём: 3×(рек, озёр) + 2(побережий)
+       = 8 → побеждает ВОДОЁМ, как и должно быть.
+
+       Спорные stems разведены по биомам:
+        • «берег/береж» — берег РЕКИ/ОЗЕРА (водоём, +2), крутой берег
+          степного лога (степь, +1);
+        • «болотн-» — прилагательное от «болото» (болото +2), но
+          «луговато-болотные» луга остаются лугом (болото +1);
+        • «сыр/влажн» — слабый признак (по +1), не решает исход.
+       ============================================================ */
+    BIOME_WEIGHTS: {
+        water: [
+            ['водоём', 3], ['водоем', 3], ['озер', 3], ['река', 3], ['рек', 3],
+            ['пруд', 3], ['водохранилищ', 3], ['русел', 2], ['русла', 2], ['русле', 2],
+            ['мелковод', 3], ['глубок', 2], ['нерест', 3], ['стрежен', 2], ['омут', 2],
+            ['затопл', 2], ['разлив', 2], ['паводк', 2], ['пойменн', 2], ['пойм', 2],
+            ['притоков', 2], ['канал', 2], ['ключев', 2], ['родник', 2],
+            /* «берег» сам по себе — не водоём (берег может быть степного лога),
+           поэтому общие stems ['берег'],['береж'] из водоёма убраны
+           (по замечанию игрока про болотную камышевку); остаются только
+           явные водные формы. */
+        ['берег рек', 2], ['берегам рек', 2], ['берегах рек', 2], ['берега рек', 2],
+        ['берег озер', 2], ['берегах озер', 2], ['берегам озер', 2],
+        ['берег прудов', 2], ['берегах прудов', 2], ['берегам прудов', 2],
+        ['морских побережий', 3], ['побереж', 2], ['прибрежн', 2], ['надводн', 2],
+            ['заросли тростника', 3], ['тростник', 2], ['камыш', 2], ['рогоз', 2],
+            ['чакан', 2], ['болотн', 1], ['тальник', 1], ['сыроватн', 1], ['влага', 1],
+            ['влажн', 1], ['гидро', 2],
+            /* Дополнения по замечанию игрока (подкаменщик сибирский):
+               «в Иртыше в затонах ... у опор мостов, гидротехнических
+               сооружений, дамб, ледорезов» — рыба живёт В ВОДОЁМЕ, но
+               раньше водоём набирал лишь 2 балла («гидро»), и побеждала
+               степь из-за фразы «степной ... природно-климатической зоны». */
+            ['иртыш', 3], ['зырян', 2], ['ишим', 2],
+            ['затон', 3], ['дамб', 3], ['ледорез', 2],
+            ['проточн', 2], ['течени', 2], ['рыб', 2]
+        ],
+        forest: [
+            ['лес', 2], ['дремуч', 3], ['хвойн', 3], ['широколиствен', 3], ['смешанн', 2],
+            ['елов', 2], ['ельник', 3], ['пихтов', 2], ['кедров', 2], ['лиственнич', 2],
+            ['соснов', 2], ['березов', 2], ['берёзов', 2], ['осин', 2], ['ивняк', 2],
+            ['олышк', 2], ['кустарник', 2], ['подлесок', 2], ['лесная подстилка', 3],
+            ['дерев', 2], ['древесн', 2], ['полян', 1], ['глухарин', 2], ['таёжн', 3],
+            ['тайг', 3]
+        ],
+        steppe: [
+            ['степь', 3], ['степных', 3], ['степной', 3], ['полын', 3], ['ковыл', 3],
+            ['разнотравь', 3], ['засушлив', 2], ['сухотняк', 3], ['типчаков', 3],
+            ['типчак', 3], ['солонц', 3], ['сольц', 3], ['пустыр', 3], ['отлог', 2],
+            ['открыт', 1], ['луг', 2], ['лугов', 2], ['склонов', 1],
+            ['склон', 1], ['берег', 1], ['береж', 1], ['барабан', 2],
+            /* Дополнения по замечанию игрока («Сарсазан шишковатый»:
+               «Мезогигрофит, галофит. Растет на пухлых солончаках»,
+               местонахождения — котловина оз. Эбейты). Слово «солонц»
+               раньше не ловило форму «солончак/солончаковый», а марке-
+               ров засолённых степей не было вовсе — вид уходил в ЛЕС
+               из-за слов «деревянистый» и «листочков» в описании. */
+            ['солончак', 3], ['солончаков', 3], ['галофит', 3], ['галофильн', 3],
+            ['поташник', 3], ['солянк', 2], ['шайоров', 2]
+        ],
+        bog: [
+            ['болото', 4], ['заболочен', 3], ['торф', 3], ['сфагн', 3], ['осоков', 2],
+            ['кочкар', 2], ['мокр', 2], ['сыр', 1], ['камыш', 1],
+            ['топи', 2], ['болотн', 2],
+            /* Дополнения по замечанию игрока (болотная камышевка):
+               «низинные ... болота», «гипновые (сфагновые) мхи», «топкие
+               зарастающие карьеры торфяных болот» — сильные болотные
+               признаки. Слово «болото» в тексте встречается только в
+               словосочетаниях («торфяных болот»), поэтому добавлены
+               отдельные stems прилагательных. */
+            ['низинн', 3], ['болотн', 2], ['гипнов', 3], ['мохов', 2], ['мхов', 2]
+        ]
+    },
+
     // Порядок приоритета при одинаковом числе совпадений:
     // болото — самый специфичный биом, затем водоём, лес, степь
     BIOME_PRIORITY: ['bog', 'water', 'forest', 'steppe'],
+
+    /* ============================================================
+       СОЛОНЧАКИ И ГАЛОФИТЫ — ЭТО СТЕПЬ (по замечанию игрока)
+       ------------------------------------------------------------
+       Вид «Сарсазан шишковатый» («Мезогигрофит, галофит. Растет на
+       пухлых солончаках.» + ботаническое описание «деревянистыми
+       ветвями», «продолговатых… листочков») система упорно ставила
+       в ЛЕС: слова «деревянистый» и «листочков» случайно содержат
+       корни «дерев» и «елов» из лесного списка. А настоящих маркеров
+       солончаковой степи в весах не было вовсе.
+
+       Лечим двумя шагами:
+        1) «солончак», «солонец», «галофит», «поташник» — сильные
+           признаки ЗАСОЛЁННОЙ СТЕПИ (+3): именно так трактует их
+           Красная книга Омской обл. (котловина оз. Эбейты —
+           солончаковая степь, а не водоём и не лес);
+        2) ложные срабатывания лесных корней убираем отрицательным
+           весом −2 (сумма не может уйти ниже нуля — см. biomeOf).
+       ============================================================ */
+    NEGATIVE_WEIGHTS: {
+        forest: [
+            ['деревянист', -2],   // «деревянистые ветви» — про стебель, не про лес
+            ['листочк', -2],      // «листочков околоцветника» ≠ «ель»
+            ['одревеснев', -2]
+        ]
+    },
 
     init() {
         document.getElementById('btn-habitat').addEventListener('click', () => this.open());
@@ -72,6 +182,7 @@ const HabitatGame = {
 
     close() {
         document.getElementById('habitat-modal').classList.add('hidden');
+        GameEnd.leave('habitat');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -85,12 +196,16 @@ const HabitatGame = {
         this.fastest = null;   // самый быстрый верный ответ (сек)
         this.usedIds = new Set();
         this.logEntries = [];  // пары «вид — среда» за всю игру
+        this.waitingContinue = false; // пауза после ответа до «Продолжить →»
+        this._endAfterContinue = false; // финал показываем по кнопке, не по таймеру
+        this._lastAnswerCorrect = null;
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
         // Пустой журнал не должен выглядеть «дырой» в окне —
         // показываем аккуратную подсказку, пока нет ни одной пары.
         this.renderEmptyLogNote();
         document.getElementById('habitat-end-screen').classList.add('hidden');
+        GameEnd.leave('habitat'); // игровое поле снова видимо
         this.nextRound();
     },
 
@@ -130,6 +245,10 @@ const HabitatGame = {
         btn.classList.remove('hidden', 'is-idle');
         btn.classList.add('is-active');
         btn.disabled = false;
+        // Если модалка «закрыта» для приложения (app), клики по кнопке
+        // не пройдут — на время паузы открываем ей pointer-events.
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.style.pointerEvents = 'auto';
         // чтобы игрок точно заметил появление кнопки — прокрутим к ней
         try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
     },
@@ -141,16 +260,111 @@ const HabitatGame = {
         btn.classList.remove('hidden', 'is-active');
         btn.classList.add('is-idle');
         btn.disabled = true;
+        // Возвращаем обычное поведение модального окна игры
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.style.pointerEvents = '';
     },
 
     continueToNextRound() {
         const btn = document.getElementById('habitat-next-round-btn');
-        if (btn && btn.disabled) return; // по бледной кнопке не идём вперёд
+
+        // ГЛАВНАЯ ЗАЩИТА ОТ «ЖДАТЬ ТАЙМЕР» (по замечанию игрока: «после пяти
+        // определений все еще нужно ждать истечения таймера, кнопка
+        // „Продолжить“ не активна … игра как бы начинает шестой вид, но не
+        // даёт картинку и закончить не даёт»).
+        // Если ВСЕ ПЯТЬ ВИДОВ раунда отвечены верно — независимо от того,
+        // в каком внутреннем состоянии («пауза после ответа», баннер) мы
+        // находимся и активна ли кнопка, — переходим дальше СРАЗУ: к
+        // следующему раунду или к финалу. Никакого ожидания ⏱ больше нет.
+        if (this.roundFinished()) {
+            this.waitingContinue = false;
+            this.locked = true;
+            this.stopTimer();
+            if (this.round >= this.TOTAL_ROUNDS) {
+                this._endAfterContinue = false;
+                this.showEndScreen('🏆 Игра окончена!');
+            } else {
+                this.hideNextRoundBtn();
+                const banner = document.getElementById('habitat-round-banner');
+                if (banner) banner.classList.add('hidden');
+                MiniScroll.hide('habitat-info-panel');
+                this.nextRound();
+            }
+            return;
+        }
+
+        // Кнопка бледная (is-idle/disabled), а раунд НЕ завершён — значит
+        // идти вперёд по-настоящему некуда: просто снимаем зависшую паузу
+        // и продолжаем таймер.
+        if (btn && btn.disabled) {
+            if (this.waitingContinue) {
+                this.waitingContinue = false;
+                this.locked = false;
+                this.resumeTimer();
+            }
+            return;
+        }
+
+        // Пауза ПОСЛЕ ОТВЕТА (не путать с паузой между раундами):
+        // игра стоит, открыт мини-свиток. «Продолжить →» снимает паузу
+        // и ОБЯЗАТЕЛЬНО двигает игру вперёд:
+        //  • если последний ответ был ВЕРНЫМ — переходим к СЛЕДУЮЩЕМУ
+        //    виду этого же раунда (по замечанию игрока кнопка раньше
+        //    вновь открывала ПЕРВЫЙ вид и игра «стояла» на нём);
+        //  • если ответ был НЕВЕРНЫМ — возвращаемся к ТОМУ ЖЕ виду,
+        //    чтобы игрок мог выбрать другую среду, глядя на свиток.
+        if (this.waitingContinue) {
+            const wasCorrect = !!this._lastAnswerCorrect;
+            this.waitingContinue = false;
+            this._lastAnswerCorrect = null;
+            this.locked = false;   // снова принимаем ответы
+            this.hideNextRoundBtn();
+            MiniScroll.hide('habitat-info-panel');
+            if (wasCorrect) {
+                // Верный ответ засчитан и пара уже в журнале — идём дальше.
+                // showNextCard() сам снимает паузу таймера (resumeTimer).
+                this.showNextCard();
+            } else {
+                this.resumeTimer();
+            }
+            return;
+        }
+
+        // Баннер «раунд завершён» (кнопка активна по завершении раунда) —
+        // сразу ведём игрока дальше, не заставляя ждать истечения таймера.
+        this.proceedAfterRound();
+    },
+
+    // Раунд завершён, когда разобраны ВСЕ пять карточек (currentIdx дошёл
+    // до последней) И пятый вид определён верно (matchedCount === 5).
+    // Прежняя привязка только к числу верных ответов ломалась при ошибках
+    // с исправлением: счётчик мог «проскочить» 5 раньше последней карточки
+    // (зависание на шестом виде без картинки) либо, наоборот, не дойти до
+    // неё никогда (приходится ждать, пока истечёт таймер).
+    roundFinished() {
+        return this.matchedCount >= this.ROUND_SIZE &&
+            this.currentIdx >= this.ROUND_SIZE - 1;
+    },
+
+    // Реальный переход: баннер скрыть, паузу снять, следующий раунд
+    // (или финал игры, если раунды кончились).
+    proceedAfterRound() {
         this.hideNextRoundBtn();
-        document.getElementById('habitat-round-banner').classList.add('hidden');
+        const banner = document.getElementById('habitat-round-banner');
+        if (banner) banner.classList.add('hidden');
+        this.waitingContinue = false;
+        this.locked = false;
         // Игрок нажал «Продолжить» — читаем мини-свиток больше не нужно:
         // снимаем игру с паузы и возвращаем таймер к работе.
         this.paused = false;
+        // Последний раунд уже закрыт — по кнопке показываем экран итогов,
+        // а не пытаемся начать несуществующий четвёртый раунд.
+        if (this._endAfterContinue) {
+            this._endAfterContinue = false;
+            this.stopTimer();
+            this.showEndScreen('🏆 Игра окончена!');
+            return;
+        }
         this.nextRound();
     },
 
@@ -160,42 +374,72 @@ const HabitatGame = {
         return String(str || '').toLowerCase().replace(/ё/g, 'е');
     },
 
+    // Формулы названий ПРИРОДНЫХ ЗОН («в пределах степной и лесостепной
+    // природно-климатических зон») — это административно-географическая
+    // справка, а не место обитания. Вырезаем их из текста перед подсчётом
+    // весов, иначе рыба из Иртыша получала +3 степи за слово «степной».
+    stripZonePhrases(hay) {
+        return hay
+            .replace(/(лесостеп|степ|полупустын|пустын|тундр|тайжн|лес)[а-яё]*(\s+-?\s*[а-яё]+){0,4}\s+природно[-\s]?[а-яё]*/g, ' ')
+            .replace(/природно[-\s]?(климатичес|зон|област)[а-яё]*/g, ' ');
+    },
+
     biomeOf(species) {
         // Поля habitats/description_short есть только в подробной карточке
         // из window.SPECIES_DATA (js/species-data.js), а не в списке SPECIES
         const full = (window.SPECIES_DATA && species && species.id)
             ? window.SPECIES_DATA[species.id] : null;
-        const hay = this.normalize(((full && full.habitats) || '') + ' ' +
+        let hay = this.normalize(((full && full.habitats) || '') + ' ' +
             ((full && full.description_short) || ''));
         if (!hay.trim()) return null;
-        let best = null, bestHits = 0;
+        hay = this.stripZonePhrases(hay);
+
+        // Взвешенный подсчёт (см. BIOME_WEIGHTS): побеждает биом с
+        // наибольшей суммой весов встретившихся ключевых слов.
+        // Порог уверенности — 3 балла (например, одно «болото» или
+        // «степь»+«полынь» уже достаточно).
+        let best = null, bestScore = 0;
         this.BIOME_PRIORITY.forEach(key => {
-            const hits = this.KEYWORDS[key].reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
-            if (hits > bestHits) { best = key; bestHits = hits; }
+            const table = this.BIOME_WEIGHTS[key] || [];
+            const neg = this.NEGATIVE_WEIGHTS[key] || [];
+            let score = 0;
+            for (const [stem, w] of table) {
+                if (w > 0 && hay.includes(stem)) score += w;
+            }
+            // Отрицательные веса: ложные срабатывания корней-омонимов
+            // («деревянистый» ⊃ «дерев», «листочков» ⊃ «елов») вычитаем,
+            // но сумму не отпускаем ниже нуля.
+            for (const [stem, w] of neg) {
+                if (w < 0 && hay.includes(stem)) score += w;
+            }
+            if (score < 0) score = 0;
+            if (score > bestScore) { best = key; bestScore = score; }
         });
-        return bestHits >= 2 ? best : null; // нужен уверенный сигнал
+        return bestScore >= 3 ? best : null; // нужен уверенный сигнал
     },
 
     pickRoundSpecies() {
-        // Пул строим по всем видам справочника, объединяя краткую запись
-        // из SPECIES с подробной карточкой из SPECIES_DATA
-        const all = App.collectAllSpecies()
-            .filter(sp => sp.name && !this.usedIds.has(sp.id))
-            .map(sp => ({ sp, biome: this.biomeOf(sp) }))
-            .filter(e => e.biome);
-        const pool = this.shuffle(all);
-        const selected = pool.slice(0, this.ROUND_SIZE);
-        // Если пригодных видов мало — допускаем повторное использование
-        if (selected.length < this.ROUND_SIZE) {
-            const any = this.shuffle(App.collectAllSpecies()
-                .map(sp => ({ sp, biome: this.biomeOf(sp) }))
-                .filter(e => e.biome));
-            while (selected.length < this.ROUND_SIZE && any.length) {
-                const cand = any.pop();
-                if (!selected.find(s => s.sp.id === cand.sp.id)) selected.push(cand);
+        // Пул строим по ВСЕМ видам справочника SPECIES_DATA (в них есть
+        // «habitats»), объединяя с краткой записью из SPECIES ради имени/статуса.
+        // Ключи usedIds нормализуем через String(...) + нижний регистр, чтобы
+        // избежать рассогласования типов/регистра ID (число vs строка) — иначе
+        // один и тот же вид мог попадаться в пуле повторно.
+        const key = (id) => String(id).toLowerCase();
+        const byId = new Map(App.collectAllSpecies().map(sp => [key(sp.id), sp]));
+        const entries = [];
+        if (window.SPECIES_DATA) {
+            for (const rawId of Object.keys(window.SPECIES_DATA)) {
+                const id = key(rawId);
+                if (this.usedIds.has(id)) continue;
+                const sp = byId.get(id) || { id: rawId, name: (window.SPECIES_DATA[rawId] || {}).name || '' };
+                if (!sp.name) continue;
+                const biome = this.biomeOf(sp);
+                if (biome) entries.push({ sp, biome });
             }
         }
-        selected.forEach(e => this.usedIds.add(e.sp.id));
+        const pool = this.shuffle(entries);
+        const selected = pool.slice(0, this.ROUND_SIZE);
+        selected.forEach(e => this.usedIds.add(key(e.sp.id)));
         return selected;
     },
 
@@ -249,10 +493,30 @@ const HabitatGame = {
 
     // Карточка нового вида: сначала «рубашка», клик — открыть фото.
     showNextCard() {
+        // Защита от «шестого вида без картинки» (замечание игрока): если
+        // все пять карточек раунда уже показаны, дальше идти некуда —
+        // вместо пустой карточки закрываем раунд активной кнопкой.
+        if (this.currentIdx >= this.ROUND_SIZE - 1 && this.matchedCount >= this.ROUND_SIZE) {
+            this.stopTimer();
+            if (this.round >= this.TOTAL_ROUNDS) {
+                this.showRoundBanner(
+                    `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены! Верно определено: ${this.score} видов.`,
+                    'Завершить игру 🏁');
+                this._endAfterContinue = true;
+            } else {
+                this.showRoundBanner(
+                    `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.`,
+                    'Продолжить →');
+            }
+            this.waitingContinue = false;
+            this.locked = true;
+            return;
+        }
         // Переходим к следующему вопросу — снимаем паузу, таймер снова тикает
         this.resumeTimer();
         this.currentIdx++;
         this._answeredCurrent = false;
+        this._matchedCurrent = false; // новая карточка — пару ещё не собран
         const item = this.currentCard();
         const card = document.getElementById('habitat-card');
         if (!item) { card.innerHTML = ''; return; }
@@ -366,16 +630,22 @@ const HabitatGame = {
     answer(biomKey, btn) {
         const item = this.currentCard();
         if (!item) return;
+        // Игра на паузе до нажатия «Продолжить →» — ответы не принимаем
+        if (this.waitingContinue || this.locked) return;
         const correct = biomKey === item.biome;
         const firstTry = !this._answeredCurrent;
+        // Запоминаем исход последнего ответа — по нему «Продолжить →»
+        // решает: идти к следующему виду (верный) или остаться на
+        // текущем для повторного выбора (неверный).
+        this._lastAnswerCorrect = correct;
 
-        // Любой ответ: ставим таймер на паузу, чтобы игрок мог спокойно
-        // прочитать мини-свиток с данными из Красной книги. Пауза
-        // снимается в continueToNextRound() («Продолжить →») или при
-        // переходе к следующему вопросу (showNextCard -> resumeTimer).
+        // Любой ответ: ставим игру на паузу (таймер заморожен), чтобы
+        // игрок мог спокойно прочитать мини-свиток с данными из
+        // Красной книги. Снимается пауза кнопкой «Продолжить →».
         this.pauseTimer();
         this._lastPickKey = biomKey;
-        // Свиток показываем при ЛЮБОМ ответе; подсветка — только при верном.
+        // Свиток показываем при ЛЮБОМ ответе (верном и неверном);
+        // подсветка ключевых слов — только при верном.
         this.renderInfoPanel(item, biomKey, correct); // свиток + подсветка выбранной среды
 
         if (correct) {
@@ -383,14 +653,26 @@ const HabitatGame = {
             btn.classList.add('hab-correct');
             setTimeout(() => btn.classList.remove('hab-correct'), 600);
 
-            if (firstTry) {
-                this.score++;
-                this.streak++;
-                this.bestStreak = Math.max(this.bestStreak, this.streak);
-                if (this.fastest == null || elapsed < this.fastest) this.fastest = elapsed;
-                if (elapsed <= 2) this.unlockAch('quick');
-                if (this.streak >= 8) this.unlockAch('serial');
+            // ВАЖНО (по замечанию игрока: «после пяти определений игра не
+            // понимает, что раунд закончился, как бы начинает шестой вид,
+            // но не даёт картинку и не даёт закончить»):
+            // засчитываем пару ОДИН РАЗ на вопрос — по флагу _matchedCurrent.
+            // Раньше счётчик верных нёс только firstTry-защиту, и второй
+            // верный клик по тому же виду завышал matchedCount. Теперь при
+            // повторном верном ответе счётчик стоит, а защита от перелёта
+            // за пятый вопрос в showNextCard() не даёт игре «начать шестой
+            // вид без картинки».
+            if (!this._matchedCurrent) {
+                this._matchedCurrent = true;
                 this.matchedCount++;
+                if (firstTry) {
+                    this.score++;
+                    this.streak++;
+                    this.bestStreak = Math.max(this.bestStreak, this.streak);
+                    if (this.fastest == null || elapsed < this.fastest) this.fastest = elapsed;
+                    if (elapsed <= 2) this.unlockAch('quick');
+                    if (this.streak >= 8) this.unlockAch('serial');
+                }
             }
             this.locked = false;
             this.updateScoreboard();
@@ -398,26 +680,55 @@ const HabitatGame = {
             // «Стрепет — Лес ✘», затем при верном выборе «Стрепет — Степь ✔».
             this.addLogPair(item, true, biomKey);
 
-            if (this.matchedCount >= this.ROUND_SIZE) {
-                // Все пары раунда собраны. Если это был последний раунд —
-                // игра заканчивается СРАЗУ (раньше нужно было ждать
-                // истечения таймера). Иначе — баннер о завершении раунда.
-                this.stopTimer(); // не заставляем ждать истечения времени
-                if (this.round >= this.TOTAL_ROUNDS) {
-                    this.showEndScreen('🏆 Игра окончена!');
+            if (this.roundFinished()) {
+                // Все пять ВИДОВ раунда отвечены верно — это КЛЮЧЕВОЕ
+                // отличие от прежней логики (по замечанию игрока: «после
+                // пяти определений все еще нужно ждать истечения таймера,
+                // кнопка „Продолжить“ не активна; игра как бы начинает
+                // шестой вид, но не даёт картинку и закончить не даёт»).
+                // Раньше раунд закрывался по числу ВЕРНЫХ ОТВЕТОВ, и если
+                // игрок сначала ошибался, а затем исправлялся на том же
+                // виде, счётчик мог дойти до 5 раньше, чем реально разобраны
+                // все карточки (или наоборот — никогда не дойти, и тогда
+                // игра крутила шестую несуществующую карточку до конца
+                // таймера). Теперь закрытие раунда привязано к последней
+                // карточке: currentIdx === ROUND_SIZE - 1 И пятый вид
+                // угадан.
+                const allCardsAnswered = this.currentIdx >= this.ROUND_SIZE - 1;
+                if (allCardsAnswered) {
+                    this.stopTimer();
+                    if (this.round >= this.TOTAL_ROUNDS) {
+                        // Последний раунд закрыт — финал игры тоже по кнопке,
+                        // чтобы игрок успел дочитать мини-свиток.
+                        this.showRoundBanner(
+                            `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены! Верно определено: ${this.score} видов.` +
+                            (this.mistakes ? ` Ошибок за игру: ${this.mistakes}.` : ' Ни одной ошибки!'),
+                            'Завершить игру 🏁');
+                        this._endAfterContinue = true;   // «Продолжить» → экран итогов
+                    } else {
+                        this.showRoundBanner(
+                            `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
+                            (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
+                            'Продолжить →');
+                    }
+                    this.waitingContinue = false;        // это пауза МЕЖДУ раундами
+                    this.locked = true;                  // ответы больше не нужны
                 } else {
-                    this.showRoundBanner(
-                        `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
-                        (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
-                        'Продолжить →');
+                    // Пятая верная пара собрана ДО того, как игрок дошёл до
+                    // последней карточки (были ошибки с исправлением) —
+                    // оставшиеся карточки всё равно надо разобрать: обычная
+                    // пауза после ответа.
+                    this.showAnswerPauseBtn();
                 }
             } else {
-                this.showNextCard();
+                // НЕ показываем следующую карточку сразу: игра встаёт на
+                // паузу до нажатия «Продолжить →» — есть время изучить свиток.
+                this.showAnswerPauseBtn();
             }
         } else {
             if (firstTry) {
                 // Первая ошибка в вопросе: засчитываем, но даём шанс
-                // выбрать другой вариант, глядя на подсвеченный текст.
+                // выбрать другой вариант, глядя на текст в свитке.
                 this.mistakes++;
                 this.roundMistakes++;
                 this.streak = 0;
@@ -429,15 +740,20 @@ const HabitatGame = {
                 this.addLogPair(item, false, biomKey);
             }
             btn.classList.add('hab-wrong');
-            this.locked = true;
-            setTimeout(() => {
-                btn.classList.remove('hab-wrong');
-                this.locked = false;
-                // Ответ разобран, свиток открыт — можно продолжать выбор,
-                // но время НЕ тикает, пока игрок читает свиток. Переход к
-                // следующему вопросу — по клику на новую карточку среды.
-            }, 600);
+            setTimeout(() => btn.classList.remove('hab-wrong'), 600);
+            // Пауза после любого ответа: ждём «Продолжить →». После
+            // снятия паузы можно выбрать другую среду для этого же вида.
+            this.showAnswerPauseBtn();
         }
+    },
+
+    // Активировать кнопку «Продолжить →» как сигнал ПАУЗЫ ПОСЛЕ ОТВЕТА:
+    // таймер стоит, свиток открыт, новые ответы не принимаются, пока
+    // игрок не нажмёт кнопку (см. continueToNextRound -> waitingContinue).
+    showAnswerPauseBtn() {
+        this.waitingContinue = true;
+        this.locked = true;
+        this.showNextRoundBtn('Продолжить →');
     },
 
     // Журнал пар «вид — среда»: записи остаются до конца игры.
@@ -581,6 +897,9 @@ const HabitatGame = {
         } catch (e) { /* noop */ }
 
         document.getElementById('habitat-end-screen').classList.remove('hidden');
+        // Финал: прячем игровые ↺/✕ (было «двоение крестиков») и всё
+        // игровое поле под полупрозрачной подложкой экрана итогов.
+        GameEnd.enter('habitat');
     },
 
     unlockAch(achId) {

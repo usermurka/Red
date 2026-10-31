@@ -59,6 +59,7 @@ const FamilyGame = {
 
     close() {
         document.getElementById('family-modal').classList.add('hidden');
+        GameEnd.leave('family');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -72,6 +73,7 @@ const FamilyGame = {
         this.hideBanner();
         document.getElementById('family-check-result').classList.add('hidden');
         document.getElementById('family-end-screen').classList.add('hidden');
+        GameEnd.leave('family');
         this.nextRound();
     },
 
@@ -617,6 +619,7 @@ const FamilyGame = {
         } catch (e) { /* noop */ }
 
         document.getElementById('family-end-screen').classList.remove('hidden');
+        GameEnd.enter('family'); // скрыть поле игры и ↺/✕
     },
 
     unlockAch(achId) {

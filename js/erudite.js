@@ -84,11 +84,13 @@ const EruditeGame = {
 
   close() {
     document.getElementById('erudite-modal').classList.add('hidden');
+    GameEnd.leave('erudite');
     document.getElementById('app').style.pointerEvents = '';
   },
 
   startGame() {
     document.getElementById('erudite-end-screen').classList.add('hidden');
+    GameEnd.leave('erudite');
     this.hideNextBtn();
     this.round = 0;
     this.score = 0;          // итоговые очки (не тратятся)
@@ -822,6 +824,7 @@ const EruditeGame = {
     }
     this.unlockAch('letters');
     document.getElementById('erudite-end-screen').classList.remove('hidden');
+    GameEnd.enter('erudite'); // скрыть поле игры и ↺/✕
   },
 
   // Выдача медали через общий реестр достижений (если тот загружен)

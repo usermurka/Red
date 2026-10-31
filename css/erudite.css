@@ -447,11 +447,105 @@
     #erudite-skip { font-size: 12px; padding: 7px 4px; }
 }
 
-/* Переключение подписи кнопки «Пропустить»: полная — на широких
-   экранах, короткая («Пропуск») — на узких, чтобы влезала в одну
-   строку без переноса. */
-#erudite-skip .skip-short { display: none; }
-@media (max-width: 480px) {
-    #erudite-skip .skip-full { display: none; }
-    #erudite-skip .skip-short { display: inline; }
+/* Переключение подписи кнопки «Пропустить» УБРАНО: span'ов .skip-full /
+   .skip-short в разметке больше нет (текст — простой узел). Правила с
+   display:...!important для потомков #erudite-skip ломали скрытие самой
+   кнопки классом .hidden (style.css: display:none!important) — на
+   мобильных казалось, что у кнопки «пропали слова». */
+
+/* Мобильные: «⏭ Пропустить» — шире остальных кнопок, чтобы текст
+   целиком вмещался в одну строку (flex-grow у skip больше). */
+@media (max-width: 820px) {
+    .erudite-controls button {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    #erudite-skip {
+        flex: 1.7 1 auto;      /* заметно шире «Убрать» и «Дальше» */
+        white-space: nowrap;
+        font-size: clamp(11px, 3.2vw, 14px);
+        padding: 8px 6px;
+    }
+}
+
+/* ============================================================
+   АБСОЛЮТНО ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — «ЭРУДИТ» (конец файла)
+   ------------------------------------------------------------
+   Этот блок идёт ПОСЛЕ @media 820px / 420px выше и перебивает их:
+    • текст кнопок ВСЕГДА полный («⏭ Пропустить», без «Пропуск»);
+    • перенос по слогам включён — на очень узких экранах слово
+      «Пропустить» делится дефисом, но НЕ исчезает и не обрезается;
+    • кнопка пропуска шире соседей (flex-grow 1.7), min-width:auto —
+      не сжимается меньше содержимого;
+    • overflow:visible на лотке/слотах — плитки-буквы физически не
+      могут пропасть за обрезкой контейнера.
+   ============================================================ */
+@media (max-width: 900px) {
+    .erudite-scroll,
+    .erudite-body {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+
+    .erudite-tray,
+    .erudite-tray-group,
+    .erudite-slots {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    .erudite-controls {
+        flex-wrap: wrap;               /* крайний случай — кнопки в две строки */
+        gap: 6px;
+    }
+
+    .erudite-controls button {
+        flex: 1 1 auto;
+        min-width: auto !important;    /* не сжиматься меньше своего текста */
+        white-space: normal !important;/* текст переносится, а не исчезает */
+        overflow: visible !important;
+    }
+
+    #erudite-skip {
+        flex: 1.7 1 auto;              /* шире соседей: «⏭ Пропустить» влезает */
+        white-space: normal !important;
+        font-size: clamp(11px, 3.2vw, 14px);
+        padding: 8px 4px;
+        hyphens: auto;                 /* сверхузкие экраны — перенос по слогам */
+        -webkit-hyphens: auto;
+        word-break: normal;            /* не рвать слово посреди буквы */
+        line-height: 1.25;
+    }
+
+    /* Подписи кнопки — простой текстовый узел (span'ов в разметке нет),
+       поэтому здесь только размеры; скрытие кнопки классом .hidden
+       работает как обычно. */
+}
+
+/* ============================================================
+   САМЫЙ КОНЕЦ ФАЙЛА — финальные мобильные правила для кнопки
+   «⏭ Пропустить» (перебивают весь каскад выше, включая latin.css
+   и mini-scroll.css, подключённые позже).
+   Проблема: на узких экранах подпись обрезалась/исчезала. Теперь:
+   • текст всегда в одну строку и НЕ скрывается;
+   • кнопка шире остальных (flex-grow 1.7);
+   • .hidden работает как обычно (display:none!important из
+     style.css) — никаких правил, перекрывающих скрытие кнопки.
+   ============================================================ */
+@media (max-width: 820px) {
+    #erudite-skip:not(.hidden) {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 1.7 1 auto !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: clamp(10px, 3.4vw, 14px) !important;
+        padding: 8px 6px !important;
+        min-width: 0;
+    }
+    /* Страховка: если вдруг родитель ставит цвет текста в цвет фона —
+       подпись обязана быть видимой */
+    #erudite-skip:not(.hidden) { color: inherit; visibility: visible; }
 }
