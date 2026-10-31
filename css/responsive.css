@@ -1171,3 +1171,330 @@ body {
    попадал по кнопке #quiz-close. */
 #quiz-modal .quiz-top-controls { position: relative; z-index: 50; }
 #quiz-modal #quiz-close { z-index: 60; pointer-events: auto; }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — ЗНАЧКИ ✕ / ↺ И ЦЕНТР В «ВИКТОРИНЕ»
+   ------------------------------------------------------------
+   По замечанию игрока на мобильных:
+    1) Значки «крестик» и «начать заново» съезжали: предыдущие
+       правки переводили .quiz-top-controls в position:relative,
+       из-за чего кнопки вставали в поток (по центру сверху окна,
+       рядом с заголовком). Возвращаем абсолютное позиционирование
+       в правом верхнем углу окна (.quiz-scroll/.latin-scroll —
+       position:relative), поверх всего содержимого (z-index).
+    2) Фото и варианты ответов не были отцентрированы: задаём
+       .quiz-image-wrap и #quiz-options ограничивающую ширину и
+       margin-left/right:auto, а картинке — display:block +
+       margin:auto.
+   Правила идут в самом конце файла — перебивают quiz.css,
+   habitat.css и более ранние блоки этого файла.
+   ============================================================ */
+@media (max-width: 900px) {
+  /* 1) Кнопки ✕ и ↺ — снова ПОВСЕХАБСКО в правом верхнем углу окна игры */
+  #quiz-modal .quiz-top-controls,
+  #habitat-modal .quiz-top-controls {
+    position: absolute !important;
+    top: 10px !important;
+    right: 12px !important;
+    left: auto !important;
+    z-index: 70 !important;
+    width: auto !important;
+    flex-direction: row !important;
+    gap: 10px;
+    background: none;
+  }
+  #quiz-modal .quiz-top-controls button,
+  #habitat-modal .quiz-top-controls button {
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Отступы шапки, чтобы абсолютные ↺/✕ не залезали на текст заголовка */
+  #quiz-modal .quiz-header,
+  #habitat-modal .quiz-header {
+    padding-right: 96px;
+    box-sizing: border-box;
+  }
+
+  /* 2) Викторина: фото и варианты — СТРОГО ПО ЦЕНТРУ окна.
+     Причина прежнего «смещения влево»: игровое окно (#quiz-content)
+     имеет внутренние отступы padding:20px, из-за которых его
+     содержимое центрировалось в полосе 350px внутри экрана 390px —
+     визуально блок уезжал влево (справа оставалась пустая лента).
+     На мобильных убираем боковые отступы игровой колонки и задаём
+     контенту ширину 100% с авто-отступами: теперь картинка,
+     варианты ответов и результат делят экран пополам ровно. */
+  #quiz-modal #quiz-play,
+  #quiz-modal #quiz-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #quiz-modal .quiz-image-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  #quiz-modal #quiz-image {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+  }
+  #quiz-modal #quiz-options {
+    width: calc(100% - 24px) !important;
+    max-width: 100%;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #quiz-modal #quiz-result {
+    width: calc(100% - 24px);
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* 3) ОКНО ЗАКРЫТИЯ (финальный экран «Викторины»): два крестика.
+     На игровом экране в правом верхнем углу живёт пара ↺/✕
+     (.quiz-top-controls). Финальный экран (#quiz-end-screen) несёт
+     СОБСТВЕННЫЙ крестик .game-close-x в тех же координатах — на
+     мобильных они накладывались друг на друга («два крестика»).
+
+     Прежняя правка прятала игровые кнопки через body:has(...) —
+     но селектор :has() не поддерживается частью мобильных браузеров
+     (и старым Safari/iOS), правило просто отбрасывалось парсером,
+     и наложение оставалось. Теперь переключение делает JS: quiz.js
+     навешивает на <body> класс quiz-end-open при показе финала и
+     снимает его при старте новой игры — этот способ работает везде.
+     Остаётся ровно один крестик (круглый .game-close-x), он и
+     закрывает игру (обработчик навешан в js/quiz.js init()). */
+  body.quiz-end-open #quiz-modal .quiz-top-controls {
+    display: none !important;
+  }
+  /* Круглый крестик финала не должен залезать на заголовок результата */
+  #quiz-modal #quiz-end-screen {
+    padding-top: 56px;
+  }
+}
+
+/* Страховка для ВСЕХ ширинок (вдруг финал откроют без мобильного
+   media-запроса): если по какой-то причине оба крестика видны —
+   поднимаем круглый крестик финала выше игровых, чтобы клик
+   доставал до него, а не до спрятанного под ним ✕ из .quiz-top-controls. */
+#quiz-modal #quiz-end-screen .game-close-x { z-index: 90; }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН ВО ВСЕХ ИГРАХ (мобильная версия)
+   ------------------------------------------------------------
+   1) «Двоение крестика». У каждой игры в правом верхнем углу окна
+      живёт пара ↺/✕ (.quiz-top-controls), а экран итогов несёт
+      СОБСТВЕННЫЙ круглый крестик .game-close-x в тех же координатах.
+      Пока был виден только викторинный случай (класс quiz-end-open),
+      у «Среды обитания» и остальных игр крестики продолжали
+      накладываться. Теперь JS (см. GameEnd в js/app-core.js) навешивает
+      на <body> класс game-end-<игра>, по нему прячем игровые ↺/✕ —
+      остаётся ровно один крестик, он и закрывает игру.
+      Селектор :has() не используем: он не поддерживается частью
+      мобильных браузеров, правило молча отбрасывалось парсером.
+
+   2) По требованию игрока: когда игра закончилась и показан
+      заключительный экран, САМО ИГРОВОЕ ПОЛЕ должно быть скрыто
+      (раньше оно просвечивало через полупрозрачную подложку итогов:
+      карточка следующего вида, таймер, счёт, кнопки раунда).
+      Прячем дочерние блоки модалки, КРОМЕ самого экрана итогов.
+   ============================================================ */
+
+/* 1) Один крестик на финале — для всех восьми игр */
+body.game-end-quiz    #quiz-modal    > * .quiz-top-controls,
+body.game-end-match   #match-modal   > * .quiz-top-controls,
+body.game-end-memo    #memo-modal    > * .quiz-top-controls,
+body.game-end-erudite #erudite-modal > * .quiz-top-controls,
+body.game-end-latin   #latin-modal   > * .quiz-top-controls,
+body.game-end-habitat #habitat-modal > * .quiz-top-controls,
+body.game-end-status  #status-modal  > * .quiz-top-controls,
+body.game-end-family  #family-modal  > * .quiz-top-controls {
+  display: none !important;
+}
+
+/* 2) Игровое поле целиком скрыто под экраном итогов.
+   ЭКРАН ИТОГОВ ЛЕЖИТ ВНУТРИ игрового контейнера (в HTML финал —
+   сосед заголовка/таймера/карточки внутри .quiz-scroll / .latin-scroll),
+   поэтому нельзя прятать «всё подряд» в этом контейнере: вместе с полем
+   исчезал и сам финал («финальный экран не появился»).
+   Скрываем ТОЛЬКО игровые блоки по их идентификаторам — для каждой игры
+   свой список. Любые будущие элементы добавленные внутрь контейнера,
+   автоматически останутся видимыми. */
+
+/* Викторина: всё содержимое поля — в #quiz-content (его прячет и JS);
+   дополнительно гасим панель мини-свитка и кнопку «Дальше», которые
+   живут вне .quiz-scroll. */
+body.game-end-active #quiz-modal #quiz-content,
+body.game-end-active #quiz-modal .quiz-header,
+body.game-end-active #quiz-modal .status-main.quiz-main,
+body.game-end-active #quiz-modal #quiz-next-btn {
+  display: none !important;
+}
+
+/* Пары (Match): шапка с заголовком и сетка карточек */
+body.game-end-active #match-modal .quiz-header,
+body.game-end-active #match-modal #match-grid {
+  display: none !important;
+}
+
+/* Мемо: шапка с заголовком, поле карточек + инфо-панель свитка (вне скролла) */
+body.game-end-active #memo-modal .quiz-header,
+body.game-end-active #memo-modal #memo-grid,
+body.game-end-active #memo-modal #memo-info-panel {
+  display: none !important;
+}
+
+/* Эрудит: шапка, фото, слоты/буквы, управление, подсказки, прогресс */
+body.game-end-active #erudite-modal .quiz-header,
+body.game-end-active #erudite-modal .erudite-body {
+  display: none !important;
+}
+
+/* Латынь: шапка, таймер, счёт, тело игры (инструкция/сетка/фото/кнопка) */
+body.game-end-active #latin-modal .quiz-header,
+body.game-end-active #latin-modal .latin-timer-track,
+body.game-end-active #latin-modal .latin-scoreboard,
+body.game-end-active #latin-modal .latin-body {
+  display: none !important;
+}
+
+/* Среда обитания: шапка, таймер, счёт, тело игры (журнал/карточка/баннер/кнопка) */
+body.game-end-active #habitat-modal .quiz-header,
+body.game-end-active #habitat-modal #habitat-timer-track,
+body.game-end-active #habitat-modal .latin-scoreboard,
+body.game-end-active #habitat-modal .latin-body {
+  display: none !important;
+}
+
+/* Статус: шапка, таймер, счёт, тело игры (карточка/варианты/баннер/кнопка) */
+body.game-end-active #status-modal .quiz-header,
+body.game-end-active #status-modal #status-timer-track,
+body.game-end-active #status-modal .latin-scoreboard,
+body.game-end-active #status-modal .latin-body {
+  display: none !important;
+}
+
+/* Систематика: шапка, таймер, счёт, тело игры (лоток/корзины/кнопки) */
+body.game-end-active #family-modal .quiz-header,
+body.game-end-active #family-modal .latin-timer-track,
+body.game-end-active #family-modal .latin-scoreboard,
+body.game-end-active #family-modal .latin-body {
+  display: none !important;
+}
+
+
+@media (max-width: 900px) {
+  /* У «Викторины» экран итогов лежит ВНЕ игрового «скролла», поэтому на
+     мобильных делаем его обычным блоком в колонке модалки: игровое поле
+     к этому моменту уже скрыто, и финал занимает всё окно сам.
+     Фоновая подложка модалки (#quiz-modal) уже пергаментная — дублировать
+     её полупрозрачным слоем не нужно. */
+  #quiz-modal #quiz-end-screen {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 60vh;
+    background: transparent !important;
+    padding: 24px 16px 40px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  /* Круглый крестик финала теперь не оверлей — сажаем его на привычное
+     место в правом верхнем углу окна. */
+  #quiz-modal #quiz-end-screen .game-close-x {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 95;
+  }
+}
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН ВО ВСЕХ ИГРАХ — ОДИН МЕХАНИЗМ (мобильная версия)
+   ------------------------------------------------------------
+   Разметка финалов отличается от игры к игре:
+     • «Викторина» — #quiz-end-screen ЛЕЖИТ ВНЕ игрового «скролла»
+       и не имеет инлайн-стилей;
+     • «Эрудит», «Латынь», «Среда обитания», «Статус», «Систематика»,
+       «Пары», «Мемо» — экран итогов ВНУТРИ контейнера и размечен
+       инлайн-стилем position:absolute + height:100% +
+       background:rgba(...). Инлайн перебивает обычные правила CSS,
+       поэтому на мобильных финал рисовался absolutely по контенту:
+       под ним оставалось видно поле игры (карточку, таймер, счёт), а
+       полупрозрачная подложка делала итоговый текст нечитаемым —
+       игрок видел это как «финальный экран не появился».
+
+   Решение единое для всех восьми игр: финал становится обычным
+   блоком колонки модалки (position:static), непрозрачным и на всю
+   высоту окна. Игровое поле к этому моменту уже скрыто правилом
+   body.game-end-active выше, поэтому финал занимает всё окно сам.
+   Селектор [data-game] ловит все шесть «инлайновых» финалов разом и
+   не трогает ничего innego (атрибут data-game есть только у них).
+   ============================================================ */
+@media (max-width: 900px) {
+  #quiz-modal #quiz-end-screen,
+  #match-modal #match-end-screen,
+  #memo-modal #memo-end-screen,
+  #erudite-modal #erudite-end-screen,
+  #latin-modal #latin-end-screen,
+  #habitat-modal #habitat-end-screen,
+  #status-modal #status-end-screen,
+  #family-modal #family-end-screen {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 78vh;
+    background: var(--parchment-light, #f7efdc) !important;
+    padding: 56px 16px 40px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  /* Крестик ровно один. Игровая пара ↺/✕ скрыта правилом
+     body.game-end-<игра> ... .quiz-top-controls выше; круглый крестик
+     финала сажаем в правый верхний угол окна — туда, где стоял ✕.
+     position:fixed + z-index 95 поднимают его над содержимым финала
+     (внутри финала он был absolutely при position:relative контейнера). */
+  #quiz-modal #quiz-end-screen .game-close-x,
+  #match-modal #match-end-screen .game-close-x,
+  #memo-modal #memo-end-screen .game-close-x,
+  #erudite-modal #erudite-end-screen .game-close-x,
+  #latin-modal #latin-end-screen .game-close-x,
+  #habitat-modal #habitat-end-screen .game-close-x,
+  #status-modal #status-end-screen .game-close-x,
+  #family-modal #family-end-screen .game-close-x {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 95;
+  }
+
+  /* Подзаголовки/текст финала не должны залезать под крестик */
+  #quiz-modal #quiz-end-screen > h2,
+  [id$="-end-screen"] > h2 {
+    margin-top: 0;
+    padding-right: 40px;
+  }
+}
