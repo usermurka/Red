@@ -521,3 +521,31 @@
        поэтому здесь только размеры; скрытие кнопки классом .hidden
        работает как обычно. */
 }
+
+/* ============================================================
+   САМЫЙ КОНЕЦ ФАЙЛА — финальные мобильные правила для кнопки
+   «⏭ Пропустить» (перебивают весь каскад выше, включая latin.css
+   и mini-scroll.css, подключённые позже).
+   Проблема: на узких экранах подпись обрезалась/исчезала. Теперь:
+   • текст всегда в одну строку и НЕ скрывается;
+   • кнопка шире остальных (flex-grow 1.7);
+   • .hidden работает как обычно (display:none!important из
+     style.css) — никаких правил, перекрывающих скрытие кнопки.
+   ============================================================ */
+@media (max-width: 820px) {
+    #erudite-skip:not(.hidden) {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 1.7 1 auto !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: clamp(10px, 3.4vw, 14px) !important;
+        padding: 8px 6px !important;
+        min-width: 0;
+    }
+    /* Страховка: если вдруг родитель ставит цвет текста в цвет фона —
+       подпись обязана быть видимой */
+    #erudite-skip:not(.hidden) { color: inherit; visibility: visible; }
+}

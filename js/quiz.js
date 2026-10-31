@@ -17,7 +17,19 @@ const Quiz = {
 
     init() {
         document.getElementById('btn-quiz').addEventListener('click', () => this.open());
-        document.getElementById('quiz-close').addEventListener('click', () => this.close());
+        // Крестик: ДЕЛЕГИРОВАННЫЙ обработчик на всей модалке. Прямой
+        // addEventListener на #quiz-close мог не навешиваться, если init()
+        // вызывался раньше появления кнопки в DOM — из-за этого «крестик
+        // не закрывал окно». Теперь клик по любому .game-close-x /
+        // #quiz-close внутри #quiz-modal гарантированно закрывает игру.
+        const modal = document.getElementById('quiz-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                const t = e.target.closest ? e.target.closest('#quiz-close, .game-close-x') : null;
+                if (t && modal.contains(t)) this.close();
+            });
+        }
+        document.getElementById('quiz-close')?.addEventListener('click', () => this.close());
         document.getElementById('quiz-restart').addEventListener('click', () => this.startGame());
         // Крестик на финальном экране — закрыть игру
         document.querySelector('#quiz-end-screen .game-close-x')?.addEventListener('click', () => this.close());

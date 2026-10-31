@@ -1075,3 +1075,99 @@ body {
     z-index: 20;
   }
 }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ БЛОК МОБИЛЬНОЙ РАСКЛАДКИ «ВИКТОРИНЫ» (в самом конце
+   файла — перебивает quiz.css / status.css / mini-scroll.css,
+   которые подключены в <head> ПОЗЖЕ responsive.css).
+   1) Ширина окна: .quiz-scroll был width:600px; на телефоне
+      375px окно сжималось до контента (картинка ~290px), а
+      flex-спейсеры ::before/::after и padding давали большую
+      ПУСТУЮ область справа. Теперь окно растянуто на всю ширину
+      экрана, спейсеры отключены, padding по бокам убран.
+   2) Свиток #quiz-info-panel выровнен по той же ширине окна.
+   3) Крестик #quiz-close — поверх всего (z-index), чтобы клик
+      гарантированно доходил до кнопки (закрытие дублирует
+      делегированным обработчиком в js/quiz.js).
+   ============================================================ */
+@media (max-width: 900px) {
+  #quiz-modal:not(.hidden) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* .hidden должен ОСТАВАТЬСЯ сильнее этого правила */
+  #quiz-modal.hidden { display: none !important; }
+
+  #quiz-modal::before,
+  #quiz-modal::after { content: none !important; display: none !important; }
+
+  .quiz-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    border-radius: 0 !important;
+    clip-path: none !important;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .status-main.quiz-main {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .status-play.quiz-play {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+  }
+
+  /* Свиток — строго под окном игры, ВЫРОВНЕН по его ширине */
+  #quiz-modal #quiz-info-panel {
+    position: static !important;
+    order: 99;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 14px 0 0 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    flex: none !important;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    clip-path: none;
+    box-shadow: var(--shadow-deep);
+    z-index: 20;
+    box-sizing: border-box;
+  }
+
+  /* Крестик викторины — кликабелен поверх игрового содержимого */
+  #quiz-modal .quiz-top-controls {
+    position: relative;
+    z-index: 50;
+  }
+  #quiz-modal #quiz-close {
+    z-index: 60;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+}
+
+/* Подстраховка крестика «Викторины» на десктопной ширине тоже:
+   z-index над игровым контентом, чтобы клик гарантированно
+   попадал по кнопке #quiz-close. */
+#quiz-modal .quiz-top-controls { position: relative; z-index: 50; }
+#quiz-modal #quiz-close { z-index: 60; pointer-events: auto; }

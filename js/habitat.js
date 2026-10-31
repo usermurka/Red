@@ -283,12 +283,17 @@ const HabitatGame = {
     pickRoundSpecies() {
         // Пул строим по ВСЕМ видам справочника SPECIES_DATA (в них есть
         // «habitats»), объединяя с краткой записью из SPECIES ради имени/статуса.
-        const byId = new Map(App.collectAllSpecies().map(sp => [sp.id, sp]));
+        // Ключи usedIds нормализуем через String(...) + нижний регистр, чтобы
+        // избежать рассогласования типов/регистра ID (число vs строка) — иначе
+        // один и тот же вид мог попадаться в пуле повторно.
+        const key = (id) => String(id).toLowerCase();
+        const byId = new Map(App.collectAllSpecies().map(sp => [key(sp.id), sp]));
         const entries = [];
         if (window.SPECIES_DATA) {
-            for (const id of Object.keys(window.SPECIES_DATA)) {
+            for (const rawId of Object.keys(window.SPECIES_DATA)) {
+                const id = key(rawId);
                 if (this.usedIds.has(id)) continue;
-                const sp = byId.get(id) || { id, name: window.SPECIES_DATA[id].name || '' };
+                const sp = byId.get(id) || { id: rawId, name: (window.SPECIES_DATA[rawId] || {}).name || '' };
                 if (!sp.name) continue;
                 const biome = this.biomeOf(sp);
                 if (biome) entries.push({ sp, biome });
@@ -296,7 +301,7 @@ const HabitatGame = {
         }
         const pool = this.shuffle(entries);
         const selected = pool.slice(0, this.ROUND_SIZE);
-        selected.forEach(e => this.usedIds.add(e.sp.id));
+        selected.forEach(e => this.usedIds.add(key(e.sp.id)));
         return selected;
     },
 

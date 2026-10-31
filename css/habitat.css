@@ -434,3 +434,17 @@
 @media (max-width: 760px) {
     .habitat-pane { min-height: 0; }
 }
+
+/* ============================================================
+   САМЫЙ КОНЕЦ ФАЙЛА — гарантированная раскраска журнала по
+   результату ответа. Наследование цвета текста от .habitat-log-pane
+   (тёмно-зелёный) раньше делало и «✔», и «✘» зелёными на мобильных;
+   эти правила перебивают любой каскад ниже/выше.
+   ============================================================ */
+.habitat-log .hl-entry.hl-hit,
+.habitat-log .hl-entry.hl-hit b { color: var(--green, #2e6b3e) !important; }
+.habitat-log .hl-entry.hl-hit .hl-mark { color: var(--green, #2e6b3e) !important; }
+.habitat-log .hl-entry.hl-miss,
+.habitat-log .hl-entry.hl-miss b { color: #a33 !important; }
+.habitat-log .hl-entry.hl-miss .hl-mark { color: #c0392b !important; }
+.habitat-log .hl-entry.hl-miss { border-left-color: #a33 !important; }
