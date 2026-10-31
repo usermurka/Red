@@ -1216,15 +1216,33 @@ body {
     box-sizing: border-box;
   }
 
-  /* 2) Викторина: фото и варианты — СТРОГО ПО ЦЕНТРУ окна */
+  /* 2) Викторина: фото и варианты — СТРОГО ПО ЦЕНТРУ окна.
+     Причина прежнего «смещения влево»: игровое окно (#quiz-content)
+     имеет внутренние отступы padding:20px, из-за которых его
+     содержимое центрировалось в полосе 350px внутри экрана 390px —
+     визуально блок уезжал влево (справа оставалась пустая лента).
+     На мобильных убираем боковые отступы игровой колонки и задаём
+     контенту ширину 100% с авто-отступами: теперь картинка,
+     варианты ответов и результат делят экран пополам ровно. */
+  #quiz-modal #quiz-play,
+  #quiz-modal #quiz-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
   #quiz-modal .quiz-image-wrap {
-    width: min(92%, 420px) !important;
-    max-width: 92%;
+    width: 100% !important;
+    max-width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
   }
   #quiz-modal #quiz-image {
     display: block;
@@ -1232,14 +1250,14 @@ body {
     max-width: 100%;
   }
   #quiz-modal #quiz-options {
-    width: min(92%, 420px) !important;
-    max-width: 92%;
+    width: calc(100% - 24px) !important;
+    max-width: 100%;
     margin-left: auto !important;
     margin-right: auto !important;
   }
   #quiz-modal #quiz-result {
-    width: min(92%, 420px);
-    max-width: 92%;
+    width: calc(100% - 24px);
+    max-width: 100%;
     margin-left: auto;
     margin-right: auto;
   }

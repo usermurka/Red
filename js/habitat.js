@@ -148,6 +148,8 @@ const HabitatGame = {
         this.usedIds = new Set();
         this.logEntries = [];  // пары «вид — среда» за всю игру
         this.waitingContinue = false; // пауза после ответа до «Продолжить →»
+        this._endAfterContinue = false; // финал показываем по кнопке, не по таймеру
+        this._lastAnswerCorrect = null;
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
         // Пустой журнал не должен выглядеть «дырой» в окне —
@@ -215,7 +217,21 @@ const HabitatGame = {
 
     continueToNextRound() {
         const btn = document.getElementById('habitat-next-round-btn');
-        if (btn && btn.disabled) return; // по бледной кнопке не идём вперёд
+        // Кнопка «Продолжить →» активна ВСЕГДА, когда игра ждёт игрока
+        // (пауза после ответа / конец раунда). Если она бледная
+        // (is-idle/disabled) — значит идти вперёд некуда: просто
+        // снимаем зависшую паузу и продолжаем таймер, но НИКОГДА не
+        // оставляем игру на месте с активной кнопкой (по замечанию
+        // игрока: «когда все пять отвечены — надо ждать, пока истечёт
+        // время, кнопка „Продолжить" не активна»).
+        if (btn && btn.disabled) {
+            if (this.waitingContinue) {
+                this.waitingContinue = false;
+                this.locked = false;
+                this.resumeTimer();
+            }
+            return;
+        }
 
         // Пауза ПОСЛЕ ОТВЕТА (не путать с паузой между раундами):
         // игра стоит, открыт мини-свиток. «Продолжить →» снимает паузу
@@ -233,20 +249,57 @@ const HabitatGame = {
             this.hideNextRoundBtn();
             MiniScroll.hide('habitat-info-panel');
             if (wasCorrect) {
-                // Верный ответ засчитан и пара уже в журнале — идём дальше.
-                // showNextCard() сам снимает паузу таймера (resumeTimer).
-                this.showNextCard();
+                // Страховка: если вдруг все виды раунда уже собраны,
+                // а мы всё ещё в «паузе после ответа» — идём к следующему
+                // раунду, а не крутим карточки одного раунда.
+                if (this.matchedCount >= this.ROUND_SIZE) {
+                    // Тот же сценарий, что и в answer(): раунд закрыт —
+                    // сразу к следующему (или к финалу), таймер не ждём.
+                    const banner = document.getElementById('habitat-round-banner');
+                    if (banner) banner.classList.add('hidden');
+                    MiniScroll.hide('habitat-info-panel');
+                    if (this.round >= this.TOTAL_ROUNDS) {
+                        this.stopTimer();
+                        this.showEndScreen('🏆 Игра окончена!');
+                    } else {
+                        this.nextRound();
+                    }
+                } else {
+                    // Верный ответ засчитан и пара уже в журнале — идём дальше.
+                    // showNextCard() сам снимает паузу таймера (resumeTimer).
+                    this.showNextCard();
+                }
             } else {
                 this.resumeTimer();
             }
             return;
         }
 
+        // Все пять видов раунда отвечены (кнопка активна по завершении
+        // раунда) — сразу ведём игрока дальше, не заставляя ждать
+        // истечения таймера.
+        this.proceedAfterRound();
+    },
+
+    // Реальный переход: баннер скрыть, паузу снять, следующий раунд
+    // (или финал игры, если раунды кончились).
+    proceedAfterRound() {
         this.hideNextRoundBtn();
-        document.getElementById('habitat-round-banner').classList.add('hidden');
+        const banner = document.getElementById('habitat-round-banner');
+        if (banner) banner.classList.add('hidden');
+        this.waitingContinue = false;
+        this.locked = false;
         // Игрок нажал «Продолжить» — читаем мини-свиток больше не нужно:
         // снимаем игру с паузы и возвращаем таймер к работе.
         this.paused = false;
+        // Последний раунд уже закрыт — по кнопке показываем экран итогов,
+        // а не пытаемся начать несуществующий четвёртый раунд.
+        if (this._endAfterContinue) {
+            this._endAfterContinue = false;
+            this.stopTimer();
+            this.showEndScreen('🏆 Игра окончена!');
+            return;
+        }
         this.nextRound();
     },
 
@@ -523,18 +576,28 @@ const HabitatGame = {
             this.addLogPair(item, true, biomKey);
 
             if (this.matchedCount >= this.ROUND_SIZE) {
-                // Все пары раунда собраны. Если это был последний раунд —
-                // игра заканчивается СРАЗУ (раньше нужно было ждать
-                // истечения таймера). Иначе — баннер о завершении раунда.
-                this.stopTimer(); // не заставляем ждать истечения времени
+                // Все пары раунда собраны. Игра НЕ должна ждать истечения
+                // таймера — сразу показываем активную кнопку «Продолжить →»
+                // (по замечанию игрока на мобильных: после пятого верного
+                // ответа кнопка оставалась бледной, и приходилось ждать,
+                // пока время «выйдет в ноль»).
+                this.stopTimer();
                 if (this.round >= this.TOTAL_ROUNDS) {
-                    this.showEndScreen('🏆 Игра окончена!');
+                    // Последний раунд закрыт — финал игры тоже по кнопке,
+                    // чтобы игрок успел дочитать мини-свиток.
+                    this.showRoundBanner(
+                        `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены! Верно определено: ${this.score} видов.` +
+                        (this.mistakes ? ` Ошибок за игру: ${this.mistakes}.` : ' Ни одной ошибки!'),
+                        'Завершить игру 🏁');
+                    this._endAfterContinue = true;   // «Продолжить» → экран итогов
                 } else {
                     this.showRoundBanner(
                         `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
                         (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
                         'Продолжить →');
                 }
+                this.waitingContinue = false;        // это пауза МЕЖДУ раундами
+                this.locked = true;                  // ответы больше не нужны
             } else {
                 // НЕ показываем следующую карточку сразу: игра встаёт на
                 // паузу до нажатия «Продолжить →» — есть время изучить свиток.
