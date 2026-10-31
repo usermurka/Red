@@ -468,3 +468,55 @@
         padding: 8px 6px;
     }
 }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — «ЭРУДИТ»
+   ------------------------------------------------------------
+   Подключается в самом конце файла (после latin.css / quiz.css /
+   games-mode.css) и перебивает весь каскад. Слово «Пропустить»
+   раньше пропадало из-за связки: white-space:nowrap + крошечный
+   flex-basis (кнопка сжималась до невидимости текста). Теперь:
+    • подписи ВСЕГДА полные («⏭ Пропустить», без «Пропуск»);
+    • кнопкам запрещаем сжиматься ниже содержимого (min-width:auto),
+      перенос слов разрешён — текст не обрезается ни при какой
+      ширине экрана;
+    • overflow:visible на контейнерах — слова лотка и подписи кнопок
+      физически не могут «исчезнуть» за обрезкой.
+   ============================================================ */
+@media (max-width: 900px) {
+    .erudite-scroll,
+    .erudite-body {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+
+    .erudite-tray,
+    .erudite-tray-group,
+    .erudite-slots {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    .erudite-controls {
+        flex-wrap: wrap;               /* крайний случай — кнопки в две строки */
+        gap: 6px;
+    }
+
+    .erudite-controls button {
+        flex: 1 1 auto;
+        min-width: auto !important;    /* не сжиматься меньше своего текста */
+        white-space: normal;           /* длинное слово переносится, а не исчезает */
+        overflow: visible;
+    }
+
+    #erudite-skip {
+        flex: 1.7 1 auto;              /* шире соседей: «⏭ Пропустить» влезает */
+        white-space: normal;
+        font-size: clamp(11px, 3.2vw, 14px);
+        padding: 8px 4px;
+    }
+
+    /* Подписи: короткая variante не используется НИКОГДА */
+    #erudite-skip .skip-short { display: none !important; }
+    #erudite-skip .skip-full  { display: inline !important; }
+}

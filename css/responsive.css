@@ -879,3 +879,88 @@ body {
     z-index: 5000; /* выше всех игровых модалок (3100/3200) */
   }
 }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — «ВИКТОРИНА» (окно + свиток)
+   ------------------------------------------------------------
+   Подключается ПОСЛЕДНИМ (после quiz.css / status.css /
+   mini-scroll.css) и гарантированно перебивает desktop-наследие:
+    • .status-main — flex-direction:row !important из status.css
+      (при 760px) — именно из-за него свиток вставал СПРАВА от
+      игровой зоны, а не под ней;
+    • margin-left:-30px + padding-left:15px («заход под панель») и
+      анимация slideInRight с translateX(30px) — из-за них текст
+      свитка «съезжал вбок»;
+    • центрирование окна: у модалки остаётся только justify-content,
+      без ::before/::after-спейсеров и боковых отступов.
+   ============================================================ */
+@media (max-width: 900px) {
+  /* Окно викторины — по центру экрана, колонкой */
+  #quiz-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 6px 0 calc(12px + env(safe-area-inset-bottom)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #quiz-modal::before,
+  #quiz-modal::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .quiz-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    flex-shrink: 0;
+  }
+
+  /* Игровая зона + свиток — вертикальная колонка: свиток СТРОГО
+     ПОД окном игры, на всю его ширину. !important перебивает
+     row-раскладку .status-main из css/status.css. */
+  .status-main.quiz-main {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    width: 100%;
+  }
+
+  .quiz-play {
+    flex: 0 0 auto !important;
+    width: 100%;
+  }
+
+  /* Свиток викторины: сброс «наложения» и скольжения справа */
+  #quiz-info-panel {
+    position: static !important;
+    order: 99;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 14px 0 0 0 !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    flex: none !important;
+    clip-path: var(--torn-edge);
+    box-shadow: var(--shadow-deep);
+    z-index: 20;
+  }
+
+  #quiz-info-panel.hidden {
+    display: none !important;
+  }
+
+  /* Кнопка «Дальше →» — тоже по центру, под свитком */
+  #quiz-next-btn {
+    margin: 14px auto calc(8px + env(safe-area-inset-bottom));
+  }
+}

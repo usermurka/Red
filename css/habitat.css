@@ -292,7 +292,13 @@
 }
 
 .hl-entry.hl-hit { border-left-color: var(--green, #2e6b3e); }
+.hl-entry.hl-hit .hl-mark { color: var(--green, #2e6b3e); }
 .hl-entry.hl-miss { border-left-color: #a33; opacity: 0.85; }
+/* Записи журнала красятся по результату: «✔» — зелёным, «✘» — красным.
+   Раньше обе записи оставались тёмно-зелёными (наследие цвета .hl-entry),
+   из-за чего казалось, что «правильное/неправильное всегда зеленым». */
+.hl-entry.hl-miss .hl-mark { color: #a33; }
+.hl-entry.hl-miss b { color: #7c2d12; }
 .hl-mark { font-weight: bold; margin-right: 4px; }
 
 @media (max-width: 760px) {
