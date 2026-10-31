@@ -44,6 +44,7 @@ const StatusGame = {
 
     close() {
         document.getElementById('status-modal').classList.add('hidden');
+        GameEnd.leave('status');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -59,6 +60,7 @@ const StatusGame = {
         this.hideNextBtn();
         document.getElementById('status-result').classList.add('hidden');
         document.getElementById('status-end-screen').classList.add('hidden');
+        GameEnd.leave('status');
         this.nextQuestion();
     },
 
@@ -239,7 +241,9 @@ const StatusGame = {
         // категории редкости убран.
         blocks.push({
             title: 'Статус вида в базе',
-            html: `<div class="si-small">${this.highlightStatusText(sp.status_text || (full && full.status_text), sp.status).replace(/\n/g, '<br>')}</div>`
+            // По требованию: в игре «Статус» мини-свиток БЕЗ подсветок —
+            // обычный экранированный текст.
+            html: `<div class="si-small">${txt(sp.status_text || (full && full.status_text))}</div>`
         });
         if (full && (full.abundance || full.limiting_factors)) {
             blocks.push({
@@ -260,7 +264,10 @@ const StatusGame = {
             data: {
                 title: sp.name,
                 latin: sp.latin || '',
-                status: st ? { value: st.value, color: st.color, label: st.label } : null,
+                // По требованию пользователя строка «номер статуса + его
+                // название» из мини-свитка убрана (информация о статусе
+                // и так есть в блоках ниже).
+                status: null,
                 blocks: blocks
             }
         });
@@ -296,13 +303,14 @@ const StatusGame = {
             this.bestStreak = Math.max(this.bestStreak, this.streak);
             if (elapsed <= 2) this.unlockAch('speed');
             if (this.streak >= 5) this.unlockAch('streak5');
-            resultEl.textContent = `✔ Верно! ${st ? st.label : ''} (${elapsed.toFixed(1)} с)`;
+            // По требованию: после ответа — только «верно/неверно», без пояснений.
+            resultEl.textContent = '✔ Верно!';
             resultEl.className = 'status-result ok';
         } else {
             this.mistakes++;
             this.streak = 0;
             btn.classList.add('st-wrong');
-            resultEl.textContent = `✘ Неверно. Правильный ответ: ${st ? st.label : this.correctStatus}`;
+            resultEl.textContent = '✘ Неверно';
             resultEl.className = 'status-result bad';
         }
         resultEl.classList.remove('hidden');
@@ -361,7 +369,12 @@ const StatusGame = {
                 this.streak = 0;
                 const resultEl = document.getElementById('status-result');
                 const st = this.statusList().find(s => s.value === this.correctStatus);
-                resultEl.textContent = `⏱ Время вышло! Правильный ответ: ${st ? `${st.value} — ${st.label}` : this.correctStatus}`;
+                // По требованию пользователя: при истечении времени —
+                // только «⏱ Время вышло!» (правильный ответ показан
+                // подсветкой кнопки и в мини-свитке). Переменная st
+                // сохранена для совместимости.
+                void st;
+                resultEl.textContent = '⏱ Время вышло!';
                 resultEl.className = 'status-result bad';
                 resultEl.classList.remove('hidden');
                 // Время вышло — тоже открываем мини-свиток с данными.
@@ -421,6 +434,7 @@ const StatusGame = {
         } catch (e) { /* noop */ }
 
         document.getElementById('status-end-screen').classList.remove('hidden');
+        GameEnd.enter('status'); // скрыть поле игры и ↺/✕
     },
 
     unlockAch(achId) {

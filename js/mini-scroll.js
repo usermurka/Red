@@ -19,6 +19,10 @@ window.MiniScroll = {
     // панелью-«скроллом» по flex-линии, а не внутрь неё.
     ensurePanel(id, modalId) {
         let panel = document.getElementById(id);
+        // Если панель уже размечена в HTML внутри игрового окна — НЕ
+        // перемещаем её (иначе она вырезается из своей flex-колонки и
+        // CSS-правила раскладки к ней перестают применяться).
+        if (panel && panel.parentElement) return panel;
         if (!panel) {
             panel = document.createElement('div');
             panel.id = id;
@@ -36,6 +40,10 @@ window.MiniScroll = {
 
     // Построение содержимого свитка.
     // data = { title, latin, status:{value,color,label}, blocks:[{title, html, text}] }
+    // Флаг window.__MS_NO_STATUS_BADGE — временный: игры, которым строка
+    // «номер статуса + его название» в мини-свитке не нужна (по требованию
+    // пользователя убрана из «Статуса», а за ней и из «Среды обитания»),
+    // устанавливают его перед MiniScroll.show() и сбрасывают сразу после.
     build(data) {
         const wrap = document.createElement('div');
         wrap.className = 'mini-scroll';
@@ -49,7 +57,7 @@ window.MiniScroll = {
         lat.textContent = data.latin || '';
         wrap.appendChild(lat);
 
-        if (data.status) {
+        if (data.status && !window.__MS_NO_STATUS_BADGE) {
             const st = document.createElement('div');
             st.className = 'ms-status';
             const badge = document.createElement('span');
@@ -108,11 +116,23 @@ window.MiniScroll = {
         // Разрешаем клики по свитку, даже если модалка «закрыта» для app
         panel.style.pointerEvents = 'auto';
         if (opts.speciesId != null) this._speciesId = opts.speciesId;
+        // «Лифт»: на мобильных мини-свиток стоит ПОД окном игры —
+        // плавно прокручиваем модалку к нему (как в игре «Статус»).
+        if (window.matchMedia('(max-width: 900px)').matches) {
+            setTimeout(() => {
+                try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* noop */ }
+            }, 60);
+        }
     },
 
     hide(panelId) {
         const panel = document.getElementById(panelId);
         if (panel) panel.classList.add('hidden');
+        // При закрытии свитка возвращаем экран к окну игры
+        const modal = panel ? panel.closest('.game-modal, [id$="-modal"]') : null;
+        if (modal && window.matchMedia('(max-width: 900px)').matches) {
+            try { modal.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* noop */ }
+        }
     },
 
     // Общий переход «Читать в свитке» → полный свиток вида + закрытие игры.

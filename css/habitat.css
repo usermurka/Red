@@ -292,12 +292,81 @@
 }
 
 .hl-entry.hl-hit { border-left-color: var(--green, #2e6b3e); }
+.hl-entry.hl-hit .hl-mark { color: var(--green, #2e6b3e); }
 .hl-entry.hl-miss { border-left-color: #a33; opacity: 0.85; }
+/* Записи журнала красятся по результату: «✔» — зелёным, «✘» — красным.
+   Раньше обе записи оставались тёмно-зелёными (наследие цвета .hl-entry),
+   из-за чего казалось, что «правильное/неправильное всегда зеленым». */
+.hl-entry.hl-miss .hl-mark { color: #a33; }
+.hl-entry.hl-miss b { color: #7c2d12; }
 .hl-mark { font-weight: bold; margin-right: 4px; }
 
 @media (max-width: 760px) {
     .habitat-main { flex-direction: column; align-items: stretch; }
     .habitat-info { max-width: none; max-height: 240px; }
+
+    /* Мобильная компоновка по замечаниям: ДВА СТОЛБЦА — слева журнал
+       пар, справа карточка + выбор среды. Мини-свиток — ПОД обоими
+       столбцами на всю ширину окна (выровнен, не шире). */
+    .habitat-cols {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start;
+        gap: 8px;
+        width: 100%;
+    }
+    .habitat-log-pane {
+        flex: 0 0 34%;
+        min-width: 0;
+    }
+    .habitat-play-pane {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    /* Высота столбцов — одинаковая (по журналу пар): правый столбец
+       не должен быть выше левого. Карточка и биомы уплотнены так,
+       чтобы «вид + выбор среды» занимали ровно свою колонку. */
+    .habitat-cols { align-items: stretch; }
+    .habitat-play-pane .habitat-play { flex: 0 1 auto; }
+    .habitat-card { margin: 2px auto 8px; }
+    .habitat-card .latin-photo-card {
+        width: clamp(96px, 26vw, 130px);
+        height: clamp(96px, 26vw, 130px);
+    }
+    .habitat-biomes {
+        grid-template-columns: repeat(2, 1fr); /* 4 среды — 2×2 вместо длинной строки */
+        gap: 6px;
+    }
+    .habitat-biom { min-height: 52px; padding: 6px 4px; }
+    .hb-icon { font-size: 20px; }
+    .hb-label { font-size: 11px; }
+    .habitat-log {
+        max-height: none;
+        overflow: visible;      /* журнал растёт в высоту по мере добавления пар */
+    }
+    #habitat-info-panel {
+        width: 100% !important; /* выровнять со столбцами: не шире окна игры */
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Мини-свиток «Среды обитания» — ПОД окном игры, на всю ширину.
+       Сбрасываем desktop-наследие .mini-scroll-panel (margin-left:-30px,
+       padding-left:15px, анимация slideInRight с translateX(30px)) —
+       из-за них свиток на мобильных «съезжал вбок». Панель стоит в
+       flex-колонке (.habitat-main) последним элементом — строго под
+       игровой зоной. */
+    #habitat-info-panel {
+        position: static !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding-left: 0 !important;
+        transform: none !important;
+        animation: none !important;
+        order: 99;
+    }
 }
 
 /* ===== Панель данных и заглушка до ответа ===== */
@@ -357,3 +426,25 @@
 .habitat-book-pane {
     position: relative;
 }
+
+/* Мобильные столбцы «Среды обитания»: убрать минимальную высоту 380px —
+   именно она делала столбцы одинаково огромными, а содержимое правого
+   (фото+среды) выглядело меньше фиксированной высоты. Теперь оба столбца
+   равны по высоте и тянутся по журналу пар (align-items:stretch выше). */
+@media (max-width: 760px) {
+    .habitat-pane { min-height: 0; }
+}
+
+/* ============================================================
+   САМЫЙ КОНЕЦ ФАЙЛА — гарантированная раскраска журнала по
+   результату ответа. Наследование цвета текста от .habitat-log-pane
+   (тёмно-зелёный) раньше делало и «✔», и «✘» зелёными на мобильных;
+   эти правила перебивают любой каскад ниже/выше.
+   ============================================================ */
+.habitat-log .hl-entry.hl-hit,
+.habitat-log .hl-entry.hl-hit b { color: var(--green, #2e6b3e) !important; }
+.habitat-log .hl-entry.hl-hit .hl-mark { color: var(--green, #2e6b3e) !important; }
+.habitat-log .hl-entry.hl-miss,
+.habitat-log .hl-entry.hl-miss b { color: #a33 !important; }
+.habitat-log .hl-entry.hl-miss .hl-mark { color: #c0392b !important; }
+.habitat-log .hl-entry.hl-miss { border-left-color: #a33 !important; }

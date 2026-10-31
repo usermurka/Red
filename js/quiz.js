@@ -17,7 +17,19 @@ const Quiz = {
 
     init() {
         document.getElementById('btn-quiz').addEventListener('click', () => this.open());
-        document.getElementById('quiz-close').addEventListener('click', () => this.close());
+        // Крестик: ДЕЛЕГИРОВАННЫЙ обработчик на всей модалке. Прямой
+        // addEventListener на #quiz-close мог не навешиваться, если init()
+        // вызывался раньше появления кнопки в DOM — из-за этого «крестик
+        // не закрывал окно». Теперь клик по любому .game-close-x /
+        // #quiz-close внутри #quiz-modal гарантированно закрывает игру.
+        const modal = document.getElementById('quiz-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                const t = e.target.closest ? e.target.closest('#quiz-close, .game-close-x') : null;
+                if (t && modal.contains(t)) this.close();
+            });
+        }
+        document.getElementById('quiz-close')?.addEventListener('click', () => this.close());
         document.getElementById('quiz-restart').addEventListener('click', () => this.startGame());
         // Крестик на финальном экране — закрыть игру
         document.querySelector('#quiz-end-screen .game-close-x')?.addEventListener('click', () => this.close());
@@ -29,6 +41,71 @@ const Quiz = {
 
         // Единый мини-свиток (js/mini-scroll.js): панель #quiz-info-panel
         // строится кодом, кнопка «📖 Читать в свитке» — общая для всех игр.
+
+        // Механика как в игре «Статус»: одна постоянная кнопка «Дальше →»
+        // под окном игры; до ответа она бледная и неактивная.
+        const nextBtn = document.getElementById('quiz-next-btn');
+        if (nextBtn) nextBtn.addEventListener('click', () => this.onNextClick());
+
+        // Перенос игрового контента внутрь игровой колонки новой
+        // раскладки (окно игры + мини-свиток рядом/под ним).
+        const play = document.getElementById('quiz-play');
+        const content = document.getElementById('quiz-content');
+        if (play && content && !content.parentElement.classList.contains('quiz-play')) {
+            play.appendChild(content);
+        }
+
+        // Кнопка «Дальше» — ВНУТРЬ окна игры (.quiz-scroll), сразу после
+        // колонки «игра + свиток»: на мобильных скроллится именно окно,
+        // и кнопка должна быть доступна прокруткой внутри него.
+        const nextBtnEl = document.getElementById('quiz-next-btn');
+        const scrollBox = document.querySelector('#quiz-modal .quiz-scroll');
+        if (nextBtnEl && scrollBox && nextBtnEl.parentElement !== scrollBox) {
+            scrollBox.appendChild(nextBtnEl);
+        }
+    },
+
+    showNextBtn(label) {
+        const btn = document.getElementById('quiz-next-btn');
+        if (!btn) return;
+        btn.textContent = label || 'Дальше →';
+        btn.classList.remove('hidden', 'is-idle');
+        btn.classList.add('is-active');
+        btn.disabled = false;
+        // Как в эталонном «Статусе»: кнопка «Дальше» под свитком должна
+        // попасть в поле зрения — подводим её видимой частью экрана.
+        try { btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* noop */ }
+    },
+
+    hideNextBtn() {
+        const btn = document.getElementById('quiz-next-btn');
+        if (!btn) return;
+        btn.textContent = 'Дальше →';
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
+        btn.disabled = true;
+    },
+
+    // «Лифт» по эталону «Статуса»: после ответа прокручиваем окно к
+    // мини-свитку (это делает MiniScroll.show), а возврат к началу —
+    // при переходе к следующему вопросу / рестарте.
+    scrollToGameTop() {
+        // Скролл живёт внутри окна игры (.quiz-scroll), модалка не скроллит.
+        const box = document.querySelector('#quiz-modal .quiz-scroll')
+                 || document.getElementById('quiz-modal');
+        if (box && window.matchMedia('(max-width: 900px)').matches) {
+            try { box.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { /* noop */ }
+        }
+    },
+
+    onNextClick() {
+        if (this.currentQuestionNum >= this.totalQuestions) {
+            this.finishGame();
+            return;
+        }
+        this.currentQuestionNum++;
+        this.scrollToGameTop();
+        this.startNewQuestion();
     },
 
     open() {
@@ -50,6 +127,10 @@ const Quiz = {
     close() {
         this.stopTimer();
         document.getElementById('quiz-modal').classList.add('hidden');
+        // Финал закрыт вместе с окном — снимаем классы финального экрана
+        // (иначе при повторном открытии игры поле осталось бы скрытым).
+        GameEnd.leave('quiz');
+        document.body.classList.remove('quiz-end-open'); // страховка: не «светить» классом после выхода
         document.getElementById('app').style.pointerEvents = '';
         // НЕ сбрасываем isGameActive, чтобы сохранить прогресс
     },
@@ -68,8 +149,16 @@ const Quiz = {
         document.getElementById('quiz-q-num').textContent = '1';
 
         document.getElementById('quiz-end-screen').classList.add('hidden');
+        GameEnd.leave('quiz'); // снова видно игровое поле и ↺/✕
+        // Возвращаем игровые ↺/✕: на финальном экране body несёт класс
+        // quiz-end-open, по которому responsive.css прячет .quiz-top-controls
+        // (иначе круглый крестик финала ложился ПОВЕРХ игрового ✕ — «два
+        // крестика»). Класс снимаем здесь, т.к. :has() в CSS ненадёжен
+        // на мобильных браузерах.
+        document.body.classList.remove('quiz-end-open');
         document.getElementById('quiz-content').classList.remove('hidden');
-        document.getElementById('quiz-info-panel').classList.add('hidden');
+        MiniScroll.hide('quiz-info-panel');
+        this.hideNextBtn();
 
         this.startNewQuestion();
     },
@@ -86,7 +175,10 @@ const Quiz = {
         const resultContainer = document.getElementById('quiz-result');
         optionsContainer.innerHTML = '';
         resultContainer.classList.add('hidden');
-        document.getElementById('quiz-info-panel').classList.add('hidden');
+        // Свиток скрыт до ответа + возврат экрана к окну игры (лифт наверх)
+        MiniScroll.hide('quiz-info-panel');
+        this.scrollToGameTop();
+        this.hideNextBtn();
 
         document.getElementById('quiz-q-num').textContent = this.currentQuestionNum;
 
@@ -229,23 +321,11 @@ const Quiz = {
         this.showNextButton(resultContainer);
     },
 
-    showNextButton(container) {
-        if (this.currentQuestionNum >= this.totalQuestions) {
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'quiz-next-btn';
-            nextBtn.textContent = 'Показать результаты 🏆';
-            nextBtn.addEventListener('click', () => this.finishGame());
-            container.appendChild(nextBtn);
-        } else {
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'quiz-next-btn';
-            nextBtn.textContent = 'Следующий вопрос →';
-            nextBtn.addEventListener('click', () => {
-                this.currentQuestionNum++;
-                this.startNewQuestion();
-            });
-            container.appendChild(nextBtn);
-        }
+    showNextButton() {
+        // Постоянная кнопка «Дальше →» под окном игры (как в «Статусе»):
+        // после ответа она активна; на последнем вопросе — «Итоги игры 🏆».
+        const last = this.currentQuestionNum >= this.totalQuestions;
+        this.showNextBtn(last ? 'Показать результаты 🏆' : 'Следующий вопрос →');
     },
 
     showInfoPanel() {
@@ -286,9 +366,14 @@ const Quiz = {
         this.stopTimer();
         this.isGameActive = false; // Игра завершена
         document.getElementById('quiz-content').classList.add('hidden');
-        document.getElementById('quiz-info-panel').classList.add('hidden');
+        MiniScroll.hide('quiz-info-panel');
+        this.hideNextBtn();
         const endScreen = document.getElementById('quiz-end-screen');
         endScreen.classList.remove('hidden');
+        GameEnd.enter('quiz'); // скрыть игровое поле + ↺/✕ на финале
+        // Прячем игровые ↺/✕ (см. responsive.css, body.quiz-end-open),
+        // чтобы на финале остался ровно один крестик — круглый .game-close-x.
+        document.body.classList.add('quiz-end-open');
 
         const title = document.getElementById('quiz-end-title');
         const desc = document.getElementById('quiz-end-desc');

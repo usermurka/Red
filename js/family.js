@@ -59,6 +59,7 @@ const FamilyGame = {
 
     close() {
         document.getElementById('family-modal').classList.add('hidden');
+        GameEnd.leave('family');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
     },
@@ -72,6 +73,7 @@ const FamilyGame = {
         this.hideBanner();
         document.getElementById('family-check-result').classList.add('hidden');
         document.getElementById('family-end-screen').classList.add('hidden');
+        GameEnd.leave('family');
         this.nextRound();
     },
 
@@ -524,10 +526,10 @@ const FamilyGame = {
                 this.renderTray();
                 this.refreshBasketEmptiness();
             }, 800);
+            // Без расшифровки ошибок — только общее сообщение (ТЗ)
             resultEl.innerHTML =
-                `<strong>Найдено ошибок: ${wrong}.</strong><br>` +
-                escHtml(wrongList.join(' · ')) +
-                '<br>Неверные карточки вернулись в лоток — разложи их по другим корзинам и снова нажми «✔ Проверить».';
+                `<strong>Найдено ошибок: ${wrong}.</strong> ` +
+                'Неверные карточки вернулись в лоток — разложи их по другим корзинам и снова нажми «✔ Проверить».';
             resultEl.className = 'family-check-result bad';
             return;
         }
@@ -617,6 +619,7 @@ const FamilyGame = {
         } catch (e) { /* noop */ }
 
         document.getElementById('family-end-screen').classList.remove('hidden');
+        GameEnd.enter('family'); // скрыть поле игры и ↺/✕
     },
 
     unlockAch(achId) {

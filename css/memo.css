@@ -129,6 +129,16 @@
     /* Оставляем перевернутой, но добавляем зеленую рамку, чтобы было видно, что она найдена */
 }
 
+/* Пустая центральная ячейка мобильной сетки 5×5 («Мемо»): карточки
+   нет — заглушка занимает место в гриде (grid-row/column ставит JS),
+   сама невидима и не кликабельна. */
+.memo-cell-empty {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    visibility: hidden;
+}
+
 .memo-card.matched .memo-front {
     border-color: #4CAF50;
     box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.5);

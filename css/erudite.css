@@ -260,36 +260,62 @@
     -webkit-user-drag: element;
 }
 
-/* Кнопки управления: разные по роли и размеру — «Убрать» маленькая
-   вторичная, «Пропустить» средняя нейтральная, «Дальше» крупная
-   акцентная. Больше не «одинаковые и грубые». */
+/* Кнопки управления: ОДИНАКОВЫЕ по размеру — «Убрать», «Пропустить»
+   и «Дальше» в одну строку равными компактивными плитками (на мобильных
+   «Дальше» больше не раздувается до 34px отступов из latin.css). */
 .erudite-controls {
     display: flex;
     align-items: stretch;
     gap: 10px;
 }
 
-#erudite-backspace {
-    min-width: 44px;
-    padding: 6px 12px;
+.erudite-controls button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px;
     font-size: 14px;
-    background: transparent;
-    border: 1px solid var(--gold-deep, #a8842a);
     border-radius: 16px;
     cursor: pointer;
     color: inherit;
+    margin: 0; /* отмена margin:18px auto у .latin-next-btn */
+    white-space: normal; /* на узких экранах текст переносится, а не вылезает за кнопку */
+}
+
+/* Очень узкие экраны: кнопки управления — в одну строку. Текст «⏭ Пропустить»
+   целиком не влезает в свою треть, поэтому на мобильных подпись сокращается
+   до «⏭ Пропуск» (title остаётся полным). white-space:nowrap гарантирует
+   одну строку; шрифт и отступы уменьшены. */
+@media (max-width: 420px) {
+    .erudite-controls { gap: 6px; }
+    .erudite-controls button {
+        font-size: 12px;
+        padding: 7px 4px;
+        white-space: nowrap;
+    }
+    #erudite-skip::after { content: none; } /* без подстрочника */
+}
+
+#erudite-backspace {
+    background: transparent;
+    border: 1px solid var(--gold-deep, #a8842a);
     opacity: 0.9;
 }
 
 #erudite-skip {
-    min-width: 52px;
-    padding: 7px 14px;
-    font-size: 15px;
     background: var(--parchment);
     border: 1px solid var(--gold-deep, #a8842a);
-    border-radius: 16px;
-    cursor: pointer;
-    color: inherit;
+}
+
+.erudite-controls .latin-next-btn {
+    display: inline-block;
+    padding: 8px 10px;
+    font-size: 14px;
+    margin: 0;
+}
+
+.erudite-controls .latin-next-btn.is-idle,
+.erudite-controls .latin-next-btn:disabled {
+    display: inline-block;
 }
 
 .erudite-controls button:hover:not(:disabled) {
@@ -389,4 +415,137 @@
         width: min(200px, 70vw);
         height: min(200px, 70vw);
     }
+}
+
+/* ============================================================
+   ФИНАЛЬНЫЕ МОБИЛЬНЫЕ ПРАВИЛА (в конце файла — перебивают любой
+   каскад, включая блок @media 520px выше).
+   ------------------------------------------------------------
+   1) Буквы лотка НЕ должны исчезать: окно игры скроллится целиком
+      (.erudite-scroll), внутренние контейнеры не обрезают контент.
+   2) Кнопки управления — строго в одну строку; на узких экранах
+      подпись «⏭ Пропустить» сокращается до «Пропуск» (title полный).
+   ============================================================ */
+@media (max-width: 820px) {
+    .erudite-scroll { overflow-y: auto; }
+    .erudite-body,
+    .erudite-tray,
+    .erudite-tray-group {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    .erudite-tile {
+        width: clamp(26px, 7vw, 34px);
+        height: clamp(32px, 8.5vw, 40px);
+        font-size: clamp(15px, 4.2vw, 19px);
+    }
+    .erudite-controls button { white-space: nowrap; }
+}
+
+@media (max-width: 420px) {
+    /* «Пропустить» не влезало в треть кнопки — меняем подпись на короткую. */
+    #erudite-skip { font-size: 12px; padding: 7px 4px; }
+}
+
+/* Переключение подписи кнопки «Пропустить» УБРАНО: span'ов .skip-full /
+   .skip-short в разметке больше нет (текст — простой узел). Правила с
+   display:...!important для потомков #erudite-skip ломали скрытие самой
+   кнопки классом .hidden (style.css: display:none!important) — на
+   мобильных казалось, что у кнопки «пропали слова». */
+
+/* Мобильные: «⏭ Пропустить» — шире остальных кнопок, чтобы текст
+   целиком вмещался в одну строку (flex-grow у skip больше). */
+@media (max-width: 820px) {
+    .erudite-controls button {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    #erudite-skip {
+        flex: 1.7 1 auto;      /* заметно шире «Убрать» и «Дальше» */
+        white-space: nowrap;
+        font-size: clamp(11px, 3.2vw, 14px);
+        padding: 8px 6px;
+    }
+}
+
+/* ============================================================
+   АБСОЛЮТНО ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — «ЭРУДИТ» (конец файла)
+   ------------------------------------------------------------
+   Этот блок идёт ПОСЛЕ @media 820px / 420px выше и перебивает их:
+    • текст кнопок ВСЕГДА полный («⏭ Пропустить», без «Пропуск»);
+    • перенос по слогам включён — на очень узких экранах слово
+      «Пропустить» делится дефисом, но НЕ исчезает и не обрезается;
+    • кнопка пропуска шире соседей (flex-grow 1.7), min-width:auto —
+      не сжимается меньше содержимого;
+    • overflow:visible на лотке/слотах — плитки-буквы физически не
+      могут пропасть за обрезкой контейнера.
+   ============================================================ */
+@media (max-width: 900px) {
+    .erudite-scroll,
+    .erudite-body {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+
+    .erudite-tray,
+    .erudite-tray-group,
+    .erudite-slots {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    .erudite-controls {
+        flex-wrap: wrap;               /* крайний случай — кнопки в две строки */
+        gap: 6px;
+    }
+
+    .erudite-controls button {
+        flex: 1 1 auto;
+        min-width: auto !important;    /* не сжиматься меньше своего текста */
+        white-space: normal !important;/* текст переносится, а не исчезает */
+        overflow: visible !important;
+    }
+
+    #erudite-skip {
+        flex: 1.7 1 auto;              /* шире соседей: «⏭ Пропустить» влезает */
+        white-space: normal !important;
+        font-size: clamp(11px, 3.2vw, 14px);
+        padding: 8px 4px;
+        hyphens: auto;                 /* сверхузкие экраны — перенос по слогам */
+        -webkit-hyphens: auto;
+        word-break: normal;            /* не рвать слово посреди буквы */
+        line-height: 1.25;
+    }
+
+    /* Подписи кнопки — простой текстовый узел (span'ов в разметке нет),
+       поэтому здесь только размеры; скрытие кнопки классом .hidden
+       работает как обычно. */
+}
+
+/* ============================================================
+   САМЫЙ КОНЕЦ ФАЙЛА — финальные мобильные правила для кнопки
+   «⏭ Пропустить» (перебивают весь каскад выше, включая latin.css
+   и mini-scroll.css, подключённые позже).
+   Проблема: на узких экранах подпись обрезалась/исчезала. Теперь:
+   • текст всегда в одну строку и НЕ скрывается;
+   • кнопка шире остальных (flex-grow 1.7);
+   • .hidden работает как обычно (display:none!important из
+     style.css) — никаких правил, перекрывающих скрытие кнопки.
+   ============================================================ */
+@media (max-width: 820px) {
+    #erudite-skip:not(.hidden) {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 1.7 1 auto !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-size: clamp(10px, 3.4vw, 14px) !important;
+        padding: 8px 6px !important;
+        min-width: 0;
+    }
+    /* Страховка: если вдруг родитель ставит цвет текста в цвет фона —
+       подпись обязана быть видимой */
+    #erudite-skip:not(.hidden) { color: inherit; visibility: visible; }
 }

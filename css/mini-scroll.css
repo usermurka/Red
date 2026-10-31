@@ -182,11 +182,41 @@
         order: 99;                     /* всегда последним в flex-колонке */
     }
 
-    /* Викторина: панель инфо тоже уходит под игровое окно */
-    #quiz-info-panel {
+    /* Викторина / Среда обитания / Статус: свиток стоит ВНУТРИ окна
+       игры (или сразу под игровой зоной) и обязан быть строго ПОД ним,
+       на всю ширину. Сбрасываем desktop-наследие:
+         • margin-left:-30px + padding-left:15px («заход под панель») —
+           из-за них текст съезжал вбок;
+         • анимация slideInRight с translateX(30px) — стартовое смещение
+           панели вправо;
+         • flex-shrink:0 при column-контейнере не давал панели тянуться.
+       ВАЖНО: селекторы с !important — раньше эти правила терялись в
+       каскаде: css/status.css подключается ПОСЛЕ mini-scroll.css и его
+       строковые @media (max-width:760px) перебивали обычные объявления.
+       .hidden для панелей остаётся рабочим: display:none!important у
+       селектора .mini-scroll-panel.hidden сильнее обычного !important. */
+    #quiz-info-panel,
+    #habitat-info-panel,
+    #status-info-panel {
         position: static !important;
-        order: 99;
-        margin-top: 14px;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        margin: 14px 0 0 0 !important;
+        padding-left: 0 !important;
+        flex: none !important;
+        animation: none !important;
+        transform: none !important;
+        clip-path: var(--torn-edge);
+        box-shadow: var(--shadow-deep);
         z-index: 20;
+        order: 99;
     }
+
+    /* Викторина: панель инфо — ЧАСТЬ игрового окна (колонка
+       .status-main.quiz-main), а не отдельный элемент модалки.
+       Порядок задаёт responsive.css; здесь общие сбросы выше. */
+
 }

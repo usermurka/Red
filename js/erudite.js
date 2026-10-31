@@ -84,11 +84,13 @@ const EruditeGame = {
 
   close() {
     document.getElementById('erudite-modal').classList.add('hidden');
+    GameEnd.leave('erudite');
     document.getElementById('app').style.pointerEvents = '';
   },
 
   startGame() {
     document.getElementById('erudite-end-screen').classList.add('hidden');
+    GameEnd.leave('erudite');
     this.hideNextBtn();
     this.round = 0;
     this.score = 0;          // итоговые очки (не тратятся)
@@ -199,8 +201,17 @@ const EruditeGame = {
   },
 
   buildTray() {
-    const letters = this.letters.filter(ch => ch !== ' ');
-    this.tray = this.shuffle(letters.map((ch, i) => ({ letter: ch, used: false, origIndex: i })));
+    // Плитки группируются по словам: в лотке первые len(word1) плиток —
+    // буквы ПЕРВОГО слова (внутри — перемешаны), следующие len(word2) —
+    // буквы ВТОРОГО слова и т.д. Старый код перемешивал все буквы названия
+    // одним массивом, из-за чего в блоке «Жаба» оказывались буквы «Серая».
+    const words = (this.words && this.words.length > 1) ? this.words : [this.letters.replace(/ /g, '')];
+    const tiles = [];
+    for (const w of words) {
+      const wt = this.shuffle(Array.from(w).map(ch => ({ letter: ch, used: false })));
+      tiles.push(...wt);
+    }
+    this.tray = tiles.map((t, i) => ({ ...t, origIndex: i }));
     this.renderTray();
   },
 
@@ -209,19 +220,20 @@ const EruditeGame = {
     trayEl.innerHTML = '';
     // Буквы лотка группируются по словам названия: название из двух
     // слов НЕ показывается «единой кучей» — каждое слово в своём блоке.
+    // ВАЖНО: плитки распределяются ПОСЛЕДОВАТЕЛЬНО одним курсором, а не
+    // перебором всего массива на каждую группу (старый код заново
+    // проходил this.tray для каждого слова и выдавал в обоих блоках
+    // одни и те же первые буквы, а клик «гасил» их сразу в двух).
     const groups = (this.words && this.words.length > 1) ? this.words : [null];
+    let cursor = 0;
     for (const w of groups) {
       const group = document.createElement('div');
       group.className = 'erudite-tray-group';
       if (w) group.dataset.word = w;
-      const need = w ? Array.from(w).length : null;
-      let taken = 0;
-      this.tray.forEach((tile, idx) => {
-        if (need !== null && taken >= need) return;
-        // Плитки идут по порядку исходного массива; для группировки
-        // берём их последовательно — shuffle уже перемешал буквы всего
-        // слова, разбиение по длине слов сохраняет общую случайность.
-        taken++;
+      const need = w ? Array.from(w).length : this.tray.length;
+      for (let k = 0; k < need && cursor < this.tray.length; k++) {
+        const idx = cursor++;
+        const tile = this.tray[idx];
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'erudite-tile' + (tile.used ? ' used' : '');
@@ -249,7 +261,7 @@ const EruditeGame = {
         });
         btn.addEventListener('click', () => this.onTileClick(idx));
         group.appendChild(btn);
-      });
+      }
       trayEl.appendChild(group);
     }
   },
@@ -262,6 +274,38 @@ const EruditeGame = {
       if (!this.placed[i]) return i;
     }
     return -1;
+  },
+
+  // Первый свободный слот (для резервного клика по букве).
+  // Для названий из нескольких слов: клик по плитке блока слова k кладёт
+  // букву в первый свободный слот этого же слова — плитки не «перетекают»
+  // между блоками и не гаснут сразу в двух.
+  nextFreeSlotForWord(wordIdx) {
+    let pos = 0;
+    for (let w = 0; w < this.words.length; w++) {
+      const word = this.words[w];
+      if (w === wordIdx) {
+        for (let k = 0; k < word.length; k++) {
+          const i = pos + k;
+          if (!this.revealedSlots.has(i) && !this.placed[i]) return i;
+        }
+        return -1;
+      }
+      pos += word.length + 1; // + пробел
+    }
+    return -1;
+  },
+
+  // По индексу плитки лотка определить, к какому слову она относится
+  // (плитки сгруппированы по словам в buildTray).
+  wordIdxOfTile(trayIndex) {
+    if (!this.words || this.words.length <= 1) return 0;
+    let acc = 0;
+    for (let w = 0; w < this.words.length; w++) {
+      acc += Array.from(this.words[w]).length;
+      if (trayIndex < acc) return w;
+    }
+    return this.words.length - 1;
   },
 
   // Поместить плитку в конкретный слот (или переставить уже стоящую букву)
@@ -285,7 +329,8 @@ const EruditeGame = {
 
   onTileClick(trayIndex) {
     if (this.locked) return;
-    const slotIdx = this.nextFreeSlot();
+    let slotIdx = this.nextFreeSlotForWord(this.wordIdxOfTile(trayIndex));
+    if (slotIdx === -1) slotIdx = this.nextFreeSlot(); // слово заполнено — в общее
     if (slotIdx === -1) return;
     this.placeAt(trayIndex, slotIdx);
   },
@@ -555,11 +600,29 @@ const EruditeGame = {
         break;
       }
       case 'shuffle': {
+        // Перемешиваем буквы ВНУТРИ каждого слова лотка — блоки слов
+        // не должны смешиваться между собой (плитки сгруппированы по словам).
         const free = this.tray.filter(t => !t.used);
         if (free.length < 2) { this.showHintMessage('Перемешивать нечего!', 'bad'); return; }
-        const letters = this.shuffle(free.map(t => t.letter));
-        let k = 0;
-        this.tray = this.tray.map(t => (t.used ? t : { ...t, letter: letters[k++] }));
+        const bounds = [];
+        let acc = 0;
+        const wordsArr = (this.words && this.words.length > 1) ? this.words : [this.letters.replace(/ /g, '')];
+        for (const w of wordsArr) { const len = Array.from(w).length; bounds.push([acc, acc + len]); acc += len; }
+        // Для каждой группы свободных плиток — своя перемешанная копия букв
+        const groupLetters = {};
+        for (const [s, e] of bounds) {
+          groupLetters[s] = this.shuffle(this.tray.slice(s, e).filter(x => !x.used).map(x => x.letter));
+        }
+        const taken = {};
+        let i = 0;
+        this.tray = this.tray.map((t) => {
+          if (t.used) return t;
+          const myIdx = i++;
+          const b = bounds.find(([s, e]) => myIdx >= s && myIdx < e) || bounds[bounds.length - 1];
+          const k = (taken[b[0]] || 0);
+          taken[b[0]] = k + 1;
+          return { ...t, letter: groupLetters[b[0]][k] };
+        });
         this.renderTray();
         break;
       }
@@ -761,6 +824,7 @@ const EruditeGame = {
     }
     this.unlockAch('letters');
     document.getElementById('erudite-end-screen').classList.remove('hidden');
+    GameEnd.enter('erudite'); // скрыть поле игры и ↺/✕
   },
 
   // Выдача медали через общий реестр достижений (если тот загружен)
