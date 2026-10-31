@@ -228,8 +228,39 @@
 }
 
 @media (max-width: 760px) {
-    .status-main { flex-direction: column; align-items: stretch; }
-    .status-info { max-width: none; max-height: 240px; }
+    /* Мобильная компоновка по замечаниям: ДВА СТОЛБЦА — слева
+       изображение, справа список статусов; мини-свиток ниже на всю
+       ширину окна игры. */
+    .status-main {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 10px;
+        max-width: none;
+    }
+    .status-play {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 10px;
+        flex: 1 1 100%;
+    }
+    #status-card {
+        flex: 0 0 44%;
+        min-width: 0;
+    }
+    #status-options {
+        flex: 1 1 52%;
+        min-width: 0;
+        max-width: none;
+    }
+    #status-result {
+        flex: 1 1 100%;
+    }
+    .status-info-pane { flex: none; width: 100%; }
+    /* Кнопка «Дальше →» всегда влезает: она в потоке под окном,
+       а не приклеена к низу модалки за пределами экрана. */
+    #status-next-btn { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
 }
 
 /* ============================================================

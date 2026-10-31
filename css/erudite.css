@@ -278,7 +278,14 @@
     cursor: pointer;
     color: inherit;
     margin: 0; /* отмена margin:18px auto у .latin-next-btn */
-    white-space: nowrap;
+    white-space: normal; /* на узких экранах текст переносится, а не вылезает за кнопку */
+}
+
+/* Очень узкие экраны: уменьшаем шрифт кнопок управления,
+   чтобы «⏭ Пропустить» целиком влезало в свою треть строки. */
+@media (max-width: 420px) {
+    .erudite-controls { gap: 6px; }
+    .erudite-controls button { font-size: 12px; padding: 7px 5px; }
 }
 
 #erudite-backspace {

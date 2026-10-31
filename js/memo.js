@@ -15,7 +15,11 @@ const MemoGame = {
         document.getElementById('memo-modal').classList.remove('hidden');
         document.getElementById('app').style.pointerEvents = 'none';
         document.getElementById('memo-modal').style.pointerEvents = 'auto';
-        this.startGame();
+        // Раскладка грида зависит от его реальных размеров: сразу после
+        // снятия .hidden clientWidth/clientHeight ещё могут быть 0 —
+        // сетка схлопывалась в «тонкую полосу». Ждём один кадр, чтобы
+        // браузер выполнил layout, и только тогда запускаем игру.
+        requestAnimationFrame(() => this.startGame());
     },
     close() {
         document.getElementById('memo-modal').classList.add('hidden');
@@ -53,13 +57,13 @@ const MemoGame = {
             const cardSizeH = Math.floor((maxGridHeight - (rows - 1) * gap) / rows);
             cardSize = Math.min(cardSizeW, cardSizeH);
         }
-        cardSize = Math.max(56, Math.min(cardSize, isMobile ? 92 : 130));
+        cardSize = Math.max(56, Math.min(cardSize, isMobile ? 110 : 130));
 
         grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
         grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
         grid.style.gap = gap + 'px';
         grid.style.justifyContent = 'center';
-        grid.style.alignContent = 'center';
+        grid.style.alignContent = 'stretch';
 
         this.moves = 0;
         document.getElementById('memo-moves').textContent = '0';

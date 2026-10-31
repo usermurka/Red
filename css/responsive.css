@@ -736,9 +736,8 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 
-  #memo-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  /* Мемо: колонки задаёт js/memo.js в px (gridTemplateColumns),
+     здесь не переопределяем — иначе шаблон ломается. */
 
   .quiz-stats {
     flex-wrap: wrap;
@@ -787,6 +786,9 @@ body {
   #memo-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* У мемо колонки и рядки в px ставит js (inline-стили) — здесь не переопределяем */
+  #memo-grid { grid-template-columns: none; }
 
   #tooltip {
     max-width: calc(100vw - 24px);

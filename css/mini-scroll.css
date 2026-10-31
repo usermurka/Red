@@ -182,11 +182,8 @@
         order: 99;                     /* всегда последним в flex-колонке */
     }
 
-    /* Викторина: панель инфо тоже уходит под игровое окно */
-    #quiz-info-panel {
-        position: static !important;
-        order: 99;
-        margin-top: 14px;
-        z-index: 20;
-    }
+    /* Викторина: панель инфо — ЧАСТЬ игрового окна (колонка
+       .status-main.quiz-main), а не отдельный элемент модалки.
+       order/margin здесь её бы ломали — правила в css/responsive.css. */
+
 }
