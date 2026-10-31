@@ -288,3 +288,34 @@
 .latin-next-btn.hidden {
     display: none;
 }
+
+/* ===== Кнопка «Продолжить / Дальше» во всех играх =====
+   Правило живёт в latin.css, потому что именно этот файл подключается
+   раньше остальных игровых стилей и содержит базовый класс .latin-next-btn.
+   Кнопка ВСЕГДА присутствует в разметке (иначе окно «прыгает» при её
+   появлении), но до конца раунда она бледная и неактивная. */
+.latin-next-btn.is-idle,
+.latin-next-btn:disabled {
+    display: block;              /* не прячем — иначе сдвиг вёрстки */
+    opacity: 0.35;               /* «бледная» */
+    filter: grayscale(0.6);
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+    pointer-events: none;        /* клики по неактивной кнопке игнорируются */
+}
+
+.latin-next-btn.is-idle:hover,
+.latin-next-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Активное состояние возвращаем явно — класс добавляется поверх is-idle */
+.latin-next-btn.is-active:not(:disabled) {
+    opacity: 1;
+    filter: none;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(36, 53, 42, 0.3);
+    pointer-events: auto;
+}

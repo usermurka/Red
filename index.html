@@ -43,6 +43,10 @@
         <button id="btn-open-status"  class="game-big-btn" type="button"><span class="gbi">🎖️</span> Статус</button>
         <button id="btn-open-family"  class="game-big-btn" type="button"><span class="gbi">🗂️</span> Систематик</button>
 
+        <!-- Разделительная черта под кнопками режимов: отделяет выбор
+             игры от списка игр / прогресса -->
+        <hr class="games-menu-divider" aria-hidden="true">
+
         <h2 style="margin-top: 8px;">Прогресс</h2>
         <div class="sub-btn-group" style="display: flex; gap: 6px;">
           <button id="btn-save-progress" class="sub-btn" type="button" style="flex:1; display:inline-flex;">💾 Сохранить</button>
@@ -514,25 +518,9 @@
     </div>
   </div>
 
-  <!-- Правая панель: Упрощенный свиток -->
-  <div id="quiz-info-panel" class="hidden">
-    <div class="quiz-info-scroll">
-      <h3 id="qi-name">Название</h3>
-      <div id="qi-latin" class="qi-latin">Latin</div>
-  
-      <div class="qi-status" id="qi-status">
-        <span class="qi-status-badge"></span>
-        <span class="qi-status-text"></span>
-      </div>
-  
-      <div class="qi-block open">
-        <div class="qi-block-title">Краткое описание</div>
-        <div id="qi-desc"></div>
-      </div>
-  
-      <button id="qi-open-full" class="quiz-next-btn" style="margin-top: 20px; width: 100%;">📖 Читать в свитке</button>
-    </div>
-  </div>
+  <!-- Правая панель: единый мини-свиток (js/mini-scroll.js).
+       Содержимое строится кодом — разметка одна на все игры. -->
+  <div id="quiz-info-panel" class="mini-scroll-panel hidden"></div>
 </div>
 
   <!-- Модалка: Найди пару -->
@@ -544,7 +532,7 @@
       </div>
       <div class="quiz-header">
         <h2>Найди пару</h2>
-        <div class="quiz-progress">Соедините фото с названием</div>
+        <div class="quiz-progress">Соедините изображение с названием. Двойным кликом можно увеличить изображение</div>
       </div>
       <div id="match-grid"></div>
       <div id="match-end-screen" class="hidden" data-game="match"
@@ -615,20 +603,25 @@
       <div class="erudite-body">
         <div class="erudite-picture">
           <!-- Фото вписывается целиком (object-fit: contain) — без обрезки
-               альбомных/книжных картинок, белые поля по краям -->
-          <img id="erudite-img" src="" alt="" loading="lazy"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="erudite-img-ph latin-photo-placeholder" style="display:none">Фото недоступно</div>
+               альбомных/книжных картинок, белые поля по краям.
+               Плейсхолдер лежит ВНУТРИ контейнера и скрыт через display:none
+               у самого контейнера-заглушки: раньше его показывало через
+               style.display='flex', что перебивало align-items:center у
+               .erudite-picture и «съедало» изображение (оно казалось пропавшим). -->
+          <img id="erudite-img" src="" alt="" loading="lazy">
         </div>
         <div id="erudite-slots" class="erudite-slots" aria-label="Слово"></div>
         <div id="erudite-tray" class="erudite-tray" aria-label="Буквы"></div>
+        <!-- Управление в одну строку: «убрать», «пропустить» и «дальше» рядом -->
         <div class="erudite-controls">
-          <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫</button>
-          <button id="erudite-skip" type="button" title="Пропустить слово">⏭</button>
+          <button id="erudite-backspace" type="button" title="Убрать последнюю букву">⌫ Убрать</button>
+          <button id="erudite-skip" type="button" title="Пропустить слово">⏭ Пропустить</button>
+          <!-- Кнопка перехода между раундами всегда на месте (окно не «прыгает»),
+               до конца раунда — бледная и неактивная -->
+          <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
         </div>
         <div id="erudite-hints" class="erudite-hints" aria-label="Подсказки за баллы"></div>
         <div id="erudite-hint" class="erudite-hint"></div>
-        <!-- Переход к следующему раунду — только по явной кнопке -->
-        <button id="erudite-next-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Дальше →</button>
         <div class="quiz-progress">Очки: <strong id="erudite-score">0</strong> · Серия: <strong
             id="erudite-streak">0</strong> · Баллы: <strong id="erudite-balance">10</strong>🪙</div>
       </div>
@@ -670,7 +663,7 @@
         <p class="latin-instruction">Нажми на русское название, затем на соответствующее латинское. Угаданная пара открывает фотографию вида</p>
         <div id="latin-grid" class="latin-grid"></div>
         <div id="latin-photos" class="latin-photos" aria-label="Фотографии видов"></div>
-        <button id="latin-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
+        <button id="latin-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="latin-end-screen" class="hidden" data-game="latin"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -705,8 +698,10 @@
         <span class="latin-sb" id="habitat-streak-block">🔥 <strong id="habitat-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото. Три окошка: слева — журнал пар, в центре — игра, справа — Красная книга (текст появится после ответа).</p>
-        <!-- Три окошка: журнал пар | игровая зона | данные из Красной книги -->
+        <p class="latin-instruction">Посмотри на вид и выбери тип местообитания: лес, степь, водоём или болото. После любого ответа справа откроется мини-свиток с данными из Красной книги и подсветкой — таймер встанет на паузу, чтобы можно было почитать.</p>
+        <!-- Два окошка: журнал пар | игровая зона.
+             Данные из Красной книги — единый мини-свиток справа от панели
+             (js/mini-scroll.js), появляется после любого ответа. -->
         <div class="habitat-main">
           <div id="habitat-log-wrap" class="habitat-pane habitat-log-pane">
             <div class="hp-title">📒 Журнал пар</div>
@@ -719,14 +714,15 @@
               <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
             </div>
           </div>
-          <aside id="habitat-info" class="habitat-pane habitat-info habitat-book-pane" aria-label="Данные из Красной книги">
-            <div class="hi-title hp-title">📖 Данные из Красной книги</div>
-            <div id="habitat-info-body" class="hi-body"></div>
-          </aside>
+          <!-- Мини-свиток «Данные из Красной книги»: справа от игровой
+               зоны на десктопе, НИЖЕ окна игры на мобильных (order:99).
+               js/mini-scroll.js найдёт этот узел по id и вложит свиток
+               сюда — панель больше не создаётся где-то в углу модалки. -->
+          <div id="habitat-info-panel" class="mini-scroll-panel habitat-info-pane hidden" aria-live="polite"></div>
         </div>
         <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
         <div id="habitat-round-banner" class="habitat-round-banner hidden" role="status"></div>
-        <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
+        <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="habitat-end-screen" class="hidden" data-game="habitat"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -754,29 +750,31 @@
         <h2>Статус</h2>
         <div class="quiz-progress">Вопрос <strong id="status-q-num">1</strong> из 10</div>
       </div>
-      <div class="latin-timer-track"><div id="status-timer-bar" class="latin-timer-bar"></div></div>
+      <div id="status-timer-track" class="st-timer-track">
+        <span id="status-timer-count" class="st-timer-count">⏳ 15 с</span>
+        <div class="latin-timer-track st-timer-bar-track"><div id="status-timer-bar" class="latin-timer-bar"></div></div>
+      </div>
       <div class="latin-scoreboard">
         <span class="latin-sb latin-sb-right">✓ <strong id="status-score-right">0</strong></span>
         <span class="latin-sb latin-sb-wrong">✗ <strong id="status-score-wrong">0</strong></span>
         <span class="latin-sb" id="status-streak-block">🔥 <strong id="status-score-streak">0</strong></span>
       </div>
       <div class="latin-body">
-        <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге</p>
-        <!-- Игровая зона (карточка + варианты) и окно данных из Красной книги — рядом -->
+        <p class="latin-instruction">По фотографии и описанию определи категорию редкости вида в Красной книге. После ответа справа откроется мини-свиток с данными из книги</p>
+        <!-- Компоновка по замечаниям: слева — крупное изображение и
+             список статусов с кнопкой «Дальше», мини-свиток — справа.
+             На мобильных свиток встаёт ниже окна игры (mini-scroll.css) -->
         <div class="status-main">
           <div class="status-play">
             <div id="status-card" class="status-card"></div>
             <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
             <div id="status-result" class="status-result hidden"></div>
           </div>
-          <aside id="status-info" class="status-info" aria-label="Данные о виде из Красной книги">
-            <div class="si-title">📖 Данные из Красной книги</div>
-            <div id="status-info-body" class="si-body"></div>
-          </aside>
+          <div id="status-info-panel" class="status-info-pane" aria-live="polite"></div>
         </div>
         <!-- Баннер между вопросами: итог вопроса остаётся видимым до явного «Дальше» -->
         <div id="status-round-banner" class="status-round-banner hidden" role="status"></div>
-        <button id="status-next-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Дальше →</button>
+        <button id="status-next-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Дальше →</button>
       </div>
       <div id="status-end-screen" class="hidden" data-game="status"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -802,7 +800,7 @@
       </div>
       <div class="quiz-header">
         <h2>Систематик</h2>
-        <div class="quiz-progress" id="family-round-label">Раунд <strong id="family-q-num">1</strong> из 3</div>
+        <div class="quiz-progress" id="family-round-label">Раунд <strong id="family-q-num">1</strong> из <span id="family-total-rounds">6</span></div>
       </div>
       <div class="latin-timer-track"><div id="family-timer-bar" class="latin-timer-bar"></div></div>
       <div class="latin-scoreboard">
@@ -820,7 +818,7 @@
         </div>
         <!-- Баннер успешного раунда: виден только после «Проверить» -->
         <div id="family-round-banner" class="family-round-banner hidden" role="status"></div>
-        <button id="family-next-round-btn" class="quiz-next-btn latin-next-btn hidden" type="button">Продолжить →</button>
+        <button id="family-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="family-end-screen" class="hidden" data-game="family"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -846,11 +844,13 @@
   <link rel="stylesheet" href="css/status.css">
   <link rel="stylesheet" href="css/family.css">
   <link rel="stylesheet" href="css/games-mode.css">
+  <link rel="stylesheet" href="css/mini-scroll.css">
 
   <!-- Сначала базовые данные и App (модули app-*.js дополняют window.App),
        затем игры, которые при своём DOMContentLoaded проверяют наличие App.
        Порядок подключения app-*.js важен: core -> ui -> map -> regions ->
        species -> render -> tooltips -> guide (guide содержит App.init). -->
+  <script defer src="js/mini-scroll.js"></script>
   <script defer src="js/species-data.js"></script>
   <script defer src="js/markers-data.js"></script>
   <script defer src="js/config.js"></script>

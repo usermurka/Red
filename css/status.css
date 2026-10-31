@@ -231,3 +231,91 @@
     .status-main { flex-direction: column; align-items: stretch; }
     .status-info { max-width: none; max-height: 240px; }
 }
+
+/* ============================================================
+   Видимый таймер обратного отсчёта (строка под заголовком).
+   Рендерится js/status.js: renderTimer() / freezeTimerDisplay().
+   ============================================================ */
+.st-timer-track {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(255, 253, 245, 0.6);
+    border: 1px solid rgba(46, 107, 62, 0.25);
+}
+
+.st-timer-count {
+    font-family: Georgia, serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--dark-green, #2e6b3e);
+    min-width: 64px;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+/* Последние секунды — красная подсветка числа */
+.st-timer-count.st-time-warning {
+    color: #b3261e;
+    animation: st-timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes st-timer-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+}
+
+.st-timer-bar-track {
+    flex: 1;
+    margin: 0;
+}
+
+/* Полоса «бежит», пока время идёт */
+.st-timer-running .latin-timer-bar {
+    background: linear-gradient(90deg, #2e6b3e, #4c8a5a);
+    transition: width 0.45s linear;
+}
+
+/* После ответа / истечения времени таймер «заморожен» */
+.st-timer-track:not(.st-timer-running) {
+    opacity: 0.75;
+    border-style: dashed;
+}
+
+.st-timer-track:not(.st-timer-running) .latin-timer-bar {
+    background: #9aa79b;
+}
+
+.st-timer-track:not(.st-timer-running) .st-timer-count {
+    color: #6b7280;
+    animation: none;
+}
+
+/* ============================================================
+   Правая колонка мини-свитка в окне игры «Статус» (desktop).
+   js/mini-scroll.js рендерит свиток внутрь #status-info-panel,
+   поэтому панель справа от игровой зоны — крупное изображение и
+   список статусов слева, свиток справа. На мобильных (.status-main
+   становится column) свиток встаёт НИЖЕ окна игры по порядку DOM.
+   ============================================================ */
+.status-info-pane {
+    flex: 0 1 360px;
+    min-width: 0;
+    align-self: stretch;
+}
+
+.status-info-pane .mini-scroll {
+    position: static;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+@media (max-width: 760px) {
+    .status-info-pane { flex: none; width: 100%; }
+    /* Кнопка «Дальше →» всегда влезает: она в потоке под окном,
+       а не приклеена к низу модалки за пределами экрана. */
+    #status-next-btn { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
+}
