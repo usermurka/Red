@@ -1171,3 +1171,76 @@ body {
    попадал по кнопке #quiz-close. */
 #quiz-modal .quiz-top-controls { position: relative; z-index: 50; }
 #quiz-modal #quiz-close { z-index: 60; pointer-events: auto; }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ МОБИЛЬНЫЙ БЛОК — ЗНАЧКИ ✕ / ↺ И ЦЕНТР В «ВИКТОРИНЕ»
+   ------------------------------------------------------------
+   По замечанию игрока на мобильных:
+    1) Значки «крестик» и «начать заново» съезжали: предыдущие
+       правки переводили .quiz-top-controls в position:relative,
+       из-за чего кнопки вставали в поток (по центру сверху окна,
+       рядом с заголовком). Возвращаем абсолютное позиционирование
+       в правом верхнем углу окна (.quiz-scroll/.latin-scroll —
+       position:relative), поверх всего содержимого (z-index).
+    2) Фото и варианты ответов не были отцентрированы: задаём
+       .quiz-image-wrap и #quiz-options ограничивающую ширину и
+       margin-left/right:auto, а картинке — display:block +
+       margin:auto.
+   Правила идут в самом конце файла — перебивают quiz.css,
+   habitat.css и более ранние блоки этого файла.
+   ============================================================ */
+@media (max-width: 900px) {
+  /* 1) Кнопки ✕ и ↺ — снова ПОВСЕХАБСКО в правом верхнем углу окна игры */
+  #quiz-modal .quiz-top-controls,
+  #habitat-modal .quiz-top-controls {
+    position: absolute !important;
+    top: 10px !important;
+    right: 12px !important;
+    left: auto !important;
+    z-index: 70 !important;
+    width: auto !important;
+    flex-direction: row !important;
+    gap: 10px;
+    background: none;
+  }
+  #quiz-modal .quiz-top-controls button,
+  #habitat-modal .quiz-top-controls button {
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Отступы шапки, чтобы абсолютные ↺/✕ не залезали на текст заголовка */
+  #quiz-modal .quiz-header,
+  #habitat-modal .quiz-header {
+    padding-right: 96px;
+    box-sizing: border-box;
+  }
+
+  /* 2) Викторина: фото и варианты — СТРОГО ПО ЦЕНТРУ окна */
+  #quiz-modal .quiz-image-wrap {
+    width: min(92%, 420px) !important;
+    max-width: 92%;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #quiz-modal #quiz-image {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+  }
+  #quiz-modal #quiz-options {
+    width: min(92%, 420px) !important;
+    max-width: 92%;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #quiz-modal #quiz-result {
+    width: min(92%, 420px);
+    max-width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

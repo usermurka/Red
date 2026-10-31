@@ -218,15 +218,27 @@ const HabitatGame = {
         if (btn && btn.disabled) return; // по бледной кнопке не идём вперёд
 
         // Пауза ПОСЛЕ ОТВЕТА (не путать с паузой между раундами):
-        // игра стоит, открыт мини-свиток. «Продолжить →» — просто
-        // снять паузу и вернуться к текущему вопросу/раунду, БЕЗ
-        // перехода в новый раунд.
+        // игра стоит, открыт мини-свиток. «Продолжить →» снимает паузу
+        // и ОБЯЗАТЕЛЬНО двигает игру вперёд:
+        //  • если последний ответ был ВЕРНЫМ — переходим к СЛЕДУЮЩЕМУ
+        //    виду этого же раунда (по замечанию игрока кнопка раньше
+        //    вновь открывала ПЕРВЫЙ вид и игра «стояла» на нём);
+        //  • если ответ был НЕВЕРНЫМ — возвращаемся к ТОМУ ЖЕ виду,
+        //    чтобы игрок мог выбрать другую среду, глядя на свиток.
         if (this.waitingContinue) {
+            const wasCorrect = !!this._lastAnswerCorrect;
             this.waitingContinue = false;
-            this.locked = false;   // снова принимаем ответы по текущему вопросу
+            this._lastAnswerCorrect = null;
+            this.locked = false;   // снова принимаем ответы
             this.hideNextRoundBtn();
             MiniScroll.hide('habitat-info-panel');
-            this.resumeTimer();
+            if (wasCorrect) {
+                // Верный ответ засчитан и пара уже в журнале — идём дальше.
+                // showNextCard() сам снимает паузу таймера (resumeTimer).
+                this.showNextCard();
+            } else {
+                this.resumeTimer();
+            }
             return;
         }
 
@@ -476,6 +488,10 @@ const HabitatGame = {
         if (this.waitingContinue || this.locked) return;
         const correct = biomKey === item.biome;
         const firstTry = !this._answeredCurrent;
+        // Запоминаем исход последнего ответа — по нему «Продолжить →»
+        // решает: идти к следующему виду (верный) или остаться на
+        // текущем для повторного выбора (неверный).
+        this._lastAnswerCorrect = correct;
 
         // Любой ответ: ставим игру на паузу (таймер заморожен), чтобы
         // игрок мог спокойно прочитать мини-свиток с данными из
