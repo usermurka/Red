@@ -1833,69 +1833,112 @@ body.game-end-active #latin-modal .quiz-top-controls {
 }
 
 /* ============================================================
-   ФИНАЛЬНАЯ СТРАХОВКА: ✕ / ↺ ВО ВСЕХ ИГРОВЫХ ОКНАХ (мобильные)
+   ФИНАЛЬНАЯ ЗАЩИТА ШАПКИ «ЛАТЫНИ» / «СТАТУСА» / «СИСТЕМАТИКА»
    ------------------------------------------------------------
-   По замечанию игрока в «Латыни» и «Систематике» на телефоне не
-   видно крестик закрытия и стрелку перезапуска. Причина — дыра в
-   каскаде: финальный блок этого файла, который возвращает
-   .quiz-top-controls в правый верхний угла окна (position:absolute
-   + z-index), перечисляет только #quiz-modal и #habitat-modal.
-   Для latin/family/status/erudite/match/memo оставалось раннее
-   правило position:relative (строка ~1338) — кнопки вставали В
-   ПОТОК свитка, а так как мобильный блок отдаёт весь скролл модалке
-   (.latin-scroll{overflow:visible}) и верхняя часть уходит за край
-   экрана — значки уезжают за верхнюю границу и становятся
-   невидимыми.
+   Причина жалобы: на мобильных эти игры подключаются в <head> ПОСЛЕ
+   responsive.css (latin.css, status.css, family.css — строки 857–860),
+   и их собственные правила перебивают мобильный каскад:
 
-   Это правило — последнее во всём каскаде (после quiz.css и т.д.),
-   поэтому перебивает и relative-страховку выше, и всё остальное:
-   ↺/✕ всегда абсолютно в углу окна игры, поверх содержимого.
-   Не трогает экраны итогов: они скрыты до конца игры, а при показе
-   финала JS навешивает body.game-end-active, под которым кнопки
-   легально прячутся существующими правилами выше.
+     1) latin.css / erudite.css: .latin-scroll { clip-path: var(--torn-edge) }.
+        Мобильный сброс clip-path:none живёт в блоке ~820px этого файла,
+        т.е. РАНЬШЕ latin.css в каскаде → не перебивает. Рваный край
+        обрезает верхнюю кромку окна на величину вырезов полигона
+        (проценты от высоты). У «Статуса» окно на весь экран (~800px),
+        вырез сверху ≈ 48px + padding-top 20px → шапка с названием игры
+        и ↺/✕ полностью отрезана. У «Латыни» окно ниже (~560px) —
+        вырез ≈ 34px, поэтому обрезаны только ↺/✕.
+
+     2) status.css @media(max-width:900px): .status-scroll {
+        overflow: visible !important } и #status-modal { overflow-y: auto
+        !important } — без !important мобильный блок не может вернуть
+        окну внутренний скролл; шапка при этом остаётся absolutely-
+        контролами поверх уезжающего вверх контента.
+
+   Это правило — последнее во всём файле, специфичное и с !important,
+   поэтому гарантированно перебивает latin/status/family/erudite.css.
    ============================================================ */
 @media (max-width: 900px) {
-  [id$="-modal"]:not(.hidden) .quiz-top-controls {
-    position: absolute !important;
+  /* Клип-рамка рваного края запрещена всем игровым окнам — иначе
+     абсолютные ↺/✕ и заголовок обрезаются по polygon в любом случае
+     (clip-path наследуется и на absolutely-потомков). */
+  [id$="-modal"] .latin-scroll,
+  [id$="-modal"] .status-scroll,
+  [id$="-modal"] .family-scroll,
+  [id$="-modal"] .erudite-scroll,
+  [id$="-modal"] .quiz-scroll,
+  [id$="-modal"] .match-scroll,
+  [id$="-modal"] .memo-scroll,
+  [id$="-modal"] .habitat-scroll {
+    clip-path: none !important;
+  }
+
+  /* Внутренний вертикальный скролл возвращаем окнам «Латыни»,
+     «Статуса», «Систематика» (перебивает overflow:visible!important
+     из status.css и любые поздние сбросы). */
+  #latin-modal .latin-scroll,
+  #status-modal .latin-scroll,
+  #status-modal .status-scroll,
+  #family-modal .latin-scroll,
+  #family-modal .family-scroll {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100dvh - 16px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex-shrink: 1 !important;
+    overscroll-behavior: contain;
+  }
+
+  /* Подложка модалки сама не скроллится — скролл только в окне. */
+  #latin-modal:not(.hidden),
+  #status-modal:not(.hidden),
+  #family-modal:not(.hidden) {
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    padding: 8px !important;
+  }
+
+  /* Шапка с названием игры — всегда первой и целиком внутри окна:
+     увеличенный верхний отступ (под абсолютные ↺/✕) и защита от
+     схлопывания в flex-колонке. */
+  #latin-modal .quiz-header,
+  #status-modal .quiz-header,
+  #family-modal .quiz-header {
+    padding-top: 48px !important;
+    margin-top: 0 !important;
+    flex-shrink: 0 !important;
+    background: var(--parchment);
+  }
+
+  /* ↺/✕ — ПРИВЯЗАНЫ К ОКНУ И НЕ УХОДЯТ ПРИ СКРОЛЛЕ.
+     Тест показал: если controls остаются absolutely внутри окна со
+     скроллом, они живут в прокручиваемом слое и после свайпа уезжают
+     за верх вместе с шапкой. Поэтому на мобильных переводим пару ↺/✕
+     в position:fixed по правому верхнему углу ЭКРАНА (над подложкой
+     модалки z 3100) — как в «Викторине» финальный ✕. */
+  #latin-modal .quiz-top-controls,
+  #status-modal .quiz-top-controls,
+  #family-modal .quiz-top-controls {
+    position: fixed !important;
     top: calc(10px + env(safe-area-inset-top)) !important;
     right: 12px !important;
     left: auto !important;
     bottom: auto !important;
-    width: auto !important;
-    height: auto !important;
-    flex-direction: row !important;
+    z-index: 3300 !important;
     display: flex !important;
-    gap: 10px;
-    z-index: 999 !important;
-    background: none;
-    pointer-events: auto;
-  }
-
-  [id$="-modal"]:not(.hidden) .quiz-top-controls button {
-    pointer-events: auto !important;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
     visibility: visible !important;
     opacity: 1 !important;
   }
 
-  /* Отступ в шапке, чтобы абсолютные ↺/✕ не залезали на заголовок
-     ни в одной из игр (раньше padding-right:96px был только у
-     викторины и среды обитания). */
-  [id$="-modal"] .quiz-header {
-    padding-right: 96px;
-    box-sizing: border-box;
-  }
-
-  /* Экран итогов любой игры остаётся поверх всего окна — вместе со
-     своим собственным крестиком. */
-  [id$="-modal"] [id$="-end-screen"]:not(.hidden) {
-    z-index: 1000 !important;
-  }
-
-  /* При показанном финале ничего не должно перекрывать его крестик:
-     страхуем от остаточных high-z-index правил для контролов. */
-  body.game-end-active [id$="-modal"] .quiz-top-controls {
-    display: none !important;
+  /* Шапка этих же игр — sticky внутри окна: название игры всегда
+     остаётся видимым во время прокрутки карточек. */
+  #latin-modal .quiz-header,
+  #status-modal .quiz-header,
+  #family-modal .quiz-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 110 !important;
   }
 }
