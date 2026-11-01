@@ -1790,3 +1790,21 @@ body.game-end-active #latin-modal .quiz-top-controls {
     padding-top: calc(56px + env(safe-area-inset-top)) !important;
   }
 }
+
+/* ============================================================
+   ЖЕСТКАЯ СТРАХОВКА ДЛЯ ПРОКРУТКИ МЕДАЛЕЙ НА МОБИЛЬНЫХ
+   ============================================================ */
+@media (max-width: 820px) {
+  /* Убеждаемся, что сама витрина медалей может скроллиться */
+  #games-showcase {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* Защита от "перетягивания" скролла на карту */
+    touch-action: pan-y !important; 
+  }
+  
+  /* Разрешаем карте скроллиться внутри витрины */
+  body.games-mode #app {
+    overflow: visible !important;
+  }
+}

@@ -134,9 +134,10 @@ body.games-mode #hint {
 #games-showcase {
     position: absolute;
     inset: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* Включает плавный тач-скролл на iOS */
-    overscroll-behavior: contain;      /* Предотвращает прокрутку фона (body) при достижении краев */
+    overflow-y: scroll !important;     /* Принудительно включаем скролл */
+    -webkit-overflow-scrolling: touch; /* Плавный тач-скролл на iOS */
+    overscroll-behavior: contain;      
+    touch-action: pan-y;               /* Разрешаем браузеру обрабатывать вертикальные свайпы */
     background:
         radial-gradient(circle at 20% 10%, rgba(212, 180, 90, 0.10), transparent 45%),
         radial-gradient(circle at 80% 90%, rgba(46, 107, 62, 0.08), transparent 40%),
