@@ -612,6 +612,49 @@ Object.assign(App, {
     this.container.addEventListener('touchend', (e) => this.onTouchEnd(e));
     this.container.addEventListener('touchcancel', (e) => this.onTouchEnd(e));
 
+    // --- Фолбэк скролла витрины медалей на мобильных ---
+    // В режиме «Игры» касания по витрине не должны панорамировать карту.
+    // Если браузер по какой-то причине не выполняет нативный тач-скролл
+    // самого контейнера #games-showcase, прокручиваем его вручную по delta
+    // пальца. Нативный скролл при этом не ломается: как только scrollTop
+    // реально изменился без нашего участия, фолбэк отключается сам.
+    (() => {
+      const showcase = document.getElementById('games-showcase');
+      if (!showcase) return;
+      let startX = 0, startY = 0, startScroll = 0, active = false, nativeWorked = false;
+
+      const inShowcase = (target) =>
+        showcase && !showcase.classList.contains('hidden') &&
+        showcase.contains(target);
+
+      showcase.addEventListener('touchstart', (e) => {
+        if (!inShowcase(e.target)) return;
+        const t = e.touches[0];
+        startX = t.clientX; startY = t.clientY;
+        startScroll = showcase.scrollTop;
+        active = true; nativeWorked = false;
+      }, { passive: true });
+
+      showcase.addEventListener('touchmove', (e) => {
+        if (!active || !inShowcase(e.target)) return;
+        if (e.touches.length !== 1) { active = false; return; }
+        const t = e.touches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        // Горизонтальный жест важнее вертикального — не мешаем ему
+        if (Math.abs(dx) > Math.abs(dy)) { active = false; return; }
+        // Если scrollTop уже изменился сам — работает нативный скролл,
+        // наш фолбэк больше не нужен в этом жесте
+        if (showcase.scrollTop !== startScroll) { nativeWorked = true; active = false; return; }
+        if (nativeWorked) return;
+        showcase.scrollTop = startScroll - dy;
+        e.preventDefault();
+      }, { passive: false });
+
+      showcase.addEventListener('touchend', () => { active = false; }, { passive: true });
+      showcase.addEventListener('touchcancel', () => { active = false; }, { passive: true });
+    })();
+
     // --- Мобильный интерфейс: панель-меню, зум-кнопки, затемнение ---
     this.bindMobileControls();
 
