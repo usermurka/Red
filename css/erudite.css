@@ -44,6 +44,11 @@
 
 /* Картинка вида */
 .erudite-picture {
+    /* aspect-ratio + flex:0 0 auto — страховка от «схлопывания в строку»
+       на мобильных: высота не зависит от содержимого <img>, даже если
+       каскад (responsive.css / games-mode.css) переопределил height. */
+    aspect-ratio: 1 / 1;
+    flex: 0 0 auto;
     width: min(260px, 60vw);
     height: min(260px, 60vw);
     background: var(--parchment);
@@ -56,10 +61,12 @@
 }
 
 .erudite-picture img {
+    display: block;
     max-width: 100%;
     max-height: 100%;
     width: 100%;
     height: 100%;
+    min-height: 120px; /* картинка физически не может стать «строкой» */
     /* Фото вписывается ЦЕЛИКОМ (как в «Найди пару»), а не обрезается:
        альбомные и книжные снимки остаются с белыми полями по краям */
     object-fit: contain;
@@ -627,4 +634,34 @@
    чтобы клик гарантированно попадал по нему */
 #erudite-end-screen .game-close-x {
     z-index: 100 !important;
+}
+/* ============================================================
+   ФИНАЛ: МОБИЛЬНАЯ ГАРАНТИЯ ВИДИМОСТИ ФОТО В «ЭРУДИТЕ»
+   Конец файла перебивает весь каскад (включая latin.css и
+   mini-scroll.css, подключённые после erudite.css).
+   Проблема: на узких экранах блок .erudite-picture схлопывался
+   в тонкую строку — изображение было не видно.
+   ============================================================ */
+@media (max-width: 900px) {
+    .erudite-picture {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        overflow: hidden !important;
+        flex: 0 0 auto !important;
+        width: min(240px, 70vw) !important;
+        height: min(240px, 70vw) !important;
+        min-width: 180px !important;
+        min-height: 180px !important;
+        aspect-ratio: 1 / 1 !important;
+    }
+
+    .erudite-picture img {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 150px !important;
+        object-fit: contain !important;
+    }
 }
