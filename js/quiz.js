@@ -42,8 +42,12 @@ const Quiz = {
         // Единый мини-свиток (js/mini-scroll.js): панель #quiz-info-panel
         // строится кодом, кнопка «📖 Читать в свитке» — общая для всех игр.
 
-        // Механика как в игре «Статус»: одна постоянная кнопка «Дальше →»
-        // под окном игры; до ответа она бледная и неактивная.
+        // Кнопка «Дальше» убрана из окна викторины: до ответа её нет
+        // (скрыта полностью). После успешного/неуспешного ответа вместо
+        // неё показывается новая активная кнопка («Следующий вопрос →»
+        // или «Показать результаты 🏆»).
+        this.hideNextBtn();
+
         const nextBtn = document.getElementById('quiz-next-btn');
         if (nextBtn) nextBtn.addEventListener('click', () => this.onNextClick());
 
@@ -78,11 +82,13 @@ const Quiz = {
     },
 
     hideNextBtn() {
+        // Неотвеченный вопрос: кнопка полностью скрыта (не «бледная
+        // неактивная»). Появляется только после ответа — как новая активная.
         const btn = document.getElementById('quiz-next-btn');
         if (!btn) return;
         btn.textContent = 'Дальше →';
-        btn.classList.remove('hidden', 'is-active');
-        btn.classList.add('is-idle');
+        btn.classList.remove('is-active');
+        btn.classList.add('hidden');
         btn.disabled = true;
     },
 
