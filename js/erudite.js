@@ -647,7 +647,12 @@ const EruditeGame = {
         if (free.length < 2) { this.showHintMessage('Перемешивать нечего!', 'bad'); return; }
         const bounds = [];
         let acc = 0;
-        const wordsArr = (this.words && this.words.length > 1) ? this.words : [this.letters.replace(/ /g, '')];
+        // this.letters — массив букв (Array.from), у него нет .replace():
+        // берём исходную строку слова this.current.word с фолбэком через join.
+        const wordStr = (typeof this.current?.word === 'string')
+          ? this.current.word
+          : this.letters.join('');
+        const wordsArr = (this.words && this.words.length > 1) ? this.words : [wordStr.replace(/ /g, '')];
         for (const w of wordsArr) { const len = Array.from(w).length; bounds.push([acc, acc + len]); acc += len; }
         // Для каждой группы свободных плиток — своя перемешанная копия букв
         const groupLetters = {};
