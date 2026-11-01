@@ -1802,6 +1802,13 @@ body.game-end-active #latin-modal .quiz-top-controls {
     /* Защита от "перетягивания" скролла на карту */
     touch-action: pan-y !important; 
   }
+
+  /* В режиме «Игры» отключаем жестовое панорамирование/зум карты:
+     обработчики тача карты вызывают preventDefault() в touchmove,
+     из-за чего окно медалей не скроллится касанием на узких экранах. */
+  body.games-mode #map-container {
+    touch-action: none !important;
+  }
   
   /* Разрешаем карте скроллиться внутри витрины */
   body.games-mode #app {

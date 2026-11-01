@@ -138,6 +138,9 @@ body.games-mode #hint {
     -webkit-overflow-scrolling: touch; /* Плавный тач-скролл на iOS */
     overscroll-behavior: contain;      
     touch-action: pan-y;               /* Разрешаем браузеру обрабатывать вертикальные свайпы */
+    user-select: none;                 /* Свайп не должен выделять текст медалей */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     background:
         radial-gradient(circle at 20% 10%, rgba(212, 180, 90, 0.10), transparent 45%),
         radial-gradient(circle at 80% 90%, rgba(46, 107, 62, 0.08), transparent 40%),
