@@ -1831,3 +1831,71 @@ body.game-end-active #latin-modal .quiz-top-controls {
     overflow: visible !important;
   }
 }
+
+/* ============================================================
+   ФИНАЛЬНАЯ СТРАХОВКА: ✕ / ↺ ВО ВСЕХ ИГРОВЫХ ОКНАХ (мобильные)
+   ------------------------------------------------------------
+   По замечанию игрока в «Латыни» и «Систематике» на телефоне не
+   видно крестик закрытия и стрелку перезапуска. Причина — дыра в
+   каскаде: финальный блок этого файла, который возвращает
+   .quiz-top-controls в правый верхний угла окна (position:absolute
+   + z-index), перечисляет только #quiz-modal и #habitat-modal.
+   Для latin/family/status/erudite/match/memo оставалось раннее
+   правило position:relative (строка ~1338) — кнопки вставали В
+   ПОТОК свитка, а так как мобильный блок отдаёт весь скролл модалке
+   (.latin-scroll{overflow:visible}) и верхняя часть уходит за край
+   экрана — значки уезжают за верхнюю границу и становятся
+   невидимыми.
+
+   Это правило — последнее во всём каскаде (после quiz.css и т.д.),
+   поэтому перебивает и relative-страховку выше, и всё остальное:
+   ↺/✕ всегда абсолютно в углу окна игры, поверх содержимого.
+   Не трогает экраны итогов: они скрыты до конца игры, а при показе
+   финала JS навешивает body.game-end-active, под которым кнопки
+   легально прячутся существующими правилами выше.
+   ============================================================ */
+@media (max-width: 900px) {
+  [id$="-modal"]:not(.hidden) .quiz-top-controls {
+    position: absolute !important;
+    top: calc(10px + env(safe-area-inset-top)) !important;
+    right: 12px !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    height: auto !important;
+    flex-direction: row !important;
+    display: flex !important;
+    gap: 10px;
+    z-index: 999 !important;
+    background: none;
+    pointer-events: auto;
+  }
+
+  [id$="-modal"]:not(.hidden) .quiz-top-controls button {
+    pointer-events: auto !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Отступ в шапке, чтобы абсолютные ↺/✕ не залезали на заголовок
+     ни в одной из игр (раньше padding-right:96px был только у
+     викторины и среды обитания). */
+  [id$="-modal"] .quiz-header {
+    padding-right: 96px;
+    box-sizing: border-box;
+  }
+
+  /* Экран итогов любой игры остаётся поверх всего окна — вместе со
+     своим собственным крестиком. */
+  [id$="-modal"] [id$="-end-screen"]:not(.hidden) {
+    z-index: 1000 !important;
+  }
+
+  /* При показанном финале ничего не должно перекрывать его крестик:
+     страхуем от остаточных high-z-index правил для контролов. */
+  body.game-end-active [id$="-modal"] .quiz-top-controls {
+    display: none !important;
+  }
+}
