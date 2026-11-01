@@ -11,18 +11,17 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
-    /* Убираем gap, будем использовать отрицательный margin для наложения */
+    /* Оставляем flex для центрирования, но свиток вынесем абсолютом */
+    box-sizing: border-box;
 }
 
 /* Контейнер для центрирования левой части */
-#quiz-modal::before {
-    content: '';
-    flex: 1;
-}
-
+/* На десктопе окно викторины и свиток стоят по центру БЕЗ flex-спейсеров:
+   спейсеры «сжимали» окно, из-за чего ↺/✕ визуально уезжали влево. */
+#quiz-modal::before,
 #quiz-modal::after {
-    content: '';
-    flex: 1;
+    content: none;
+    display: none;
 }
 
 #quiz-modal.hidden {
@@ -32,9 +31,11 @@
 /* Левая панель (Викторина) */
 .quiz-scroll {
     background: var(--parchment-light);
-    width: 600px;
-    max-width: 100%;
-    max-height: 90vh;
+    /* Делаем окно игры адаптивным, но с комфортным максимумом */
+    width: 100%;
+    max-width: 920px; 
+    flex: 0 1 920px; 
+    position: relative; /* Обязательно для абсолютного свитка */
     border: 2px solid var(--gold-deep);
     box-shadow: var(--shadow-deep);
     border-radius: 2px;
@@ -43,15 +44,14 @@
     flex-direction: column;
     clip-path: var(--torn-edge);
     flex-shrink: 0;
-    position: relative;
     z-index: 10;
-    /* Левая панель всегда сверху */
 }
 
 /* Правая панель (Свиток) */
 #quiz-info-panel {
     background: var(--parchment-light);
-    width: 350px;
+    width: 320px; /* Чуть уменьшили с 350px, чтобы точно влезало */
+    flex: 0 0 320px; /* Жестко фиксируем ширину свитка */
     max-height: 90vh;
     border: 2px solid var(--gold-deep);
     box-shadow: var(--shadow-deep);
@@ -61,13 +61,12 @@
     animation: slideInRight 0.3s ease-out;
     flex-shrink: 0;
 
-    /* Вот тут магия наложения */
-    margin-left: -30px;
-    /* Сдвигаем влево, чтобы зайти под левую панель */
+    /* На десктопе свиток стоит РЯДОМ с окном игры (flex-поток модалки),
+       без «захода под панель»: убираем negative margin и компенсирующий
+       padding — текст не смещается вбок относительно рамки. */
     z-index: 5;
-    /* Ниже, чем у левой панели */
-    padding-left: 15px;
-    /* Компенсируем сдвиг, чтобы контент не скрывался */
+    overflow-y: auto; /* Прокрутка появляется только если контент не влезает */
+    overflow-x: hidden; /* Защита от горизонтального сдвига */
 }
 
 #quiz-info-panel.hidden {
@@ -393,15 +392,19 @@
 }
 
 .quiz-top-controls {
-    position: absolute;
-    top: 15px;
-    right: 15px;
+    position: absolute !important;
+    top: 15px !important;
+    right: 15px !important;
+    left: auto !important;
+    bottom: auto !important;
     display: flex;
     flex-direction: row;
-    /* Явно указываем строку */
     align-items: center;
     gap: 12px;
-    z-index: 10;
+    /* Кнопки ↺/✕ всегда в правом верхнем углу окна игры и поверх
+       свитка/контента (z-index выше панелей). */
+    z-index: 60;
+    pointer-events: auto;
 }
 
 .quiz-top-controls button {

@@ -31,6 +31,7 @@ const LatinGame = {
         document.getElementById('latin-modal').classList.add('hidden');
         GameEnd.leave('latin');
         this.stopTimer();
+        document.body.classList.remove('game-end-active');
         document.getElementById('app').style.pointerEvents = '';
     },
 
@@ -45,6 +46,16 @@ const LatinGame = {
         this.hideNextRoundBtn();
         document.getElementById('latin-end-screen').classList.add('hidden');
         GameEnd.leave('latin');
+        document.body.classList.remove('game-end-active');
+        
+        // ПРИНУДИТЕЛЬНО ВОЗВРАЩАЕМ КНОПКИ ПРИ СТАРТЕ ИГРЫ
+        const topControls = document.querySelector('#latin-modal .quiz-top-controls');
+        if (topControls) topControls.style.display = '';
+        const closeBtn = document.getElementById('latin-close');
+        if (closeBtn) closeBtn.style.display = '';
+        const restartBtn = document.getElementById('latin-restart');
+        if (restartBtn) restartBtn.style.display = '';
+
         this.nextRound();
     },
 
@@ -323,6 +334,10 @@ const LatinGame = {
     },
 
     showEndScreen(titleText) {
+        // Скрываем игровые кнопки (крестик и рестарт), чтобы не было дубля
+        const topControls = document.querySelector('#latin-modal .quiz-top-controls');
+        if (topControls) topControls.style.display = 'none';
+
         const titleEl = document.getElementById('latin-end-title');
         const achieveEl = document.getElementById('latin-end-achieve');
         document.getElementById('latin-final-score').textContent = this.score;
@@ -355,6 +370,7 @@ const LatinGame = {
 
         document.getElementById('latin-end-screen').classList.remove('hidden');
         GameEnd.enter('latin'); // скрыть поле игры и ↺/✕
+        document.body.classList.add('game-end-active');
     },
 
     // Выдача медали через общий реестр достижений (если тот загружен)

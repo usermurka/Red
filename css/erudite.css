@@ -123,8 +123,17 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
+    /* На десктопе блок слотов держит стабильную высоту (2 ряда на случай
+       длинного двухсловного названия) — при переходе между раундами
+       лоток с буквами и подсказки не «прыгают» по вертикали. */
     min-height: 46px;
     max-width: 100%;
+}
+
+@media (min-width: 901px) {
+    .erudite-slots {
+        min-height: 96px;
+    }
 }
 
 .erudite-word-group {
@@ -263,10 +272,19 @@
 /* Кнопки управления: ОДИНАКОВЫЕ по размеру — «Убрать», «Пропустить»
    и «Дальше» в одну строку равными компактивными плитками (на мобильных
    «Дальше» больше не раздувается до 34px отступов из latin.css). */
+/* Кнопки управления: ОДИНАКОВЫЕ по размеру — «Убрать», «Пропустить»
+   и «Дальше» в одну строку равными компактивными плитками. */
 .erudite-controls {
     display: flex;
     align-items: stretch;
+    justify-content: center; /* Центрируем группу кнопок */
     gap: 10px;
+    /* На десктопе группа кнопок не растягивается на всю ширину окна:
+       кнопки компактные, стоят по центру и не «разъезжаются». */
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+    flex-wrap: nowrap; /* ЗАПРЕЩАЕМ перенос строк */
 }
 
 .erudite-controls button {
@@ -277,8 +295,13 @@
     border-radius: 16px;
     cursor: pointer;
     color: inherit;
-    margin: 0; /* отмена margin:18px auto у .latin-next-btn */
-    white-space: normal; /* на узких экранах текст переносится, а не вылезает за кнопку */
+    margin: 0; 
+    white-space: nowrap; /* ЗАПРЕЩАЕМ перенос текста внутри кнопки */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* Отступ между иконкой и текстом */
+    line-height: 1.2;
 }
 
 /* Очень узкие экраны: кнопки управления — в одну строку. Текст «⏭ Пропустить»
@@ -435,9 +458,9 @@
         max-height: none !important;
     }
     .erudite-tile {
-        width: clamp(26px, 7vw, 34px);
-        height: clamp(32px, 8.5vw, 40px);
-        font-size: clamp(15px, 4.2vw, 19px);
+        width: clamp(28px, 7vw, 34px);
+        height: clamp(34px, 8.5vw, 40px);
+        font-size: clamp(16px, 4.2vw, 19px);
     }
     .erudite-controls button { white-space: nowrap; }
 }
@@ -532,20 +555,76 @@
    • .hidden работает как обычно (display:none!important из
      style.css) — никаких правил, перекрывающих скрытие кнопки.
    ============================================================ */
-@media (max-width: 820px) {
-    #erudite-skip:not(.hidden) {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        flex: 1.7 1 auto !important;
-        white-space: nowrap !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        font-size: clamp(10px, 3.4vw, 14px) !important;
-        padding: 8px 6px !important;
-        min-width: 0;
+@media (max-width: 900px) {
+    .erudite-scroll,
+    .erudite-body {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        /* Добавляем отступ снизу, чтобы кнопки не прилипали к краю экрана */
+        padding-bottom: 20px; 
     }
-    /* Страховка: если вдруг родитель ставит цвет текста в цвет фона —
-       подпись обязана быть видимой */
-    #erudite-skip:not(.hidden) { color: inherit; visibility: visible; }
+
+    /* Убираем жесткую минимальную высоту на мобильных, чтобы блоки не наезжали друг на друга */
+    .erudite-slots {
+        min-height: auto !important;
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+
+    .erudite-tray,
+    .erudite-tray-group {
+        overflow: visible !important;
+        max-height: none !important;
+        margin-top: 10px;
+        gap: 6px; /* Уменьшаем отступы между буквами */
+    }
+
+    /* Уменьшаем размеры плиток и слотов, чтобы они влезали в экран */
+    .erudite-tile {
+        width: clamp(28px, 7.5vw, 34px) !important;
+        height: clamp(34px, 9vw, 42px) !important;
+        font-size: clamp(16px, 4.5vw, 20px) !important;
+    }
+
+    .erudite-slot {
+        width: clamp(24px, 6.5vw, 32px) !important;
+        height: clamp(30px, 8vw, 40px) !important;
+        font-size: clamp(14px, 4vw, 18px) !important;
+    }
+
+    .erudite-controls {
+        flex-wrap: wrap;               
+        gap: 6px;
+        margin-top: 15px;
+    }
+
+    .erudite-controls button {
+        flex: 1 1 auto;
+        min-width: auto !important;    
+        white-space: normal !important;
+        overflow: visible !important;
+    }
+
+    #erudite-skip {
+        flex: 1.5 1 auto;              
+        white-space: nowrap !important;
+        font-size: clamp(11px, 3.2vw, 14px);
+        padding: 8px 4px;
+        line-height: 1.25;
+    }
+}
+
+/* ============================================================
+   СКРЫТИЕ ДУБЛИРУЮЩЕГОСЯ КРЕСТИКА НА ФИНАЛЬНОМ ЭКРАНЕ
+   ============================================================ */
+/* Если экран завершения игры (#erudite-end-screen) показан 
+   (не имеет класса .hidden), то скрываем верхнюю панель с кнопками ↺ и ✕ */
+#erudite-modal:has(#erudite-end-screen:not(.hidden)) .quiz-top-controls {
+    display: none !important;
+}
+
+/* На всякий случай поднимаем круглый крестик финального экрана выше, 
+   чтобы клик гарантированно попадал по нему */
+#erudite-end-screen .game-close-x {
+    z-index: 100 !important;
 }

@@ -77,7 +77,7 @@ Object.assign(App, {
         `;
         return;
       }
-      hint.innerHTML = '<p>Кликните по карте, чтобы поставить маркер.</p>';
+      hint.innerHTML = '<p>Выберите инструмент, чтобы начать работу.</p>';
       return;
     }
 

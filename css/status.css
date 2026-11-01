@@ -23,7 +23,30 @@
 }
 
 .status-scroll {
-    max-width: 780px;
+    /* На десктопе окно «Статуса» шире: игровая зона 520px + свиток 360px +
+       зазоры помещаются без сжатия информации. */
+    max-width: 980px;
+    width: 980px;
+}
+
+.status-scroll .latin-body {
+    min-height: 0;
+}
+
+/* На мобильных и планшетах снимаем ограничения по высоте — 
+   экран должен тянуться бесконечно, а не скроллиться внутри себя. */
+@media (max-width: 900px) {
+    .status-scroll {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    .status-scroll .latin-body {
+        overflow-y: visible !important;
+        max-height: none !important;
+    }
+    #status-modal {
+        overflow-y: auto !important; /* Прокрутка только у самой модалки */
+    }
 }
 
 .status-card {
@@ -88,6 +111,9 @@
     text-align: left;
     cursor: pointer;
     transition: background 0.2s, transform 0.1s;
+    white-space: normal !important; /* Разрешаем перенос длинного текста на новую строку */
+    word-break: break-word;         /* Ломаем слишком длинные слова, чтобы не расширяли экран */
+    line-height: 1.3;
 }
 
 .status-option-btn:hover {
@@ -147,7 +173,10 @@
 /* Игровая зона + окно данных из Красной книги рядом */
 .status-main {
     display: flex;
-    align-items: stretch;
+    /* На десктопе выравниваем по ВЕРХУ, а не растягиваем по высоте свитка:
+       иначе карточка, варианты и кнопка «Дальше» «уезжают» вниз при длинном
+       тексте источника и кнопка выходит за пределы окна. */
+    align-items: flex-start;
     justify-content: center;
     gap: 16px;
     width: 100%;
@@ -159,7 +188,10 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    flex: 0 1 520px;
+    /* На десктопе фиксируем ширину игровой зоны: длинный текст в свитке
+       не «сжимает» карточку вида и кнопки категорий. */
+    flex: 0 0 560px;
+    width: 560px;
     min-width: 0;
 }
 
@@ -229,36 +261,65 @@
 }
 
 @media (max-width: 760px) {
-    /* Мобильная компоновка по замечаниям: ДВА СТОЛБЦА — слева
-       изображение, справа список статусов; мини-свиток ниже на всю
-       ширину окна игры. */
+    /* Мобильная компоновка: ОДНА КОЛОНКА (картинка → название → кнопки),
+       мини-свиток встаёт ПОД игровой зоной на всю ширину. */
     .status-main {
-        flex-direction: row !important;
-        flex-wrap: wrap;
-        align-items: flex-start;
+        flex-direction: column !important;
+        flex-wrap: nowrap;
+        align-items: stretch;
         gap: 10px;
         max-width: none;
+        width: 100%;
     }
+    
+    /* Сбрасываем жесткую ширину 560px с десктопа, чтобы блок не вылезал за экран */
     .status-play {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 10px;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 12px;
         flex: 1 1 100%;
+        width: 100% !important; /* Растягиваем на всю ширину */
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+        margin: 0 auto !important; /* Центрируем содержимое */
     }
+    
+    /* Центрируем карточку и разрешаем ей нормально переноситься */
     #status-card {
-        flex: 0 0 44%;
-        min-width: 0;
+        flex: none;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto 5px auto !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
+    
+    /* Прячем ползунки горизонтальной прокрутки, если они появляются */
+    .status-scroll, #status-modal {
+        overflow-x: hidden !important;
+    }
+    
     #status-options {
-        flex: 1 1 52%;
+        flex: none;
+        width: 100%;
         min-width: 0;
-        max-width: none;
+        max-width: 100%;
     }
+    
     #status-result {
-        flex: 1 1 100%;
+        flex: none;
+        width: 100%;
     }
-    .status-info-pane { flex: none; width: 100%; }
+    
+    .status-info-pane { 
+        flex: none; 
+        width: 100%; 
+        margin-top: 14px;
+    }
+    
     /* Кнопка «Дальше →» всегда влезает: она в потоке под окном,
        а не приклеена к низу модалки за пределами экрана. */
     #status-next-btn { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
@@ -277,6 +338,7 @@
     border-radius: 8px;
     background: rgba(255, 253, 245, 0.6);
     border: 1px solid rgba(46, 107, 62, 0.25);
+    box-sizing: border-box;
 }
 
 .st-timer-count {
@@ -334,14 +396,20 @@
    становится column) свиток встаёт НИЖЕ окна игры по порядку DOM.
    ============================================================ */
 .status-info-pane {
-    flex: 0 1 360px;
+    /* Свиток «Статуса» на десктопе — фиксированная ширина, не «сжимается»
+       длиной текста соседней игровой зоны. */
+    flex: 0 0 380px;
+    width: 380px;
     min-width: 0;
-    align-self: stretch;
+    align-self: flex-start;
 }
 
 .status-info-pane .mini-scroll {
     position: static;
-    max-height: 520px;
+    /* Свиток скроллится САМ, а не растягивает окно: длинный текст
+       «Численность и лимитирующие факторы» не выталкивает кнопку
+       «Дальше →» за нижнюю границу окна. */
+    max-height: calc(94vh - 260px);
     overflow-y: auto;
 }
 

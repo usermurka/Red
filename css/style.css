@@ -707,7 +707,7 @@ body {
 }
 
 #password-modal {
-  z-index: 1200;
+  z-index: 9999 !important; /* Максимальный приоритет, чтобы перекрыть сайдбар (950) и мобильные кнопки */
 }
 
 #modal.hidden,

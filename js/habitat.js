@@ -201,6 +201,12 @@ const HabitatGame = {
         this._lastAnswerCorrect = null;
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
+
+        // Возвращаем кнопки управления при старте новой игры
+        const topControls = document.querySelector('#habitat-modal .quiz-top-controls');
+        if (topControls) {
+            topControls.style.display = '';
+        }
         // Пустой журнал не должен выглядеть «дырой» в окне —
         // показываем аккуратную подсказку, пока нет ни одной пары.
         this.renderEmptyLogNote();
@@ -234,6 +240,11 @@ const HabitatGame = {
     setInfoVisible(visible) {
         if (visible) return; // показ строится в renderInfoPanel()
         MiniScroll.hide('habitat-info-panel');
+        // Свиток — отдельная третья колонка на десктопе: пока данных нет,
+        // колонка не должна «схлопываться»/сдвигать игру. На мобильных
+        // скрытие панели просто убирает блок под игрой.
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.classList.toggle('habitat-info-empty', true);
     },
 
     showNextRoundBtn(label) {
@@ -451,6 +462,9 @@ const HabitatGame = {
         this.round++;
         this.roundMistakes = 0;
         this.matchedCount = 0;
+        
+        // Очищаем журнал пар в начале каждого нового раунда
+        this.renderEmptyLogNote();
         this.locked = false;
         this.questionStartTs = Date.now();
         this.hideNextRoundBtn();
@@ -593,7 +607,20 @@ const HabitatGame = {
         } else {
             blocks.push({ title: 'Места обитания', text: 'Поле «Места обитания» в базе пусто — ориентируйтесь на описание.' });
         }
-        if (spread) blocks.push({ title: 'Распространение в Омской области', html: escHtml(spread).replace(/\n/g, '<br>') });
+        if (spread) {
+            // Оборачиваем блок в <details>, а сам ЗАГОЛОВОК кладём внутрь <summary>.
+            // Так клик по заголовку будет сворачивать/разворачивать текст.
+            // title оставляем пустым (null), чтобы mini-scroll.js не рисовал дубликат.
+            blocks.push({
+                title: null,
+                html: `
+                    <details class="ms-details">
+                        <summary class="ms-block-title">Распространение в Омской области</summary>
+                        <div class="ms-block-body" style="margin-top: 6px;">${escHtml(spread).replace(/\n/g, '<br>')}</div>
+                    </details>
+                `
+            });
+        }
         // По требованию пользователя из мини-свитка игры «Среда обитания»
         // блок «Краткое описание» убран — оставляем только справочную
         // информацию о местах обитания и распространении вида.
@@ -614,6 +641,8 @@ const HabitatGame = {
             }
         });
         window.__MS_NO_STATUS_BADGE = false;
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.classList.toggle('habitat-info-empty', false);
         const panel = document.getElementById('habitat-info-panel');
         if (panel && !panel.querySelector('.ms-open-full')) {
             panel.appendChild(MiniScroll.footerButton(sp.id, () => this.close()));
@@ -701,13 +730,15 @@ const HabitatGame = {
                         // Последний раунд закрыт — финал игры тоже по кнопке,
                         // чтобы игрок успел дочитать мини-свиток.
                         this.showRoundBanner(
-                            `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены! Верно определено: ${this.score} видов.` +
+                            `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены!` +
                             (this.mistakes ? ` Ошибок за игру: ${this.mistakes}.` : ' Ни одной ошибки!'),
                             'Завершить игру 🏁');
                         this._endAfterContinue = true;   // «Продолжить» → экран итогов
+                        // Прячем игровые ↺/✕ и поле игры под баннером финала
+                        GameEnd.enter('habitat');
                     } else {
                         this.showRoundBanner(
-                            `🎉 Раунд ${this.round} завершён! Верно определено: ${this.matchedCount} из ${this.ROUND_SIZE}.` +
+                            `🎉 Раунд ${this.round} завершён!` +
                             (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
                             'Продолжить →');
                     }
@@ -864,6 +895,12 @@ const HabitatGame = {
     },
 
     showEndScreen(titleText) {
+        // Скрываем только сами кнопки управления, не трогая игровое окно
+        const topControls = document.querySelector('#habitat-modal .quiz-top-controls');
+        if (topControls) {
+            topControls.style.display = 'none';
+        }
+
         const titleEl = document.getElementById('habitat-end-title');
         const achieveEl = document.getElementById('habitat-end-achieve');
         document.getElementById('habitat-final-score').textContent = this.score;

@@ -79,7 +79,12 @@ const EruditeGame = {
     document.getElementById('erudite-modal').classList.remove('hidden');
     document.getElementById('app').style.pointerEvents = 'none';
     document.getElementById('erudite-modal').style.pointerEvents = 'auto';
-    this.startGame();
+    
+    // ДОБАВИТЬ ЗАДЕРЖКУ: Даем браузеру время отрисовать модальное окно,
+    // прежде чем вычислять размеры плиток и слотов внутри него.
+    setTimeout(() => {
+      this.startGame();
+    }, 30);
   },
 
   close() {
@@ -165,6 +170,14 @@ const EruditeGame = {
     // а «Пропустить слово» — активна (раунд ещё не закончен).
     this.setNextBtnIdle(true);
     this.updateStats();
+
+    // Хак для пересчета размеров flexbox-контейнеров при первом запуске.
+    // Без этого буквы в лотке и слотах могут иметь размер 0x0, пока
+    // пользователь не изменит размер окна или не нажмет на кнопку.
+    setTimeout(() => {
+      this.renderTray();
+      this.renderSlots();
+    }, 50);
   },
 
   // Текстовая заглушка вместо отсутствующего файла фото.

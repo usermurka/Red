@@ -58,7 +58,7 @@ Object.assign(App, {
       hintText.innerHTML = 'Режим просмотра. Кликните по маркеру, чтобы увидеть описание.';
       hintBtn.classList.add('hidden');
     } else {
-      hintText.innerHTML = 'Кликните по карте, чтобы поставить маркер.';
+      hintText.innerHTML = 'Выберите инструмент, чтобы начать работу.';
       hintBtn.classList.add('hidden');
 
       if (visibleSpeciesIds.size === 0 && this.lastUsed) {

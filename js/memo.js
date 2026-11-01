@@ -46,28 +46,46 @@ const MemoGame = {
         const emptyCellIndex = isMobile ? Math.floor(totalCells / 2) : -1; // индекс центра (12)
         const pairs = (totalCells - (isMobile ? 1 : 0)) / 2;   // всегда 12 пар
 
-        // Динамический расчет размера карточек.
-        // ВАЖНО: на мобильных окно игры имеет height:auto, поэтому
-        // clientHeight грида до раскладки ≈ 0 — сетка схлопывалась в
-        // «тонкую полосу». Если высоты нет, считаем размер от ширины.
-        const maxGridWidth = grid.clientWidth - 24;
-        const maxGridHeight = grid.clientHeight - 40;
-        const gap = isMobile ? 5 : 10;
+        // Надежный расчет размеров
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const isTablet = vw > 820 && vw <= 1100;
 
-        // Вычисляем максимальный возможный размер карточки по ширине и высоте
-        const cardSizeW = Math.floor((maxGridWidth - (cols - 1) * gap) / cols);
-        let cardSize = cardSizeW;
-        if (maxGridHeight > 120) {
-            const cardSizeH = Math.floor((maxGridHeight - (rows - 1) * gap) / rows);
-            cardSize = Math.min(cardSizeW, cardSizeH);
+        // Ждем малейшего тика, чтобы DOM успел применить CSS
+        // Если grid.clientWidth равен 0, высчитываем ширину вручную
+        let availableWidth;
+        if (grid.clientWidth > 0) {
+            availableWidth = grid.clientWidth - 20; // минус паддинги
+        } else {
+            // На планшете и мобилке панель уходит вниз, ширина = 100vw
+            availableWidth = vw - 24; 
         }
-        cardSize = Math.max(48, Math.min(cardSize, isMobile ? 96 : 130));
 
+        // Увеличиваем доступную высоту, чтобы карточки были крупнее (дыры снизу больше не будет)
+        const availableHeight = vh * (isMobile ? 0.65 : 0.60); 
+
+        const gap = isMobile ? 5 : (isTablet ? 8 : 10);
+
+        // Считаем идеальный размер карточки
+        const cardSizeW = Math.floor((availableWidth - (cols - 1) * gap) / cols);
+        const cardSizeH = Math.floor((availableHeight - (rows - 1) * gap) / rows);
+        
+        let cardSize = Math.min(cardSizeW, cardSizeH);
+        
+        let maxCardLimit = 130;
+        if (isMobile) maxCardLimit = 92;
+        else if (isTablet) maxCardLimit = 100; // Для планшета делаем чуть меньше, чтобы не выпирало
+
+        cardSize = Math.max(36, Math.min(cardSize, maxCardLimit));
+
+        // Сетка ровно по размеру карточек, без лишних растяжений
         grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
         grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
         grid.style.gap = gap + 'px';
         grid.style.justifyContent = 'center';
-        grid.style.alignContent = 'stretch';
+        grid.style.alignContent = 'center';
+        grid.style.width = '100%'; 
+        grid.style.margin = '0';
 
         this.moves = 0;
         document.getElementById('memo-moves').textContent = '0';

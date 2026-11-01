@@ -12,18 +12,21 @@
 .mini-scroll-panel {
     background: var(--parchment-light);
     width: 350px;
+    max-width: 350px;
     max-height: 90vh;
     border: 2px solid var(--gold-deep);
     box-shadow: var(--shadow-deep);
     border-radius: 2px;
-    overflow-y: auto;
+    /* Убираем лишний скролл, если контент помещается */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    /* На десктопе позиционирование задается в quiz.css, 
+       но на всякий случай дадим базовый сброс */
+    position: relative; 
     clip-path: var(--torn-edge);
     animation: slideInRight 0.3s ease-out;
-    flex-shrink: 0;
-    /* «Магия наложения»: сдвигаем влево, чтобы зайти под игровую панель */
-    margin-left: -30px;
+    /* ... */
     z-index: 5;          /* ниже, чем у игровой панели (z-index:10) */
-    padding-left: 15px;  /* компенсируем сдвиг, чтобы контент не скрывался */
 }
 
 .mini-scroll-panel.hidden {
@@ -31,7 +34,9 @@
 }
 
 .mini-scroll {
-    padding: 24px;
+    padding: 20px 16px; /* 20px сверху/снизу, 16px по бокам */
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .mini-scroll h3 {
@@ -98,6 +103,69 @@
     word-wrap: break-word;
 }
 
+/* ============================================================
+   Сворачиваемый блок «Распространение...»
+   ============================================================ */
+.ms-details {
+    border: 1px dashed rgba(184, 145, 47, 0.4);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 4px 8px 6px 8px;
+    margin-bottom: 12px;
+    transition: background 0.2s;
+}
+
+.ms-details:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Сам заголовок внутри summary */
+.ms-details .ms-block-title {
+    cursor: pointer;
+    color: var(--dark-green);
+    font-family: 'Georgia', serif;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 4px 0;
+    margin: 0;
+    outline: none;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ms-details .ms-block-title:hover {
+    color: var(--gold-deep);
+}
+
+/* Убираем стандартный треугольник браузера */
+.ms-details summary::-webkit-details-marker {
+    display: none;
+}
+.ms-details summary {
+    list-style: none; /* для Firefox */
+}
+
+/* Рисуем свою аккуратную стрелочку */
+.ms-details summary::before {
+    content: '▶';
+    font-size: 10px;
+    color: var(--gold-deep);
+    transition: transform 0.25s ease;
+}
+
+/* Поворот стрелочки при раскрытии */
+.ms-details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.ms-details[open] {
+    background: rgba(255, 255, 255, 0.1); /* Чуть темнее в открытом виде */
+}
+
 /* Подсветка ключевых слов (например, слов выбранной среды обитания) */
 .ms-block-body mark {
     padding: 0 2px;
@@ -149,6 +217,21 @@
    общим мини-свитком (js/mini-scroll.js) */
 .habitat-book-pane {
     display: none !important;
+}
+
+/* Десктоп: мини-свиток «Среды обитания» — самостоятельная ТРЕТЬЯ
+   колонка справа от игры. Убираем «заход под панель» и анимацию
+   slideInRight, чтобы панель стояла ровно в своей колонке. */
+@media (min-width: 1101px) {
+    #habitat-info-panel {
+        position: static !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
+        transform: none !important;
+        animation: none !important;
+        align-self: flex-start;
+        z-index: 5;
+    }
 }
 
 /* ===== Мобильная раскладка =====

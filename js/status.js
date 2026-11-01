@@ -60,6 +60,13 @@ const StatusGame = {
         this.hideNextBtn();
         document.getElementById('status-result').classList.add('hidden');
         document.getElementById('status-end-screen').classList.add('hidden');
+        
+        // Возвращаем кнопки управления при старте новой игры
+        const topControls = document.querySelector('#status-modal .quiz-top-controls');
+        if (topControls) {
+            topControls.style.display = '';
+        }
+
         GameEnd.leave('status');
         this.nextQuestion();
     },
@@ -404,6 +411,13 @@ const StatusGame = {
     },
 
     showEndScreen() {
+        // Принудительно скрываем кнопки управления (крестик и перезагрузку),
+        // чтобы на финальном экране остался только один крестик.
+        const topControls = document.querySelector('#status-modal .quiz-top-controls');
+        if (topControls) {
+            topControls.style.display = 'none';
+        }
+
         const titleEl = document.getElementById('status-end-title');
         const achieveEl = document.getElementById('status-end-achieve');
         document.getElementById('status-final-score').textContent = this.score;

@@ -34,7 +34,7 @@
 
 const FamilyGame = {
     CARDS_PER_ROUND: 12,
-    TOTAL_ROUNDS: 6,
+    TOTAL_ROUNDS: 5,
     ROUND_TIME: 150, // секунд на раунд (12 карточек)
 
     init() {
@@ -73,6 +73,13 @@ const FamilyGame = {
         this.hideBanner();
         document.getElementById('family-check-result').classList.add('hidden');
         document.getElementById('family-end-screen').classList.add('hidden');
+        
+        // Возвращаем кнопки управления при старте новой игры
+        const topControls = document.querySelector('#family-modal .quiz-top-controls');
+        if (topControls) {
+            topControls.style.display = '';
+        }
+
         GameEnd.leave('family');
         this.nextRound();
     },
@@ -586,6 +593,14 @@ const FamilyGame = {
 
     showEndScreen(titleText) {
         this.stopTimer();
+        
+        // Скрываем кнопки управления (крестик и перезагрузку), 
+        // чтобы не было дублирования с крестиком самого финального экрана
+        const topControls = document.querySelector('#family-modal .quiz-top-controls');
+        if (topControls) {
+            topControls.style.display = 'none';
+        }
+
         const titleEl = document.getElementById('family-end-title');
         const achieveEl = document.getElementById('family-end-achieve');
         document.getElementById('family-final-score').textContent = this.score;

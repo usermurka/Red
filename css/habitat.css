@@ -26,8 +26,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin: 8px auto 14px;
+    gap: 8px;
+    margin: 8px auto 20px; /* Добавили отступ снизу, чтобы не наезжало на кнопки */
+    width: 100%;
+    max-width: 400px;      /* Ограничили ширину карточки, чтобы текст переносился красиво */
+    text-align: center;
 }
 
 .habitat-card .latin-photo-card {
@@ -41,6 +44,10 @@
     font-weight: bold;
     color: var(--dark-green);
     text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+    padding: 0 10px;
 }
 
 .habitat-latin {
@@ -57,7 +64,8 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     width: 100%;
-    max-width: 640px;
+    max-width: 100%;           /* Убираем 640px — растягиваем на всю ширину колонки */
+    margin-top: 10px;
 }
 
 .habitat-biom {
@@ -118,13 +126,67 @@
 
 /* Игровая зона: карточка с вариантами слева, окно данных из Красной
    книги справа — чтобы ответ можно было проверить по источнику. */
+/* Раскладка игры:
+   • десктоп (>1100px) — ТРИ колонки: журнал пар / игра / мини-свиток;
+   • планшет и мобильный (≤1100px) — ДВЕ колонки (журнал / игра),
+     а мини-свиток встаёт ПОД ними на всю ширину. */
+/* ===== ДЕСКТОПНАЯ РАСКЛАДКА (3 КОЛОНКИ, РЕЗИНОВАЯ) ===== */
 .habitat-main {
     display: flex;
-    align-items: stretch;
-    justify-content: center;
-    gap: 16px;
+    flex-direction: row;       
+    align-items: stretch;      
+    justify-content: space-between; /* Элементы распределяются по всей ширине */
+    gap: 20px;
     width: 100%;
-    max-width: 980px;
+    max-width: 100%;           /* Убираем ограничение 1400px */
+    margin: 0;
+}
+
+/* Контейнер для журнала и игры */
+.habitat-cols {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 16px;
+    flex: 1 1 auto;            
+    min-width: 0;
+}
+
+.habitat-log-pane {
+    flex: 0 0 220px;           /* Немного сузили журнал, чтобы дать место игре */
+    min-width: 0;
+}
+
+.habitat-play-pane {
+    flex: 1 1 auto;            /* Игра забирает всё свободное место */
+    min-width: 0;              /* Убираем min-width: 320px, который мешал */
+}
+
+#habitat-info-panel {
+    flex: 0 0 380px;           /* Свиток справа фиксированной ширины */
+    min-width: 0;
+    max-height: 75vh;
+    overflow-y: auto;
+    align-self: flex-start;
+    position: relative;
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+#habitat-modal.habitat-info-empty #habitat-info-panel {
+    visibility: hidden;
+}
+
+/* Защита от разрыва сетки длинными названиями */
+.habitat-name {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    line-height: 1.2;
+}
+.habitat-biomes {
+    max-width: 100%;           /* Сетка кнопок не вылезает за пределы */
 }
 
 .habitat-play {
@@ -225,7 +287,9 @@
 /* Панели игрового окна: журнал пар (слева) и игровая зона (справа).
    Одинаковая базовая высота и выравнивание по верху — при пустом
    журнале окно не выглядит «кривым»: изображение и среды стоят
-   ровно, а не смещаются вниз. */
+   ровно, а не смещаются вниз. На десктопе .habitat-cols выравнивает
+   панели по ВЕРХУ и не даёт им «расползаться» при разной длине
+   содержимого (см. правило ниже). */
 .habitat-pane {
     min-height: 380px;
     box-sizing: border-box;
@@ -301,24 +365,67 @@
 .hl-entry.hl-miss b { color: #7c2d12; }
 .hl-mark { font-weight: bold; margin-right: 4px; }
 
-@media (max-width: 760px) {
-    .habitat-main { flex-direction: column; align-items: stretch; }
-    .habitat-info { max-width: none; max-height: 240px; }
+/* ===== ПЛАНШЕТЫ И МОБИЛЬНЫЕ (2 КОЛОНКИ + СВИТОК СНИЗУ) ===== */
+@media (max-width: 1100px) {
+    .habitat-main {
+        flex-direction: column; /* Свиток падает вниз */
+        align-items: stretch;
+    }
 
-    /* Мобильная компоновка по замечаниям: ДВА СТОЛБЦА — слева журнал
-       пар, справа карточка + выбор среды. Мини-свиток — ПОД обоими
-       столбцами на всю ширину окна (выровнен, не шире). */
     .habitat-cols {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: flex-start;
-        gap: 8px;
         width: 100%;
     }
+
+    .habitat-log-pane {
+        flex: 0 0 30%;
+    }
+
+    .habitat-play-pane {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    /* Убираем внутреннюю прокрутку журнала, чтобы он не создавал свой "лифт" */
+    .habitat-log {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* Свиток под колонками на всю ширину */
+    #habitat-info-panel {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        max-width: none !important;
+        max-height: none !important; /* Снимаем ограничение высоты свитка */
+        overflow: visible !important; /* Убираем внутренний лифт свитка */
+        margin-top: 14px;
+        align-self: stretch;
+    }
+
+    #habitat-modal.habitat-info-empty #habitat-info-panel {
+        display: none !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .habitat-info { max-width: none; max-height: 240px; }
+
+    .habitat-cols {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .habitat-cols .habitat-pane {
+        align-self: stretch;
+    }
+    
     .habitat-log-pane {
         flex: 0 0 34%;
         min-width: 0;
     }
+    
     .habitat-play-pane {
         flex: 1 1 auto;
         min-width: 0;
@@ -436,15 +543,53 @@
 }
 
 /* ============================================================
-   САМЫЙ КОНЕЦ ФАЙЛА — гарантированная раскраска журнала по
-   результату ответа. Наследование цвета текста от .habitat-log-pane
-   (тёмно-зелёный) раньше делало и «✔», и «✘» зелёными на мобильных;
-   эти правила перебивают любой каскад ниже/выше.
+   ФИНАЛЬНЫЙ ЭКРАН «СРЕДЫ ОБИТАНИЯ»: скрываем игровые кнопки
+   (крестик и перезагрузку из шапки игры), чтобы остался только
+   собственный крестик финального экрана.
    ============================================================ */
-.habitat-log .hl-entry.hl-hit,
-.habitat-log .hl-entry.hl-hit b { color: var(--green, #2e6b3e) !important; }
-.habitat-log .hl-entry.hl-hit .hl-mark { color: var(--green, #2e6b3e) !important; }
-.habitat-log .hl-entry.hl-miss,
-.habitat-log .hl-entry.hl-miss b { color: #a33 !important; }
-.habitat-log .hl-entry.hl-miss .hl-mark { color: #c0392b !important; }
-.habitat-log .hl-entry.hl-miss { border-left-color: #a33 !important; }
+body.game-end-habitat #habitat-modal .quiz-top-controls,
+body.game-end-habitat #habitat-modal #habitat-close,
+body.game-end-habitat #habitat-modal #habitat-restart {
+    display: none !important;
+}
+
+/* ============================================================
+   НАКЛАДЫВАЕМ ФИНАЛЬНЫЙ ЭКРАН ПОВЕРХ ВСЕГО ИГРОВОГО ПОЛЯ
+   Используем fixed, чтобы экран перекрывал всю модалку целиком.
+   ============================================================ */
+#habitat-end-screen {
+    position: fixed !important; /* Жестко привязываем к экрану */
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10000 !important; /* Приоритет выше любых кнопок игры */
+    background: var(--parchment-light, #f7efdc) !important; /* Плотный непрозрачный фон */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 20px;
+    margin: 0 !important;
+}
+
+/* Убеждаемся, что скрытый экран остаётся скрытым */
+#habitat-end-screen.hidden {
+    display: none !important;
+}
+
+/* Принудительно фиксируем крестик финального экрана в правом верхнем углу */
+#habitat-end-screen .game-close-x {
+    position: fixed !important; /* Жесткая привязка к окну браузера */
+    top: 60px !important;
+    right: 60px !important;
+    z-index: 10000 !important; /* Выше самого финального экрана */
+    margin: 0 !important;
+}
+
+.habitat-scroll {
+    width: 95vw !important;    /* Растягиваем окно почти на весь экран */
+    max-width: 1600px !important; /* Но не даём ему стать бесконечно огромным на 4K-мониторах */
+    /* Остальные свойства оставляем как были */
+}

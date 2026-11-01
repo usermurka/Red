@@ -168,7 +168,36 @@ body {
     gap: 20px;
     padding: 0 24px;
   }
-}
+
+  /* Узкий десктоп/планшет-альбом: окно «Викторины» и свиток сжимаются
+     пропорционально, но остаются рядом (не «разъезжаются» и не
+     переключаются в колонку — это делает брейкпоинт 900px ниже). */
+  .quiz-scroll {
+    width: 520px;
+    flex-basis: 520px;
+  }
+
+  #quiz-info-panel {
+    width: 300px;
+    flex-basis: 300px;
+  }
+  
+  #memo-info-panel {
+    width: 200px !important;
+    flex-basis: 200px !important;
+  }
+  #memo-modal .memo-scroll {
+    flex: 1;
+    width: calc(100vw - 200px) !important; /* Ровно столько, сколько осталось от панели */
+    max-width: calc(100vw - 200px) !important; 
+    overflow: hidden;
+  }
+  /* Фиксируем сетку внутри, чтобы она не раздвигала контейнер */
+  #memo-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
 
 /* ============================================================
    МАЛЕНЬКИЕ ПЛАНШЕТЫ / БОЛЬШИЕ ТЕЛЕФОНЫ В АЛЬБОМЕ (до 820px)
@@ -204,6 +233,11 @@ body {
     transform: translateX(0);
   }
 
+  /* Прячем сайдбар, если открыто модальное окно ввода пароля */
+  body:has(#password-modal:not(.hidden)) #sidebar {
+    transform: translateX(-105%) !important;
+  }
+
   /* золотая линия-переплёт больше не нужна в потоке */
   #sidebar-gold-line {
     display: none;
@@ -219,6 +253,15 @@ body {
 
   /* Кнопка вызова меню видна только когда панель скрыта ... */
   body.sidebar-open #btn-sidebar-toggle {
+    display: none !important;
+  }
+
+  /* Скрываем кнопки зума и вызов меню, когда открыт сайдбар 
+     ИЛИ открыт справочник видов (панель #species-panel не имеет класса .hidden) */
+  body.sidebar-open .mobile-zoom-controls,
+  body.sidebar-open #btn-sidebar-toggle,
+  body:has(#species-panel:not(.hidden)) .mobile-zoom-controls,
+  body:has(#species-panel:not(.hidden)) #btn-sidebar-toggle {
     display: none !important;
   }
 
@@ -307,7 +350,9 @@ body {
   #modal,
   #region-modal,
   #migration-modal,
-  #password-modal {
+  #password-modal,
+  #status-modal,    /* Добавляем модалку «Статуса» */
+  #habitat-modal {  /* И модалку «Среды обитания» на всякий случай */
     align-items: flex-end;
     padding: 0;
   }
@@ -454,28 +499,41 @@ body {
   .quiz-scroll,
   .match-scroll,
   .memo-scroll,
-  .latin-scroll {
+  .latin-scroll,
+  .habitat-scroll,
+  .status-scroll {
     width: 100vw;
     max-width: 100vw;
     height: auto;
-    max-height: calc(100dvh - 12px);
+    max-height: none !important; /* Снимаем ограничение по высоте */
+    min-height: 100dvh;          /* Даем место контенту */
     border-radius: 0;
     border-left: none;
     border-right: none;
     clip-path: none;
     flex-shrink: 0;
+    overflow: visible !important; /* Убираем внутренний скролл */
+    padding-top: calc(20px + env(safe-area-inset-top)) !important; /* Защита от "чёлки" */
+    box-sizing: border-box;
   }
 
-  /* КРИТИЧНО: у игрового окна должен ЖИТЬ скролл. В quiz.css стоит
-     overflow-y:auto, но в memo.css — overflow:hidden, а порядок
-     подключения файлов делает его перебивающим: без этого правила
-     на мобильных контент ниже сгиба (свиток викторины, кнопка
-     «Дальше») просто отрезалось — «виден только заголовок свитка». */
+  /* Убираем внутренний скролл у самого окна игры, чтобы не было 
+     «двойного лифта». Теперь скроллится вся модалка целиком. */
   .quiz-scroll,
   .match-scroll,
-  .latin-scroll {
-    overflow-y: auto !important;
+  .latin-scroll,
+  .habitat-scroll,
+  .status-scroll {
+    overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
+    height: auto !important;
+    max-height: none !important; /* Снимаем ограничение по высоте */
+  }
+
+  /* Внутреннее тело игры (в Статусе — .latin-body) тоже не должно скроллиться */
+  .status-scroll .latin-body {
+    overflow-y: visible !important;
+    max-height: none !important;
   }
 
   /* Все игровые модалки — вертикальная прокручиваемая колонка:
@@ -510,32 +568,65 @@ body {
     clip-path: none;
   }
 
-  /* --- Мемо на мобильных: игра занимает экран, панель видов — снизу --- */
+  /* --- Мемо на мобильных/планшете: игра занимает экран, панель видов — снизу --- */
+  /* Модалка — вертикальная колонка, чтобы панель видов встала ПОД игрой */
+  #memo-modal {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* --- Мемо на мобильных/планшете: единый скролл, без обрезки шапки --- */
+  #memo-modal {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
   #memo-modal .memo-scroll {
-    height: calc(100dvh - 12px);
-    max-height: calc(100dvh - 12px);
-    overflow: hidden;           /* сама колонка не скроллит — только панель */
+    /* Убираем min-height: 100dvh, чтобы не было пустой дыры снизу! */
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important; 
+    overflow: visible !important;
+    flex: none !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+  }
+  /* Шапка игры (MEMO, ходы, кнопки) — делаем отступы безопасными */
+  #memo-modal .quiz-header {
+    padding: 20px 16px 10px 16px !important; /* Даем место сверху */
+    margin-top: 0 !important;
   }
   #memo-grid {
-    flex: 1 1 auto;             /* сетка растягивается на всю доступную высоту */
-    min-height: 0;
+    flex: none !important;
+    max-height: none !important;
+    padding: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box;
   }
   #memo-info-panel {
     position: static !important;
-    order: 99;                  /* всегда ПОСЛЕ игрового окна (не поверх него) */
+    order: 99;
     width: 100% !important;
     max-width: none !important;
-    height: auto !important;    /* панель не занимает 94vh */
-    max-height: 38dvh;          /* снизу экрана — компактный список с прокруткой */
-    overflow-y: auto;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     margin: 10px 0 calc(16px + env(safe-area-inset-bottom)) !important;
-    padding-left: 0 !important;
+    padding: 15px !important; /* Добавляем паддинг для красоты */
     border-radius: 2px;
     clip-path: var(--torn-edge);
     z-index: 5;
     box-shadow: var(--shadow-deep);
-    flex-shrink: 0;
+    flex: 0 0 auto;
   }
+
   /* Список видов — ровно три столбца (12 пар в «Мемо» на мобильных) */
   #memo-species-list {
     display: grid !important;
@@ -599,15 +690,20 @@ body {
 
   /* сетки карточек — компактнее */
   #match-grid {
-    grid-template-columns: repeat(4, 1fr);
+    /* Ограничиваем максимальную ширину карточки на планшетах */
+    grid-template-columns: repeat(4, minmax(0, 110px));
+    grid-template-rows: none;
+    grid-auto-rows: auto;
     gap: 6px;
     padding: 8px;
+    align-content: start; 
+    justify-content: center; /* Центрируем по горизонтали */
   }
 
   .match-card {
-    max-width: none;
-    max-height: none;
-    font-size: clamp(9px, 2.6vw, 13px);
+    height: auto; 
+    aspect-ratio: 1 / 1;
+    width: 100%;
   }
 
   #memo-grid {
@@ -733,10 +829,31 @@ body {
   /* игры: сетки карточек плотнее */
   #match-grid {
     grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: none;    
+    grid-auto-rows: auto;        
+    align-content: start;        
+    justify-content: stretch; 
+    width: 100%;
+    box-sizing: border-box;
+    gap: 4px; /* Уменьшаем отступы между карточками */
+    padding: 4px; /* Уменьшаем поля сетки */
+  }
+  
+  .match-card {
+    height: auto; 
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    box-sizing: border-box; /* КРИТИЧНО: чтобы рамки и padding не распирали карточку */
   }
 
-  /* Мемо: колонки задаёт js/memo.js в px (gridTemplateColumns),
-     здесь не переопределяем — иначе шаблон ломается. */
+  /* Мемо: контейнеры подстраиваются под контент */
+  #memo-modal .memo-scroll,
+  #memo-grid,
+  #memo-info-panel {
+    min-height: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
 
   .quiz-stats {
     flex-wrap: wrap;
@@ -789,8 +906,30 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  #match-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    align-content: start;
+    justify-content: stretch; 
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .match-card {
+    height: auto; 
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   /* У мемо колонки и рядки в px ставит js (inline-стили) — здесь не переопределяем */
   #memo-grid { grid-template-columns: none; }
+  /* Мелкие экраны */
+  #memo-modal .memo-scroll,
+  #memo-grid {
+    max-height: none !important;
+  }
 
   #tooltip {
     max-width: calc(100vw - 24px);
@@ -960,9 +1099,16 @@ body {
     display: none !important;
   }
 
-  /* Кнопка «Дальше →» — тоже по центру, под свитком */
+  /* Кнопка «Дальше →» — прилипает к низу экрана, чтобы после ответа
+     её было видно сразу, не прокручивая длинный свиток. */
   #quiz-next-btn {
-    margin: 14px auto calc(8px + env(safe-area-inset-bottom));
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 100 !important;
+    margin: 10px auto calc(10px + env(safe-area-inset-bottom)) !important;
+    width: calc(100% - 24px) !important;
+    max-width: 520px;
+    box-shadow: 0 -4px 12px rgba(43, 33, 24, 0.18);
   }
 }
 
@@ -1050,15 +1196,33 @@ body {
     z-index: 20;
   }
 
-  /* --- «Среда обитания»: тот же принцип — свиток под игрой --- */
+  /* --- «Среда обитания»: ДВЕ колонки (журнал / игра), свиток — снизу --- */
   #habitat-modal .habitat-main {
     display: flex !important;
-    flex-direction: column !important;
+    flex-direction: column !important; /* Свиток вниз */
     align-items: stretch !important;
+  }
+  
+  #habitat-modal .habitat-cols {
+    display: flex !important;
+    flex-direction: row !important; /* Журнал и игра в ряд */
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+  }
+  
+  #habitat-modal .habitat-log-pane {
+    flex: 0 0 30% !important;
+    min-width: 0;
+  }
+  
+  #habitat-modal .habitat-play-pane {
+    flex: 1 1 0 !important;
+    min-width: 0;
   }
   #habitat-modal #habitat-info-panel {
     position: static !important;
     order: 99;
+    flex: 1 1 100% !important;
     width: 100% !important;
     max-width: none !important;
     height: auto !important;
@@ -1069,10 +1233,12 @@ body {
     padding-left: 0 !important;
     transform: none !important;
     animation: none !important;
-    flex: none !important;
     clip-path: var(--torn-edge);
     box-shadow: var(--shadow-deep);
     z-index: 20;
+  }
+  #habitat-modal.habitat-info-empty #habitat-info-panel {
+    display: none !important;
   }
 }
 
@@ -1110,11 +1276,11 @@ body {
   .quiz-scroll {
     width: 100% !important;
     max-width: 100% !important;
+    flex: none !important; /* Сбрасываем жесткую ширину с десктопа */
     margin: 0 auto !important;
     border-radius: 0 !important;
     clip-path: none !important;
     box-sizing: border-box;
-    flex-shrink: 0;
   }
 
   .status-main.quiz-main {
@@ -1190,19 +1356,23 @@ body {
    habitat.css и более ранние блоки этого файла.
    ============================================================ */
 @media (max-width: 900px) {
-  /* 1) Кнопки ✕ и ↺ — снова ПОВСЕХАБСКО в правом верхнем углу окна игры */
+  /* 1) Кнопки ✕ и ↺ — снова ПОВСЕХАБСКО в правом верхнем углу окна игры.
+     ВАЖНО: position: absolute (а не relative!) — иначе кнопки встают
+     в поток и «уезжают» от угла. left:auto + right фиксируют угол. */
   #quiz-modal .quiz-top-controls,
   #habitat-modal .quiz-top-controls {
     position: absolute !important;
     top: 10px !important;
     right: 12px !important;
     left: auto !important;
+    bottom: auto !important;
     z-index: 70 !important;
     width: auto !important;
     flex-direction: row !important;
     gap: 10px;
     background: none;
   }
+
   #quiz-modal .quiz-top-controls button,
   #habitat-modal .quiz-top-controls button {
     pointer-events: auto;
@@ -1228,11 +1398,36 @@ body {
   #quiz-modal #quiz-content {
     width: 100% !important;
     max-width: 100% !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding: 10px !important;          /* убираем пустые полосы по бокам */
     box-sizing: border-box;
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+
+  /* Картинка больше не «висит» в пустом блоке фикс. высоты:
+     задаём пропорции и даём картинке заполнить блок целиком. */
+  #quiz-modal .quiz-image-wrap {
+    height: auto !important;
+    min-height: 180px;
+    aspect-ratio: 4 / 3;
+    margin-bottom: 14px;
+    padding: 6px;
+    box-sizing: border-box;
+  }
+
+  #quiz-modal #quiz-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Варианты ответов — на всю ширину контента */
+  #quiz-modal #quiz-options {
+    width: 100% !important;
+    max-width: 100%;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    gap: 8px;
   }
   #quiz-modal .quiz-image-wrap {
     width: 100% !important;
@@ -1312,15 +1507,51 @@ body {
       Прячем дочерние блоки модалки, КРОМЕ самого экрана итогов.
    ============================================================ */
 
-/* 1) Один крестик на финале — для всех восьми игр */
-body.game-end-quiz    #quiz-modal    > * .quiz-top-controls,
-body.game-end-match   #match-modal   > * .quiz-top-controls,
-body.game-end-memo    #memo-modal    > * .quiz-top-controls,
-body.game-end-erudite #erudite-modal > * .quiz-top-controls,
-body.game-end-latin   #latin-modal   > * .quiz-top-controls,
-body.game-end-habitat #habitat-modal > * .quiz-top-controls,
-body.game-end-status  #status-modal  > * .quiz-top-controls,
-body.game-end-family  #family-modal  > * .quiz-top-controls {
+/* 1) Один крестик на финале — для всех восьми игр. 
+   Мы используем селектор :has() для современных браузеров, а также 
+   прямое скрытие по ID модалки для надежности. */
+
+/* Универсальное правило: если внутри модалки есть видимый финальный экран, 
+   прячем верхние игровые кнопки (крестик и рестарт) */
+#quiz-modal:has(#quiz-end-screen:not(.hidden)) .quiz-top-controls,
+#match-modal:has(#match-end-screen:not(.hidden)) .quiz-top-controls,
+#memo-modal:has(#memo-end-screen:not(.hidden)) .quiz-top-controls,
+#erudite-modal:has(#erudite-end-screen:not(.hidden)) .quiz-top-controls,
+#latin-modal:has(#latin-end-screen:not(.hidden)) .quiz-top-controls,
+#habitat-modal:has(#habitat-end-screen:not(.hidden)) .quiz-top-controls,
+#status-modal:has(#status-end-screen:not(.hidden)) .quiz-top-controls,
+#family-modal:has(#family-end-screen:not(.hidden)) .quiz-top-controls {
+  display: none !important;
+}
+
+/* ДОБАВЛЕНО: Жесткая страховка для ДЕСКТОПА. 
+   Как только игра показывает финал, JS навешивает на body класс game-end-active. 
+   Мы принудительно скрываем верхние игровые кнопки во всех играх. */
+body.game-end-active .quiz-top-controls,
+body.game-end-active #habitat-close,
+body.game-end-active #habitat-restart,
+body.game-end-active #status-close,
+body.game-end-active #status-restart,
+body.game-end-active #quiz-close,
+body.game-end-active #quiz-restart,
+body.game-end-active #latin-close,
+body.game-end-active #latin-restart,
+body.game-end-active #match-close,
+body.game-end-active #match-restart,
+body.game-end-active #memo-close,
+body.game-end-active #memo-restart,
+body.game-end-active #erudite-close,
+body.game-end-active #erudite-restart,
+body.game-end-active #family-close,
+body.game-end-active #family-restart {
+  display: none !important;
+}
+
+/* Дублирующее правило на случай, если :has() не поддерживается браузером.
+   Мы просто скрываем кнопки в Латыни, если игра завершена (финал не скрыт). */
+#latin-modal #latin-end-screen:not(.hidden) ~ .quiz-top-controls,
+body.game-end-active #latin-modal .quiz-top-controls,
+body.game-end-latin #latin-modal .quiz-top-controls {
   display: none !important;
 }
 
@@ -1358,7 +1589,8 @@ body.game-end-active #memo-modal #memo-info-panel {
 
 /* Эрудит: шапка, фото, слоты/буквы, управление, подсказки, прогресс */
 body.game-end-active #erudite-modal .quiz-header,
-body.game-end-active #erudite-modal .erudite-body {
+body.game-end-active #erudite-modal .erudite-body,
+body.game-end-active #erudite-modal .quiz-top-controls {
   display: none !important;
 }
 
@@ -1367,6 +1599,11 @@ body.game-end-active #latin-modal .quiz-header,
 body.game-end-active #latin-modal .latin-timer-track,
 body.game-end-active #latin-modal .latin-scoreboard,
 body.game-end-active #latin-modal .latin-body {
+  display: none !important;
+}
+
+/* ДОБАВЛЕНО: Скрываем крестик и кнопку рестарта в Латыни при показе финала */
+body.game-end-active #latin-modal .quiz-top-controls {
   display: none !important;
 }
 
@@ -1472,11 +1709,19 @@ body.game-end-active #family-modal .latin-body {
     box-sizing: border-box;
   }
 
-  /* Крестик ровно один. Игровая пара ↺/✕ скрыта правилом
-     body.game-end-<игра> ... .quiz-top-controls выше; круглый крестик
-     финала сажаем в правый верхний угол окна — туда, где стоял ✕.
-     position:fixed + z-index 95 поднимают его над содержимым финала
-     (внутри финала он был absolutely при position:relative контейнера). */
+  /* Крестик финала — возвращаем его внутрь экрана (absolute), 
+     чтобы он не улетал за пределы окна браузера */
+  #quiz-modal #quiz-end-screen,
+  #match-modal #match-end-screen,
+  #memo-modal #memo-end-screen,
+  #erudite-modal #erudite-end-screen,
+  #latin-modal #latin-end-screen,
+  #habitat-modal #habitat-end-screen,
+  #status-modal #status-end-screen,
+  #family-modal #family-end-screen {
+    position: relative !important; /* Чтобы крестик привязался к экрану */
+  }
+
   #quiz-modal #quiz-end-screen .game-close-x,
   #match-modal #match-end-screen .game-close-x,
   #memo-modal #memo-end-screen .game-close-x,
@@ -1485,10 +1730,11 @@ body.game-end-active #family-modal .latin-body {
   #habitat-modal #habitat-end-screen .game-close-x,
   #status-modal #status-end-screen .game-close-x,
   #family-modal #family-end-screen .game-close-x {
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 95;
+    position: absolute !important; /* Возвращаем в поток экрана */
+    top: 10px !important;
+    right: 12px !important;
+    z-index: 95 !important;
+    display: flex !important; /* Убедимся, что крестик финала виден */
   }
 
   /* Подзаголовки/текст финала не должны залезать под крестик */
@@ -1496,5 +1742,51 @@ body.game-end-active #family-modal .latin-body {
   [id$="-end-screen"] > h2 {
     margin-top: 0;
     padding-right: 40px;
+  }
+}
+} /* <-- ВОЗВРАЩАЕМ ЭТУ СКОБКУ, ОНА ЗАКРЫВАЕТ БЛОК @media (max-width: 900px) */
+
+/* ============================================================
+   СТРАХОВКА ДЛЯ ЛАТЫНИ: если финальный экран показан (не .hidden),
+   принудительно прячем игровые кнопки по их ID. Это перебьёт любые
+   другие стили, так как используется ID и !important.
+   ============================================================ */
+#latin-end-screen:not(.hidden) ~ #latin-close,
+#latin-end-screen:not(.hidden) ~ #latin-restart,
+#latin-end-screen:not(.hidden) ~ .quiz-top-controls,
+body.game-end-active #latin-close,
+body.game-end-active #latin-restart,
+body.game-end-active #latin-modal .quiz-top-controls {
+    display: none !important;
+}
+
+/* ============================================================
+   СТРАХОВКА ДЛЯ ИГРЫ «СТАТУС» НА МОБИЛЬНЫХ:
+   Принудительно ограничиваем окно шириной экрана, чтобы оно
+   не съезжало влево из-за остаточных десктопных стилей.
+   ============================================================ */
+@media (max-width: 760px) {
+    #status-modal {
+        overflow-x: hidden !important;
+        padding: 0 !important;
+    }
+    #status-modal .status-scroll {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 auto !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+    }
+    #status-modal .status-main {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0 10px !important; /* небольшие отступы по бокам */
+    }
+}
+
+/* Точечная страховка для финала «Среды обитания» на устройствах с чёлкой */
+@media (max-width: 900px) {
+  #habitat-modal #habitat-end-screen {
+    padding-top: calc(56px + env(safe-area-inset-top)) !important;
   }
 }

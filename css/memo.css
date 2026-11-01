@@ -36,14 +36,19 @@
 
 #memo-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    /* На десктопе карточки не сжимаются меньше 90px: при узком окне
+       сетка переносится в меньшее число колонок (JS пересчитывает
+       rows/cols для мобильных), а на десктопе 6 колонок остаются
+       читаемыми. */
+    grid-template-columns: repeat(6, minmax(90px, 1fr));
     /* 6 колонок */
     gap: 10px;
     padding: 15px;
     overflow: hidden;
     justify-content: center;
     align-content: center;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
     perspective: 1000px;
 }
 
