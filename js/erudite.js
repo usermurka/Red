@@ -163,21 +163,44 @@ const EruditeGame = {
       img.addEventListener('error', () => this.showPicturePlaceholder());
     }
 
-    this.buildTray();
-    this.renderSlots();
-    this.renderHintButtons();
-    // Начало раунда: «Дальше →» на месте, но бледная/неактивная,
-    // а «Пропустить слово» — активна (раунд ещё не закончен).
-    this.setNextBtnIdle(true);
-    this.updateStats();
-
-    // Хак для пересчета размеров flexbox-контейнеров при первом запуске.
-    // Без этого буквы в лотке и слотах могут иметь размер 0x0, пока
-    // пользователь не изменит размер окна или не нажмет на кнопку.
-    setTimeout(() => {
-      this.renderTray();
+    // КРИТИЧНО: весь интерфейс раунда (буквы лотка, слоты, подсказки)
+    // строим внутри try/catch. Любой сбой на этих шагах раньше обрывал
+    // функцию после установки src — игрок видел «картинка есть, а букв
+    // нет» (или наоборот при перезапуске). Ошибку пишем в консоль и
+    // всё равно дорисовываем то, что смогли.
+    try {
+      this.buildTray();
       this.renderSlots();
-    }, 50);
+      this.renderHintButtons();
+      // Начало раунда: «Дальше →» скрыта до конца раунда,
+      // «Пропустить слово» — активна (раунд ещё не закончен).
+      this.setNextBtnIdle(true);
+      this.updateStats();
+    } catch (err) {
+      console.error('Эрудит: ошибка сборки раунда', err);
+    }
+
+    // Пересчёт размеров flexbox-контейнеров после того, как модалка
+    // реально отрисована. Два кадра rAF надёжнее фиксированного
+    // setTimeout(50): на медленных мобильных 50 мс могли прийти ДО
+    // первой отрисовки, и плитки оставались размером 0×0 («интерфейса
+    // работы с буквами не было»). Вызываем renderTray/renderSlots (а не
+    // buildTray — он перемешал бы буквы заново), поэтому расстановка уже
+    // размещённых букв сохраняется; лоток и слоты дорисуются даже если
+    // первый проход упал или отработал по «пустому» окну.
+    const remeasure = () => {
+      try {
+        this.renderTray();
+        this.renderSlots();
+      } catch (err) {
+        console.error('Эрудит: ошибка пересчёта раунда', err);
+      }
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => requestAnimationFrame(remeasure));
+    } else {
+      setTimeout(remeasure, 60);
+    }
   },
 
   // Текстовая заглушка вместо отсутствующего файла фото.
@@ -218,7 +241,12 @@ const EruditeGame = {
     // буквы ПЕРВОГО слова (внутри — перемешаны), следующие len(word2) —
     // буквы ВТОРОГО слова и т.д. Старый код перемешивал все буквы названия
     // одним массивом, из-за чего в блоке «Жаба» оказывались буквы «Серая».
-    const words = (this.words && this.words.length > 1) ? this.words : [this.letters.replace(/ /g, '')];
+    // this.letters — МАССИВ букв (Array.from(word)); раньше здесь вызывался
+    // this.letters.replace(...) — TypeError на каждом раунде с однословным
+    // названием, из-за чего лоток и слоты не строились («нет интерфейса с
+    // буквами»). Берём исходное слово-строку напрямую.
+    const wordStr = typeof this.current?.word === 'string' ? this.current.word : String(this.letters.join ? this.letters.join('') : this.letters);
+    const words = (this.words && this.words.length > 1) ? this.words : [wordStr.replace(/ /g, '')];
     const tiles = [];
     for (const w of words) {
       const wt = this.shuffle(Array.from(w).map(ch => ({ letter: ch, used: false })));
