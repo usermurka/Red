@@ -714,6 +714,13 @@ Object.assign(App, {
     // Не мешаем работе внутри тултипа / подменю / панели
     if (e.target.closest('#tooltip') || e.target.closest('.layer-submenu')) return;
 
+    // В режиме «Игры» витрина медалей перекрывает карту: свайп пальцем
+    // должен скроллить витрину, а не панорамировать карту под ней.
+    // Без этого early-return touchmove ниже вызывает preventDefault()
+    // и на мобильных окно медалей вообще не скроллится касанием.
+    const showcaseEl = document.getElementById('games-showcase');
+    if (showcaseEl && !showcaseEl.classList.contains('hidden') && showcaseEl.contains(e.target)) return;
+
     if (e.touches.length === 1) {
       const t = e.touches[0];
 
@@ -749,6 +756,11 @@ Object.assign(App, {
   },
 
   onTouchMove(e) {
+    // Палец начал движение по витрине медалей (режим «Игры») — не мешаем
+    // браузеру проскроллить её касанием (touchstart выше уже вышел из pan-режима).
+    const showcaseEl = document.getElementById('games-showcase');
+    if (showcaseEl && !showcaseEl.classList.contains('hidden') && showcaseEl.contains(e.target)) return;
+
     if (this.pinchActive && e.touches.length >= 2) {
       e.preventDefault();
 
