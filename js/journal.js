@@ -8,6 +8,12 @@ const Journal = {
 
     pendingPins: [], // Временные точки для НОВОЙ записи
 
+    // Мобильно-планшетная компоновка дневника (≤1024px): список записей
+    // идёт первым, карта спрятана и открывается отдельным окном.
+    isCompactLayout() {
+        return window.matchMedia('(max-width: 1024px)').matches;
+    },
+
     init() {
         // Безопасная привязка кнопок
         const bind = (id, event, fn) => {
@@ -40,6 +46,12 @@ const Journal = {
                 pinBtn.classList.toggle('active', this.isPinMode);
                 mapContainer.classList.toggle('pin-mode', this.isPinMode);
                 pinBtn.textContent = this.isPinMode ? '❌ Отменить' : '📍 Поставить метку';
+
+                // Мобильно-планшетная версия: карта спрятана — включение
+                // режима меток должно показать окно карты.
+                if (this.isPinMode && this.isCompactLayout()) {
+                    this.openMapOverlay();
+                }
 
                 this.renderMarkers(); // <-- Просто перерисовываем, функция сама скроет/покажет
 
