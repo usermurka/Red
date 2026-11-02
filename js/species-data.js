@@ -60,7 +60,7 @@
     "protection_measures": "Вид включен в Красные книги Новосибирской обл., Алтайского края и Республики Алтай.",
     "sources": "1. Dubatolov, Zolotarenko, 1996; 2. Кононенко, 2010; 3. Volynkin, 2006; 4. Volynkin, 2012; 5. Дубатолов и др., 2008а.",
     "authors": "С. А. Князев",
-    "status_text": "C:\\Users\\fayit_mv\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe c:/Users/fayit_mv/Desktop/red-book-omsk/fill_status_text.py"
+    "status_text": "Редкий локальный вид"
   },
   "actaea_erythrocarpa": {
     "id": "actaea_erythrocarpa",
