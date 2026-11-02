@@ -805,15 +805,21 @@ body {
     font-size: 20px !important;
   }
 
-  /* карта-переключатель — перенос строк */
+  /* карта-переключатель — строго в одну строку (5 кнопок делят ширину) */
   #map-switcher {
-    flex-wrap: wrap;
+    flex-wrap: nowrap !important;
+    gap: 2px !important;
+    /* минимальный зазор между кнопками */
   }
-
+  
   #map-switcher .map-option {
-    flex: 1 1 45%;
-    padding: 10px 6px;
-    font-size: 11px;
+    flex: 1 1 0 !important;
+    /* равномерно распределяют всю ширину */
+    min-width: 0 !important;
+    /* разрешаем сжиматься, чтобы не было переполнения */
+    padding: 10px 2px !important;
+    /* чуть уменьшили боковые отступы */
+    font-size: 11px !important;
   }
 
   /* слои — крупные строки */
