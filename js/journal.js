@@ -33,6 +33,13 @@ const Journal = {
         });
         bind('journal-close', 'click', () => this.close());
 
+        // Фиксированный ✕ закрытия дневника (мобильно-планшетная версия,
+        // ≤1024px): дублирует исходную кнопку шапки — одна логика.
+        const journalCloseMob = document.getElementById('journal-close-mob');
+        if (journalCloseMob) {
+            journalCloseMob.addEventListener('click', () => this.close());
+        }
+
         // Мобильно-планшетная панель над карточками: «🗺 Открыть карту»
         const openMapBtn = document.getElementById('journal-open-map-btn');
         if (openMapBtn) {
@@ -64,14 +71,25 @@ const Journal = {
             });
         }
 
-        // Мобильно-планшетное окно карты: кнопка закрытия и клик по фону
-        bind('journal-map-overlay-close', 'click', () => this.closeMapOverlay());
-        const mapOverlay = document.getElementById('journal-map-overlay');
-        if (mapOverlay) {
-            mapOverlay.addEventListener('click', (e) => {
-                if (e.target === mapOverlay) this.closeMapOverlay();
-            });
-        }
+        // Мобильно-планшетное окно карты: кнопка закрытия и клик по фону.
+        // Оверлей создаётся динамически (ensureMapOverlay), поэтому
+        // вешаем обработчик делегированием на document — он работает и
+        // для уже существующего, и для ещё не созданного элемента.
+        // Кнопку «⟵» перекладываем в <body> position:fixed (см. CSS):
+        // так она гарантированно кликабельна и не зависит от stacking
+        // контекста оверлея.
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#journal-map-overlay-close')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeMapOverlay();
+                return;
+            }
+            const overlay = document.getElementById('journal-map-overlay');
+            if (overlay && !overlay.classList.contains('hidden') && e.target === overlay) {
+                this.closeMapOverlay();
+            }
+        });
         bind('journal-save-btn', 'click', () => this.exportData());
         bind('journal-load-btn', 'click', () => {
             const input = document.getElementById('journal-load-input');
@@ -224,7 +242,6 @@ const Journal = {
             overlay.className = 'hidden';
             overlay.innerHTML = `
                 <div class="jmo-inner">
-                    <button id="journal-map-overlay-close" type="button" aria-label="Закрыть карту и вернуться в дневник">⟵</button>
                     <div class="jmo-body"></div>
                 </div>`;
             document.body.appendChild(overlay);
@@ -235,10 +252,27 @@ const Journal = {
         return overlay;
     },
 
+    // Кнопка «⟵» окна карты — отдельный fixed-элемент в <body> (создаётся
+    // один раз): так она не зависит от stacking-контекста оверлея и всегда
+    // кликабельна. Видимость управляется классом html.journal-map-open.
+    ensureMapBackButton() {
+        let back = document.getElementById('journal-map-overlay-close');
+        if (!back) {
+            back = document.createElement('button');
+            back.id = 'journal-map-overlay-close';
+            back.type = 'button';
+            back.setAttribute('aria-label', 'Закрыть карту и вернуться в дневник');
+            back.textContent = '⟵';
+            document.body.appendChild(back);
+        }
+        return back;
+    },
+
     openMapOverlay(recordId) {
         if (!this.isCompactLayout()) return; // на десктопе карта и так видна
         const overlay = this.ensureMapOverlay();
         if (!overlay) return;
+        this.ensureMapBackButton();
         // Метки этой записи будут отличаться цветом в окне карты
         this.highlightedRecordId = (recordId !== undefined) ? recordId : null;
         overlay.classList.remove('hidden');
@@ -250,6 +284,10 @@ const Journal = {
         const overlay = document.getElementById('journal-map-overlay');
         if (overlay) overlay.classList.add('hidden');
         document.documentElement.classList.remove('journal-map-open');
+        // На всякий случай синхронизируем состояние кнопки «⟵»: если
+        // дневник тоже закрыт — возвращаем карту в поток
+        const modal = document.getElementById('journal-modal');
+        if (!modal || modal.classList.contains('hidden')) this.restoreMapWrap();
     },
 
     // Возврат блока карты на своё место в модалке (для десктопы)
