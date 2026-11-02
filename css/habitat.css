@@ -593,3 +593,44 @@ body.game-end-habitat #habitat-modal #habitat-restart {
     max-width: 1600px !important; /* Но не даём ему стать бесконечно огромным на 4K-мониторах */
     /* Остальные свойства оставляем как были */
 }
+
+/* ============================================================
+   ДЕСКТОП: УБИРАЕМ «ЛИФТ ВСЕГО ОКНА» (ВНУТРЕННИЙ СКРОЛЛ)
+   ============================================================ */
+@media (min-width: 821px) {
+
+    /* 1. Снимаем внутренний скролл с самой карточки игры */
+    .habitat-scroll {
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* 2. Заставляем скроллиться саму модалку целиком, если контент не влез */
+    #habitat-modal {
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        overflow-y: auto !important;
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+
+    /* 3. Убираем внутренние лифты у панелей (правая колонка и журнал) */
+    #habitat-modal #habitat-info-panel,
+    #habitat-modal .habitat-info,
+    #habitat-modal .habitat-log {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+
+    /* 4. Выравниваем колонки по верху, чтобы они не растягивались */
+    #habitat-modal .habitat-main,
+    #habitat-modal .habitat-cols {
+        align-items: flex-start !important;
+    }
+
+    /* 5. Жесткая страховка: снимаем возможные ограничения по высоте с панелей */
+    #habitat-modal .habitat-pane {
+        min-height: 0 !important;
+    }
+}
