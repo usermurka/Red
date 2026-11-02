@@ -22,8 +22,21 @@ const Journal = {
             else console.warn(`Элемент #${id} не найден в HTML!`);
         };
 
-        bind('btn-journal', 'click', () => this.open());
+        bind('btn-journal', 'click', () => {
+            const modal = document.getElementById('journal-modal');
+            if (modal && !modal.classList.contains('hidden')) this.close();
+            else this.open();
+        });
         bind('journal-close', 'click', () => this.close());
+
+        // Мобильно-планшетное окно карты: кнопка закрытия и клик по фону
+        bind('journal-map-overlay-close', 'click', () => this.closeMapOverlay());
+        const mapOverlay = document.getElementById('journal-map-overlay');
+        if (mapOverlay) {
+            mapOverlay.addEventListener('click', (e) => {
+                if (e.target === mapOverlay) this.closeMapOverlay();
+            });
+        }
         bind('journal-save-btn', 'click', () => this.exportData());
         bind('journal-load-btn', 'click', () => {
             const input = document.getElementById('journal-load-input');
@@ -126,11 +139,70 @@ const Journal = {
         }
     },
 
+    // Подсветка кнопки «Дневник» в меню как активной, пока дневник открыт
+    setMenuActive(isActive) {
+        const btn = document.getElementById('btn-journal');
+        if (btn) btn.classList.toggle('active', !!isActive);
+    },
+
+    // ============================================================
+    // Мобильно-планшетное окно карты (≤1024px). Карта вынесена из
+    // потока страницы в отдельный полноэкранный оверлей с кнопкой
+    // закрытия. На десктопе не используется (там карта видна всегда).
+    // ============================================================
+    ensureMapOverlay() {
+        const wrap = document.querySelector('.journal-map-wrap');
+        if (!wrap) return null;
+        let overlay = document.getElementById('journal-map-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'journal-map-overlay';
+            overlay.className = 'hidden';
+            overlay.innerHTML = `
+                <div class="jmo-inner">
+                    <button id="journal-map-overlay-close" type="button" aria-label="Закрыть карту">✕</button>
+                    <div class="jmo-body"></div>
+                </div>`;
+            document.body.appendChild(overlay);
+        }
+        // Перекладываем блок карты (сохраняя все обработчики) внутрь оверлея
+        const body = overlay.querySelector('.jmo-body');
+        if (body && wrap.parentElement !== body) body.appendChild(wrap);
+        return overlay;
+    },
+
+    openMapOverlay() {
+        if (!this.isCompactLayout()) return; // на десктопе карта и так видна
+        const overlay = this.ensureMapOverlay();
+        if (!overlay) return;
+        overlay.classList.remove('hidden');
+        document.documentElement.classList.add('journal-map-open');
+        this.renderMarkers();
+    },
+
+    closeMapOverlay() {
+        const overlay = document.getElementById('journal-map-overlay');
+        if (overlay) overlay.classList.add('hidden');
+        document.documentElement.classList.remove('journal-map-open');
+    },
+
+    // Возврат блока карты на своё место в модалке (для десктопы)
+    restoreMapWrap() {
+        const overlay = document.getElementById('journal-map-overlay');
+        const wrap = document.querySelector('.journal-map-wrap');
+        const content = document.querySelector('.journal-content');
+        if (overlay && wrap && content && wrap.closest('#journal-map-overlay')) {
+            content.insertBefore(wrap, content.firstChild);
+        }
+    },
+
     open() {
         const modal = document.getElementById('journal-modal');
         if (!modal) return;
 
         modal.classList.remove('hidden');
+        this.setMenuActive(true);
+        this.closeMapOverlay();
 
         this.isPinMode = false;
         this.pendingPins = []; // Очищаем временные точки при открытии
@@ -167,6 +239,10 @@ const Journal = {
     close() {
         const modal = document.getElementById('journal-modal');
         if (modal) modal.classList.add('hidden');
+        this.setMenuActive(false);
+        this.closeMapOverlay();
+        // Возвращаем карту в поток — на десктопе она должна быть видна
+        this.restoreMapWrap();
     },
 
     openForm() {
@@ -460,7 +536,13 @@ const Journal = {
                 // 1. Разворачиваем/сворачиваем текст
                 card.classList.toggle('expanded');
 
-                // 2. Подсвечиваем маркеры (только если они есть на карте)
+                // 2. Мобильно-планшетная версия: карта спрятана — клик по
+                //    карточке открывает её как отдельное окно поверх страницы.
+                if (this.isCompactLayout()) {
+                    this.openMapOverlay();
+                }
+
+                // 3. Подсвечиваем маркеры (только если они есть на карте)
                 const markers = document.querySelectorAll(`.journal-marker[data-record-id="${rec.id}"]`);
                 if (markers.length > 0) {
                     markers.forEach(m => {
@@ -473,8 +555,6 @@ const Journal = {
                     });
                 }
             });
-
-            list.appendChild(card);
 
             list.appendChild(card);
         });
