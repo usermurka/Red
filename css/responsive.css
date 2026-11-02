@@ -33,6 +33,34 @@ body {
   border-radius: 3px;
 }
 
+/* Зелёная «кожа» панели обязана тянуться от верха до самого низа при
+   прокрутке содержимого. background-attachment: local заставляет слои
+   фона следовать за контентом скроллящейся панели, а не за её видимой
+   рамкой (страховка для WebKit/Safari на iOS/iPadOS): иначе при
+   прокрутке меню снизу проступал бежевый фон страницы. */
+#sidebar {
+  background-color: var(--dark-green);
+  background-attachment: local, local, scroll;
+}
+
+@media (max-width: 820px) {
+  /* Выезжающая панель: у body есть padding-top/bottom под safe-area,
+     из-за чего внизу мог оставаться просвет цвета пергамента.
+     Растягиваем зелёную подложку на всю высоту вьюпорта. */
+  #sidebar {
+    top: env(safe-area-inset-top);
+    height: calc(100dvh - env(safe-area-inset-top));
+  }
+}
+/* (старый комментарий) прокрутке содержимого. По умолчанию у background есть области
+   padding/scroll-clip, но для надёжности (iOS Safari и т.п.) фиксируем
+   сплошной зелёный слой через background-attachment: local — тогда фон
+   следует за контентом и бежевый фон страницы снизу проступать не будет. */
+#sidebar {
+  background-color: var(--dark-green);
+  background-attachment: local, local, scroll;
+}
+
 /* элементы не должны вылезать за ширину колонки */
 #map-switcher,
 #status-layers,
