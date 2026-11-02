@@ -1989,4 +1989,46 @@ body.game-end-active #latin-modal .quiz-top-controls {
     min-width: 0;
     overflow-wrap: anywhere;
   }
+
+  /* ============================================================
+     «ЛАТЫНЬ» — надпись «КРАСНАЯ КНИГА» на рубашках карточек
+     ============================================================
+     Базовый размер рубашки (latin.css) — clamp(10px, 1.5vw, 16px):
+     на узких экранах 1.5vw почти не работает, а в latin.css @480px
+     стоял font-size:22px — для карточки 84–120px надпись была
+     слишком крупной. Теперь на ВСЕХ мобильных ширинах (≤900px)
+     размер задаётся относительно самой карточки (container query),
+     поэтому он одинаково аккуратен и в «Латыни», и в рубашках
+     карточек «Статуса»/«Среды обитания». */
+  .latin-photo-card {
+    container-type: inline-size;
+  }
+  .latin-photo-back {
+    font-size: clamp(8px, 13cqi, 12px) !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1.15 !important;
+    padding: 0 4px;
+  }
+
+  /* ============================================================
+     «НАЙДИ ПАРУ» — сетка 4×5 вместо 5×4 (мобильные)
+     ============================================================
+     Игра генерирует ровно 20 карточек (js/match.js, TOTAL_PAIRS=10).
+     Раньше на мобильных колонки ставились 3 (≤820px) или 2 (≤480px),
+     из-за чего получалось 7 рядов по высоте — поле не влезало без
+     прокрутки. Здесь — ровно 4 колонки × 5 рядов: сетка становится
+     выше и уже, что удобнее для телефона. Карточки квадратные
+     (aspect-ratio 1/1), домино-подсветка (.match-card.selected /
+     .matched) и зум (.zoomed) не зависят от числа колонок — ничего
+     не ломается. Правило стоит последним в файле и перебивает
+     repeat(5…) из match.css и repeat(3…)/repeat(2…) ниже по каскаду. */
+  #match-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-auto-rows: auto !important;
+    grid-template-rows: none !important;
+    align-content: start !important;
+    justify-content: stretch !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
 }

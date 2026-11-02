@@ -252,17 +252,23 @@ const StatusGame = {
             // обычный экранированный текст.
             html: `<div class="si-small">${txt(sp.status_text || (full && full.status_text))}</div>`
         });
-        if (full && (full.abundance || full.limiting_factors)) {
-            blocks.push({
-                title: 'Численность и лимитирующие факторы',
-                html: `<div class="si-small">${txt(full.abundance)}${full.abundance && full.limiting_factors ? ' ' : ''}${txt(full.limiting_factors)}</div>`
-            });
-        } else if (sp.status_text) {
-            blocks.push({
-                title: 'Численность и лимитирующие факторы',
-                text: 'Поле «Лимитирующие факторы» в базе пусто — ориентируйтесь на статус вида.'
-            });
-        }
+        // Блок свёрнут по умолчанию (<details>/<summary>) — так же,
+        // как «Распространение в Омской области» в игре «Среда обитания»
+        // (js/habitat.js). title оставляем пустым (null), чтобы
+        // mini-scroll.js не рисовал дубликат заголовка.
+        const abundanceHtml =
+            `<div class="ms-block-body si-small" style="margin-top: 6px;">${txt(full.abundance)}${full.abundance && full.limiting_factors ? ' ' : ''}${txt(full.limiting_factors)}</div>`;
+        const fallbackHtml =
+            `<div class="ms-block-body si-small" style="margin-top: 6px;">Поле «Лимитирующие факторы» в базе пусто — ориентируйтесь на статус вида.</div>`;
+        blocks.push({
+            title: null,
+            html: `
+                <details class="ms-details">
+                    <summary class="ms-block-title">Численность и лимитирующие факторы</summary>
+                    ${(full && (full.abundance || full.limiting_factors)) ? abundanceHtml : fallbackHtml}
+                </details>
+            `
+        });
 
         MiniScroll.show({
             modalId: 'status-modal',
