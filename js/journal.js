@@ -14,6 +14,10 @@ const Journal = {
         return window.matchMedia('(max-width: 1024px)').matches;
     },
 
+    // id последней записи, для которой открывали карту — её метки
+    // подсвечиваются в окне карты немного другим цветом.
+    highlightedRecordId: null,
+
     init() {
         // Безопасная привязка кнопок
         const bind = (id, event, fn) => {
@@ -28,6 +32,25 @@ const Journal = {
             else this.open();
         });
         bind('journal-close', 'click', () => this.close());
+
+        // Мобильно-планшетная панель над карточками: «🗺 Открыть карту»
+        const openMapBtn = document.getElementById('journal-open-map-btn');
+        if (openMapBtn) {
+            openMapBtn.addEventListener('click', () => {
+                this.highlightedRecordId = null; // без привязки к карточке
+                this.openMapOverlay();
+            });
+        }
+
+        // Мобильно-планшетный дубль кнопки «Поставить метку» (вверху
+        // дневника, перед карточками). Ведёт себя как оригинальная кнопка.
+        const pinBtnMob = document.getElementById('journal-add-pin-btn-mob');
+        if (pinBtnMob) {
+            pinBtnMob.addEventListener('click', () => {
+                const orig = document.getElementById('journal-add-pin-btn');
+                if (orig) orig.click(); // одна логика — через исходную кнопку
+            });
+        }
 
         // Мобильно-планшетное окно карты: кнопка закрытия и клик по фону
         bind('journal-map-overlay-close', 'click', () => this.closeMapOverlay());
@@ -59,6 +82,7 @@ const Journal = {
                 pinBtn.classList.toggle('active', this.isPinMode);
                 mapContainer.classList.toggle('pin-mode', this.isPinMode);
                 pinBtn.textContent = this.isPinMode ? '❌ Отменить' : '📍 Поставить метку';
+                this.syncPinButtons(this.isPinMode);
 
                 // Мобильно-планшетная версия: карта спрятана — включение
                 // режима меток должно показать окно карты.
@@ -139,10 +163,23 @@ const Journal = {
         }
     },
 
-    // Подсветка кнопки «Дневник» в меню как активной, пока дневник открыт
+    // Подсветка кнопки «Дневник» в меню как активной, пока дневник открыт.
+    // В мобильно-планшетной версии при этом скрываются ⟳ (обновление карты)
+    // и ☰ (вызов бокового меню) — для этого на <html> вешается класс
+    // journal-open (CSS ≤1024px). На десктопе класс безвреден.
     setMenuActive(isActive) {
         const btn = document.getElementById('btn-journal');
         if (btn) btn.classList.toggle('active', !!isActive);
+        document.documentElement.classList.toggle('journal-open', !!isActive);
+    },
+
+    // Синхронизация текстов/состояния мобильной кнопки-дубля
+    syncPinButtons(active) {
+        const mob = document.getElementById('journal-add-pin-btn-mob');
+        if (mob) {
+            mob.textContent = active ? '❌ Отменить' : '📍 Поставить метку';
+            mob.classList.toggle('active', !!active);
+        }
     },
 
     // ============================================================
@@ -160,7 +197,7 @@ const Journal = {
             overlay.className = 'hidden';
             overlay.innerHTML = `
                 <div class="jmo-inner">
-                    <button id="journal-map-overlay-close" type="button" aria-label="Закрыть карту">✕</button>
+                    <button id="journal-map-overlay-close" type="button" aria-label="Закрыть карту и вернуться в дневник">⟵</button>
                     <div class="jmo-body"></div>
                 </div>`;
             document.body.appendChild(overlay);
@@ -171,10 +208,12 @@ const Journal = {
         return overlay;
     },
 
-    openMapOverlay() {
+    openMapOverlay(recordId) {
         if (!this.isCompactLayout()) return; // на десктопе карта и так видна
         const overlay = this.ensureMapOverlay();
         if (!overlay) return;
+        // Метки этой записи будут отличаться цветом в окне карты
+        this.highlightedRecordId = (recordId !== undefined) ? recordId : null;
         overlay.classList.remove('hidden');
         document.documentElement.classList.add('journal-map-open');
         this.renderMarkers();
@@ -215,6 +254,7 @@ const Journal = {
             pinBtn.classList.remove('active');
             pinBtn.textContent = '📍 Поставить метку';
         }
+        this.syncPinButtons(false);
         if (finishBtn) {
             finishBtn.classList.add('hidden');
         }
@@ -239,7 +279,7 @@ const Journal = {
     close() {
         const modal = document.getElementById('journal-modal');
         if (modal) modal.classList.add('hidden');
-        this.setMenuActive(false);
+        this.setMenuActive(false); // снимает и подсветку, и html.journal-open
         this.closeMapOverlay();
         // Возвращаем карту в поток — на десктопе она должна быть видна
         this.restoreMapWrap();
@@ -349,6 +389,7 @@ const Journal = {
         const pinBtn = document.getElementById('journal-add-pin-btn');
         pinBtn.classList.remove('active');
         pinBtn.textContent = '📍 Поставить метку';
+        this.syncPinButtons(false);
         document.getElementById('journal-map-container').classList.remove('pin-mode');
 
         this.renderMarkers();
@@ -422,6 +463,11 @@ const Journal = {
                     rec.pins.forEach(pin => {
                         const el = document.createElement('div');
                         el.className = 'journal-marker saved';
+                        // Метки записи, из которой открыли карту (моб. окно),
+                        // немного отличаются цветом (золотой ореол)
+                        if (this.highlightedRecordId !== null && rec.id === this.highlightedRecordId) {
+                            el.classList.add('from-card');
+                        }
                         el.style.left = pin.x + '%';
                         el.style.top = pin.y + '%';
                         el.textContent = '?';
@@ -433,8 +479,12 @@ const Journal = {
                             e.stopPropagation();
                             const card = document.querySelector(`.journal-card[data-id="${rec.id}"]`);
                             if (card) {
+                                // В мобильно-планшетной версии карта открыта
+                                // окном поверх дневника — сначала закрываем
+                                // окно, затем подсвечиваем нужную карточку.
+                                this.closeMapOverlay();
+                                card.classList.add('expanded');
                                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                // Подсвечиваем карточку
                                 card.style.boxShadow = '0 0 15px var(--gold)';
                                 setTimeout(() => card.style.boxShadow = '', 1000);
                             }
@@ -508,7 +558,21 @@ const Journal = {
                 <h4>${safeName}</h4>
                 <div class="j-comment">${safeComment}</div>
                 ${photosHtml}
+                <div class="j-map-btn-slot"></div>
             `;
+
+            // Кнопка «Открыть карту» — только в развёрнутой карточке и
+            // только в мобильно-планшетной версии (десктоп: карта и так видна).
+            const mapBtnWrap = card.querySelector('.j-map-btn-slot');
+            const mapBtn = document.createElement('button');
+            mapBtn.type = 'button';
+            mapBtn.className = 'journal-open-map-btn is-hidden';
+            mapBtn.textContent = '🗺 Открыть карту';
+            mapBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openMapOverlay(rec.id); // метки этой записи — другим цветом
+            });
+            mapBtnWrap.appendChild(mapBtn);
 
             card.querySelector('.j-delete').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -528,7 +592,9 @@ const Journal = {
                 });
             });
 
-            // При клике на карточку - разворачиваем текст И мигают все её маркеры на карте
+            // При клике на карточку - РАЗВОРАЧИВАЕМ запись (и мигают её
+            // маркеры, если карта открыта). Карту открывает отдельная
+            // кнопка «🗺 Открыть карту» внутри развёрнутой карточки.
             card.addEventListener('click', (e) => {
                 // Игнорируем клик по крестику или фото
                 if (e.target.closest('.j-delete') || e.target.closest('.journal-thumb')) return;
@@ -536,13 +602,7 @@ const Journal = {
                 // 1. Разворачиваем/сворачиваем текст
                 card.classList.toggle('expanded');
 
-                // 2. Мобильно-планшетная версия: карта спрятана — клик по
-                //    карточке открывает её как отдельное окно поверх страницы.
-                if (this.isCompactLayout()) {
-                    this.openMapOverlay();
-                }
-
-                // 3. Подсвечиваем маркеры (только если они есть на карте)
+                // 2. Подсвечиваем маркеры (только если они есть на карте)
                 const markers = document.querySelectorAll(`.journal-marker[data-record-id="${rec.id}"]`);
                 if (markers.length > 0) {
                     markers.forEach(m => {

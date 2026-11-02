@@ -2033,6 +2033,12 @@ body.game-end-active #latin-modal .quiz-top-controls {
   }
 }
 
+/* Верхняя панель «Поставить метку / Открыть карту» в дневнике —
+   только для мобильно-планшетной версии (в блоке ≤1024px ниже). */
+.journal-top-actions {
+  display: none;
+}
+
 /* ============================================================
    ФИНАЛЬНЫЙ МОБИЛЬНО-ПЛАНШЕТНЫЙ БЛОК (≤1024px) — КАРТА И ДНЕВНИК
    ------------------------------------------------------------
@@ -2162,6 +2168,72 @@ body.game-end-active #latin-modal .quiz-top-controls {
     -webkit-line-clamp: unset;
   }
 
+  /* --- 3) Верхняя панель дневника перед карточками (≤1024px):
+     «Поставить метку» и «Открыть карту». На десктопе скрыта. --- */
+  .journal-top-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .journal-top-actions button {
+    padding: 8px 14px;
+    font-family: 'Georgia', serif;
+    font-size: 14px;
+    cursor: pointer;
+    background: var(--gold-soft);
+    border: 1px solid var(--gold-deep);
+    border-radius: 2px;
+    color: var(--dark-green);
+    font-weight: bold;
+    transition: all 0.2s;
+  }
+
+  .journal-top-actions button.active {
+    background: var(--red-dark);
+    border-color: #521414;
+    color: #fff;
+  }
+
+  /* Кнопка «🗺 Открыть карту» внутри РАЗВЁРНУТОЙ карточки записи */
+  .journal-open-map-btn.is-hidden {
+    display: none;
+  }
+
+  .journal-card .journal-open-map-btn {
+    margin-top: 8px;
+    padding: 7px 12px;
+    font-family: 'Georgia', serif;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--gold-soft);
+    border: 1px solid var(--gold-deep);
+    border-radius: 2px;
+    color: var(--dark-green);
+    font-weight: bold;
+  }
+
+  .journal-card .journal-open-map-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* Метки записи, из которой открыли окно карты, — немного другим
+     цветом (золотой ореол), чтобы отличаться от остальных меток. */
+  .journal-marker.from-card {
+    background: var(--red-dark);
+    box-shadow: 0 0 0 3px rgba(212, 180, 90, 0.85), 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Когда дневник открыт (html.journal-open) на мобильных/планшетах
+     кнопки ⟳ (обновление карты) и ☰ (вызов меню) скрыты; возврат в
+     исходное состояние — кнопкой ✕ шапки самого дневника. */
+  html.journal-open .mobile-zoom-controls,
+  html.journal-open #btn-sidebar-toggle {
+    display: none !important;
+  }
+
   /* Карта на мобильных/планшетах скрыта до вызова окном */
   .journal-map-wrap {
     display: none;
@@ -2214,18 +2286,21 @@ body.game-end-active #latin-modal .quiz-top-controls {
     max-height: calc(100dvh - 110px);
   }
 
+  /* Кнопка возврата из окна карты — как ☰: круглая 46px, тот же
+     градиент/рамка/цвет/тень, слева сверху (окно перекрывает topbar,
+     поэтому отступы повторяем: calc(10px + safe-area) / 12px). */
   #journal-map-overlay-close {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: calc(10px + env(safe-area-inset-top));
+    left: 12px;
     z-index: 2;
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     border: 1px solid var(--gold-deep);
     background: linear-gradient(180deg, var(--green-light), var(--dark-green));
     color: var(--gold-soft);
-    font-size: 18px;
+    font-size: 20px;
     line-height: 1;
     box-shadow: var(--shadow-deep);
     cursor: pointer;
