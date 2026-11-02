@@ -2104,6 +2104,52 @@ body.game-end-active #latin-modal .quiz-top-controls {
      но и без JS список идёт первым, а карта — последней. */
   #journal-modal .journal-content {
     order: 2;
+    padding-top: 64px; /* запас под фиксированный ✕ — кнопки панели
+                          никогда не заезжают под него, даже если
+                          сами перенеслись на вторую строку */
+  }
+
+  /* Верхняя панель дневника (кнопки «Поставить метку / Открыть карту»)
+     немного опускаем от строки заголовка. */
+  .journal-top-actions {
+    margin-top: 10px;
+  }
+
+  /* --- 2b) Фиксированный ✕ закрытия дневника — всегда в правом верхнем
+     углу окна, независимо от того, перенеслись ли кнопки шапки на
+     вторую строку. На десктопе (>1024px) не применяется. --- */
+  html.journal-open #journal-close.journal-close-btn {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top));
+    right: 12px;
+    z-index: 2100;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--gold-deep);
+    background: linear-gradient(180deg, var(--green-light), var(--dark-green));
+    color: var(--gold-soft);
+    font-size: 20px;
+    line-height: 1;
+    box-shadow: var(--shadow-deep);
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: none;
+  }
+
+  html.journal-open #journal-close.journal-close-btn:hover {
+    transform: none;
+    background: linear-gradient(180deg, var(--green-light), var(--dark-green));
+    color: #fff;
+  }
+
+  /* Форма «Новое наблюдение» должна быть поверх окна карты (z 2500),
+     иначе при постановке меток из мобильного окна она не видна. */
+  html.journal-map-open #journal-form-modal {
+    z-index: 2600;
   }
 
   .journal-map-wrap {
@@ -2169,7 +2215,8 @@ body.game-end-active #latin-modal .quiz-top-controls {
   }
 
   /* --- 3) Верхняя панель дневника перед карточками (≤1024px):
-     «Поставить метку» и «Открыть карту». На десктопе скрыта. --- */
+     «Поставить метку», «Открыть карту» и «Описать вид» (появляется,
+     когда поставлена хотя бы одна временная метка). На десктопе скрыта. --- */
   .journal-top-actions {
     display: flex;
     gap: 8px;
@@ -2197,26 +2244,60 @@ body.game-end-active #latin-modal .quiz-top-controls {
     color: #fff;
   }
 
-  /* Кнопка «🗺 Открыть карту» внутри РАЗВЁРНУТОЙ карточки записи */
-  .journal-open-map-btn.is-hidden {
+  .journal-top-actions button.finish {
+    background: var(--red-dark);
+    border-color: #521414;
+    color: #fff;
+  }
+
+  .journal-top-actions button.hidden {
     display: none;
   }
 
+  /* Кнопки управления оригинальной панели над картой — в мобильно-
+     планшетной версии не нужны (их дубли лежат вверху дневника), а в
+     окне карты они перекладываются вместе с контейнером и могут
+     отъедать место у карты. Скрываем их целиком. */
+  #journal-modal .journal-map-wrap > div:first-child {
+    display: none !important;
+  }
+
+  /* Компактная кнопка «🗺 Открыть карту» рядом с крестиком удаления
+     в каждой карточке записи. */
+  .journal-card {
+    position: relative;
+  }
+
+  .journal-card .j-card-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .journal-card .j-delete {
+    position: static;
+    opacity: 0.7;
+    padding: 2px 4px;
+    font-size: 14px;
+  }
+
   .journal-card .journal-open-map-btn {
-    margin-top: 8px;
-    padding: 7px 12px;
-    font-family: 'Georgia', serif;
-    font-size: 13px;
-    cursor: pointer;
-    background: var(--gold-soft);
+    background: none;
     border: 1px solid var(--gold-deep);
     border-radius: 2px;
     color: var(--dark-green);
-    font-weight: bold;
+    font-size: 14px;
+    line-height: 1;
+    padding: 2px 5px;
+    cursor: pointer;
   }
 
   .journal-card .journal-open-map-btn:active {
-    transform: scale(0.96);
+    transform: scale(0.92);
+    background: var(--gold-soft);
   }
 
   /* Метки записи, из которой открыли окно карты, — немного другим

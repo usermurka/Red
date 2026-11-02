@@ -52,6 +52,18 @@ const Journal = {
             });
         }
 
+        // Мобильно-планшетный дубль кнопки «Описать вид» в панели над
+        // карточками. В окне карты originals скрыты (CSS), поэтому
+        // finish вызывается напрямую.
+        const finishBtnMob = document.getElementById('journal-finish-pins-btn-mob');
+        if (finishBtnMob) {
+            finishBtnMob.addEventListener('click', () => {
+                if (this.pendingPins.length === 0) return;
+                this.currentDescribingIndex = 0;
+                this.openForm();
+            });
+        }
+
         // Мобильно-планшетное окно карты: кнопка закрытия и клик по фону
         bind('journal-map-overlay-close', 'click', () => this.closeMapOverlay());
         const mapOverlay = document.getElementById('journal-map-overlay');
@@ -90,6 +102,12 @@ const Journal = {
                     this.openMapOverlay();
                 }
 
+                // Панель над карточками: показываем «Описать вид», когда
+                // есть хотя бы одна временная метка (и прячем в остальных
+                // случаях — дубли в окне карты не видны, панель и так
+                // скрыта CSS в режиме карты, но синхронизируем всегда).
+                this.updateFinishButtons();
+
                 this.renderMarkers(); // <-- Просто перерисовываем, функция сама скроет/покажет
 
                 if (!this.isPinMode) {
@@ -116,6 +134,7 @@ const Journal = {
 
                 // Показываем кнопку "Описать вид", если есть хоть одна точка
                 finishBtn.classList.remove('hidden');
+                this.updateFinishButtons();
             });
 
             // Кнопка "Описать вид" (завершение)
@@ -180,6 +199,14 @@ const Journal = {
             mob.textContent = active ? '❌ Отменить' : '📍 Поставить метку';
             mob.classList.toggle('active', !!active);
         }
+    },
+
+    // Видимость кнопки «Описать вид» в мобильно-планшетной панели над
+    // карточками — появляется, когда есть хотя бы одна временная метка.
+    updateFinishButtons() {
+        const mobFinish = document.getElementById('journal-finish-pins-btn-mob');
+        if (!mobFinish) return;
+        mobFinish.classList.toggle('hidden', this.pendingPins.length === 0);
     },
 
     // ============================================================
@@ -258,6 +285,7 @@ const Journal = {
         if (finishBtn) {
             finishBtn.classList.add('hidden');
         }
+        this.updateFinishButtons();
         if (mapContainer) {
             mapContainer.classList.remove('pin-mode');
         }
@@ -382,6 +410,7 @@ const Journal = {
         // Очищаем всё
         this.pendingPins = [];
         document.getElementById('journal-finish-pins-btn').classList.add('hidden');
+        this.updateFinishButtons();
         this.closeForm();
 
         // Возвращаем кнопку "Поставить метку" в исходное состояние
@@ -391,6 +420,11 @@ const Journal = {
         pinBtn.textContent = '📍 Поставить метку';
         this.syncPinButtons(false);
         document.getElementById('journal-map-container').classList.remove('pin-mode');
+        // Мобильно-планшетная версия: после сохранения закрываем окно карты —
+        // игрок возвращается к списку записей (новая запись уже вверху).
+        if (this.isCompactLayout()) {
+            this.closeMapOverlay();
+        }
 
         this.renderMarkers();
         this.renderList();
@@ -554,25 +588,26 @@ const Journal = {
             const safeComment = (window.escapeHtml ? window.escapeHtml(rawComment) : rawComment).replace(/\n/g, '<br>');
 
             card.innerHTML = `
-                <button class="j-delete" title="Удалить">✕</button>
+                <div class="j-card-actions">
+                    <button class="journal-open-map-btn" type="button" title="Открыть карту с метками этой записи">🗺</button>
+                    <button class="j-delete" title="Удалить">✕</button>
+                </div>
                 <h4>${safeName}</h4>
                 <div class="j-comment">${safeComment}</div>
                 ${photosHtml}
-                <div class="j-map-btn-slot"></div>
             `;
 
-            // Кнопка «Открыть карту» — только в развёрнутой карточке и
-            // только в мобильно-планшетной версии (десктоп: карта и так видна).
-            const mapBtnWrap = card.querySelector('.j-map-btn-slot');
-            const mapBtn = document.createElement('button');
-            mapBtn.type = 'button';
-            mapBtn.className = 'journal-open-map-btn is-hidden';
-            mapBtn.textContent = '🗺 Открыть карту';
-            mapBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openMapOverlay(rec.id); // метки этой записи — другим цветом
-            });
-            mapBtnWrap.appendChild(mapBtn);
+            // Кнопка «🗺 Открыть карту» рядом с крестиком удаления — в каждой
+            // карточке. В мобильно-планшетной версии открывает окно карты и
+            // подсвечивает метки этой записи (десктоп: карта и так видна,
+            // кнопка скрыта CSS).
+            const mapBtn = card.querySelector('.journal-open-map-btn');
+            if (mapBtn) {
+                mapBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.openMapOverlay(rec.id); // метки этой записи — другим цветом
+                });
+            }
 
             card.querySelector('.j-delete').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -594,10 +629,10 @@ const Journal = {
 
             // При клике на карточку - РАЗВОРАЧИВАЕМ запись (и мигают её
             // маркеры, если карта открыта). Карту открывает отдельная
-            // кнопка «🗺 Открыть карту» внутри развёрнутой карточки.
+            // кнопка «🗺» рядом с крестиком удаления.
             card.addEventListener('click', (e) => {
-                // Игнорируем клик по крестику или фото
-                if (e.target.closest('.j-delete') || e.target.closest('.journal-thumb')) return;
+                // Игнорируем клик по кнопкам в шапке карточки или фото
+                if (e.target.closest('.j-card-actions') || e.target.closest('.journal-thumb')) return;
 
                 // 1. Разворачиваем/сворачиваем текст
                 card.classList.toggle('expanded');
