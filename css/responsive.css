@@ -2124,34 +2124,58 @@ body.game-end-active #latin-modal .quiz-top-controls {
   }
 
   /* --- 2b) Единый ✕ закрытия дневника (мобильно-планшетная версия):
-     маленький, аккуратный, прижат к правому верхнему углу окна и
-     стоит НА ТОЙ ЖЕ СТРОКЕ, что «💾 Сохранить» / «📂 Загрузить» —
-     actions-блок шапки растянут на всю ширину, ✕ прижат margin-left:
-     auto, поэтому даже при переносе кнопок на вторую строку крестик
-     остаётся справа вверху и ничего не накрывает. Второй крестик из
-     разметки удалён. На десктопе (>1024px) правила не действуют —
-     ✕ стоит в строке как раньше. --- */
+     маленький аккуратный кружок 26px, стоит В ОДНОЙ СТРОКЕ с
+     заголовком и «💾 Сохранить / 📂 Загрузить» — перенос запрещён
+     (flex-wrap: nowrap), при нехватке места заголовок усекается
+     многоточием. Поворот ✕ на 90° из style.css отключён — раньше
+     «залипший» тач-hover превращал круглую рамку в «овал». Второй
+     крестик из разметки удалён. На десктопе (>1024px) правила не
+     действуют — ✕ стоит в строке как раньше. --- */
   .journal-titlebar {
     position: relative;
     padding: calc(8px + env(safe-area-inset-top)) 12px 10px !important;
+    /* Одна строка: заголовок слева, «Сохранить / Загрузить / ✕» справа.
+       Перенос запрещён — заголовок при нехватке места усекается. */
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .journal-titlebar h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
   }
 
   .journal-titlebar-actions {
-    width: 100%;
-    justify-content: flex-start;
-    row-gap: 8px;
+    /* Не переносим на вторую строку: кнопки сжимаются до текста,
+       заголовок усекается — вся шапка всегда в одну линию. */
+    flex-wrap: nowrap;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+
+  /* Одна строка без переноса: min-width из среднего брейкпоинта
+     (92px) здесь отменён — кнопки сжимаются до текста, а заголовок
+     усечён многоточием, поэтому «Сохранить / Загрузить / ✕» всегда
+     помещаются рядом с ним и не сползают на вторую строку. */
+  .journal-titlebar-actions button {
+    min-width: 0;
+    white-space: nowrap;
   }
 
   .journal-titlebar-actions #journal-close.journal-close-btn {
     display: inline-flex !important; /* больше ничего не скрываем */
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     margin-left: auto;   /* прижимает к правому краю той же строки */
     margin-right: 0;
     flex: 0 0 auto;
-    font-size: 15px !important;
+    font-size: 13px !important;
     line-height: 1;
     padding: 0 !important;
     border-radius: 50%;
@@ -2159,6 +2183,18 @@ body.game-end-active #latin-modal .quiz-top-controls {
     background: rgba(0, 0, 0, 0.18);
     color: var(--gold-soft);
     box-shadow: none;
+    /* На тач-устройствах :hover «залипает», а style.css крутит ✕
+       на 90° — круглая рамка превращалась в «огромный овал».
+       Отключаем поворот и любые трансформации. */
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .journal-titlebar-actions #journal-close.journal-close-btn:hover,
+  .journal-titlebar-actions #journal-close.journal-close-btn:active {
+    transform: none !important;
+    background: rgba(0, 0, 0, 0.18);
+    color: var(--gold-soft);
   }
 
   /* Форма «Новое наблюдение» должна быть поверх окна карты (z 2500),
