@@ -202,7 +202,10 @@
         <div class="mobile-zoom-controls">
           <button id="btn-zoom-in" type="button" aria-label="Приблизить">＋</button>
           <button id="btn-zoom-out" type="button" aria-label="Отдалить">－</button>
-          <button id="btn-zoom-reset" type="button" aria-label="Сбросить масштаб">⤢</button>
+          <!-- Круглая стрелка «как обновление»: на мобильных/планшетах это
+               единственная кнопка управления картой — вернуть карту на весь
+               экран (сброс зума и панорамирования). -->
+          <button id="btn-zoom-reset" type="button" aria-label="Вернуть карту на весь экран">⟳</button>
         </div>
       </div>
       <div id="tooltip">
@@ -392,7 +395,13 @@
         <div class="journal-titlebar-actions">
           <button id="journal-save-btn" title="Сохранить в файл">💾 Сохранить</button>
           <button id="journal-load-btn" title="Загрузить из файла">📂 Загрузить</button>
+          <!-- Единая кнопка закрытия ✕: на десктопе стоит в этой строке,
+               в мобильно-планшетной версии (≤1024px) прижимается CSS-ом
+               к правому верхнему углу окна на той же строке, что и
+               «Сохранить/Загрузить» (см. финальный блок responsive.css).
+               Второй крестик не нужен — убран во избежание наложений. -->
           <button id="journal-close" class="journal-close-btn">✕</button>
+
       
           <!-- Скрытое поле для выбора файла -->
           <input type="file" id="journal-load-input" accept=".json" style="display: none;">
@@ -421,6 +430,14 @@
           </div>
         </div>
     
+          <!-- Мобильно-планшетная панель: те же кнопки, что над картой,
+               но вверху дневника, перед карточками (видна только ≤1024px) -->
+          <div class="journal-top-actions" id="journal-top-actions">
+            <button id="journal-add-pin-btn-mob" type="button">📍 Поставить метку</button>
+            <button id="journal-open-map-btn" type="button">🗺 Открыть карту</button>
+            <button id="journal-finish-pins-btn-mob" type="button" class="finish hidden">📝 Описать вид</button>
+          </div>
+
           <!-- Правая часть: Список записей -->
           <div class="journal-sidebar">
             <div class="journal-list" id="journal-list">

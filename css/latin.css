@@ -280,7 +280,9 @@
 @media (max-width: 480px) {
     .latin-photo-card { width: 84px; height: 84px; }
     .latin-photos { gap: 6px; margin-top: 12px; }
-    .latin-photo-back { font-size: 22px; }
+    /* Надпись «КРАСНАЯ КНИГА» на рубашке была слишком крупной для
+       карточки 84px — уменьшаем до аккуратного размера. */
+    .latin-photo-back { font-size: 11px; letter-spacing: 0.5px; }
 }
 
 /* ===== Кнопка «Продолжить» между раундами ===== */

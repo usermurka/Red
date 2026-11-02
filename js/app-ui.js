@@ -78,7 +78,7 @@ Object.assign(App, {
         this.syncHighlightedFromFilters();
 
         // Открываем справочник
-        this.openSpeciesPanel('browse');
+        this.openSpeciesPanel('browse', { autoOpen: false });
       });
 
       container.appendChild(btn);
@@ -341,7 +341,7 @@ Object.assign(App, {
     this.syncHighlightedFromFilters();
 
     // Обновляем справочник
-    this.openSpeciesPanel('browse');
+    this.openSpeciesPanel('browse', { autoOpen: false });
   },
 
   // Заглушка (чекбоксы удалены, управление только через подменю)

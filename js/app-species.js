@@ -10,6 +10,17 @@ const xyToGeo = window.xyToGeo;
 
 Object.assign(App, {
   openSpeciesPanel(mode = 'pick', options = {}) {
+    // --- Автооткрытие справочника: только на десктопе ---
+    // На планшете и мобильных (<1024px) фильтры боковой панели (слои,
+    // статусы) НЕ должны автоматически открывать справочник видов —
+    // иначе полноэкранная шторка перекрывает карту сразу после настройки.
+    // Явные открытия (лупа в тултипе, кнопки «➕ Добавить вид», поля
+    // модалок, кнопка «Список видов») помечаются autoOpen:false и
+    // работают как раньше. Сами фильтры при этом продолжают применяться.
+    if (!options.autoOpen && !options.userGesture) {
+      if (window.matchMedia('(max-width: 1024px)').matches) return;
+    }
+
     this.speciesPanelMode = mode;
     const focusSpeciesId = options.focusSpeciesId || null;
 
