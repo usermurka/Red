@@ -128,6 +128,15 @@ Object.assign(App, {
   // ВЫПАДАЮЩЕЕ ПОДМЕНЮ СЛОЯ (категории)
   // ============================================================
 
+  // Компактный режим подменю: мобильно-планшетная вёрстка (боковая
+  // панель — выезжающая) ИЛИ сенсорное устройство с широким экраном.
+  // В этом режиме меню раскрывается прямо внутри боковой панели,
+  // а не «поверх карты». Десктоп (мышь + широкий экран) не затронут.
+  _isCompactLayerMenu() {
+    if (window.matchMedia('(max-width: 820px)').matches) return true;
+    return window.matchMedia('(pointer: coarse)').matches;
+  },
+
   // Обновляет классы .active у открытого подменю без его пересоздания
   updateLayerSubmenuHighlight() {
     const menu = document.getElementById('layer-submenu');
@@ -186,8 +195,15 @@ Object.assign(App, {
       this.buildSubmenuLevels(menu, group, catKey);
     }
 
-    document.body.appendChild(menu);
-    this.positionLayerSubmenu(menu, rowEl);
+    // Мобильно-планшетная версия: меню раскрывается компактно прямо
+    // внутри боковой панели — сразу под строкой слоя (без position:fixed).
+    if (this._isCompactLayerMenu()) {
+      menu.classList.add('layer-submenu--compact');
+      rowEl.parentNode.insertBefore(menu, rowEl.nextSibling);
+    } else {
+      document.body.appendChild(menu);
+      this.positionLayerSubmenu(menu, rowEl);
+    }
 
     // Закрытие по клику вне меню
     setTimeout(() => {
@@ -212,6 +228,9 @@ Object.assign(App, {
   // Позиционирует меню справа от строки слоя
   positionLayerSubmenu(menu, rowEl) {
     if (!rowEl) return;
+    // Компактный (мобильно-планшетный) режим: меню находится внутри
+    // боковой панели в обычном потоке — позиционирование не нужно.
+    if (menu.classList.contains('layer-submenu--compact')) return;
     const r = rowEl.getBoundingClientRect();
     const menuW = 280;
     let left = r.right + 4;
