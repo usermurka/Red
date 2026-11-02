@@ -466,12 +466,10 @@ body {
   }
 
   .journal-titlebar {
-    /* Правый край шапки зарезервирован под фиксированный ✕ (см. блок
-       ≤1024px ниже): reserve = ✕(46) + right(12) + зазор(8) = 66px.
-       Верхний паддинг увеличен, чтобы вторая строка кнопок
-       («💾 Сохранить» / «📂 Загрузить») при переносе стартовала НИЖЕ
-       уровня крестика и не залезала под него. */
-    padding: calc(56px + env(safe-area-inset-top)) 66px 10px 12px;
+    /* Финальная компоновка шапки ≤1024px — в финальном блоке внизу
+       файла (✕ в углу той же строки, что «Сохранить/Загрузить»).
+       Здесь только базовые адаптивные отступы без резерва под ✕. */
+    padding: 10px 12px;
     flex-wrap: wrap;
     gap: 8px;
   }
@@ -2116,9 +2114,7 @@ body.game-end-active #latin-modal .quiz-top-controls {
      но и без JS список идёт первым, а карта — последней. */
   #journal-modal .journal-content {
     order: 2;
-    padding-top: 8px; /* фиксированный ✕ закрытия больше не вырезает
-                        «дыру» из контента — он лежит в правом верхнем
-                        углу поверх шапки окна (см. 2b ниже) */
+    padding-top: 8px;
   }
 
   /* Верхняя панель дневника (кнопки «Поставить метку / Открыть карту»)
@@ -2127,40 +2123,42 @@ body.game-end-active #latin-modal .quiz-top-controls {
     margin-top: 6px;
   }
 
-  /* --- 2b) Фиксированный ✕ закрытия дневника — всегда в правом верхнем
-     углу окна, независимо от того, перенеслись ли кнопки шапки на
-     вторую строку. Отделён от «📂 Загрузить»: рендерится вне потока
-     (position:fixed), а исходный ✕ из строки кнопок скрывается, чтобы
-     два элемента не пересекались и кнопка загрузки оставалась клика-
-     бельной целиком. На десктопе (>1024px) мобильный ✕ скрыт, шапочный
-     ✕ работает как раньше. --- */
-  html.journal-open .journal-titlebar-actions #journal-close {
-    display: none !important;
+  /* --- 2b) Единый ✕ закрытия дневника (мобильно-планшетная версия):
+     маленький, аккуратный, прижат к правому верхнему углу окна и
+     стоит НА ТОЙ ЖЕ СТРОКЕ, что «💾 Сохранить» / «📂 Загрузить» —
+     actions-блок шапки растянут на всю ширину, ✕ прижат margin-left:
+     auto, поэтому даже при переносе кнопок на вторую строку крестик
+     остаётся справа вверху и ничего не накрывает. Второй крестик из
+     разметки удалён. На десктопе (>1024px) правила не действуют —
+     ✕ стоит в строке как раньше. --- */
+  .journal-titlebar {
+    position: relative;
+    padding: calc(8px + env(safe-area-inset-top)) 12px 10px !important;
   }
 
-  .journal-close-mob-btn {
-    display: none; /* по умолчанию (десктоп) — не существует в макете */
+  .journal-titlebar-actions {
+    width: 100%;
+    justify-content: flex-start;
+    row-gap: 8px;
   }
 
-  html.journal-open .journal-close-mob-btn {
-    position: fixed;
-    top: calc(10px + env(safe-area-inset-top));
-    right: 12px;
-    z-index: 2100;
-    display: flex;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    border: 1px solid var(--gold-deep);
-    background: linear-gradient(180deg, var(--green-light), var(--dark-green));
-    color: var(--gold-soft);
-    font-size: 20px;
-    line-height: 1;
-    box-shadow: var(--shadow-deep);
-    padding: 0;
-    cursor: pointer;
+  .journal-titlebar-actions #journal-close.journal-close-btn {
+    display: inline-flex !important; /* больше ничего не скрываем */
     align-items: center;
     justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;   /* прижимает к правому краю той же строки */
+    margin-right: 0;
+    flex: 0 0 auto;
+    font-size: 15px !important;
+    line-height: 1;
+    padding: 0 !important;
+    border-radius: 50%;
+    border: 1px solid rgba(184, 145, 47, 0.55) !important;
+    background: rgba(0, 0, 0, 0.18);
+    color: var(--gold-soft);
+    box-shadow: none;
   }
 
   /* Форма «Новое наблюдение» должна быть поверх окна карты (z 2500),
@@ -2422,10 +2420,22 @@ body.game-end-active #latin-modal .quiz-top-controls {
   /* --- 4) Десктоп (>1024px): значок «🗺» в карточках записей не нужен —
      карта дневника и так видна рядом со списком. Скрываем целиком
      (кнопки «Поставить метку / Открыть карту» над карточками уже
-     скрыты базовым правилом .journal-top-actions{display:none}). --- */
+     скрыты базовым правилом .journal-top-actions{display:none}).
+     Дополнительно на десктопе скрывается второй крестик
+     (#journal-close-mob), если он остался в закешированной разметке. --- */
   @media (min-width: 1025px) {
-    .journal-card .j-card-actions .journal-open-map-btn {
+    .journal-card .j-card-actions .journal-open-map-btn,
+    #journal-close-mob,
+    .journal-close-mob-btn {
       display: none !important;
     }
   }
+}
+
+/* Второй (мобильный дублирующий) крестик закрытия дневника больше не
+   используется нигде — скрыт на всех разрешениях как страховка от
+   закешированной старой разметки. */
+#journal-close-mob,
+.journal-close-mob-btn {
+  display: none !important;
 }

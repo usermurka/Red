@@ -395,13 +395,13 @@
         <div class="journal-titlebar-actions">
           <button id="journal-save-btn" title="Сохранить в файл">💾 Сохранить</button>
           <button id="journal-load-btn" title="Загрузить из файла">📂 Загрузить</button>
+          <!-- Единая кнопка закрытия ✕: на десктопе стоит в этой строке,
+               в мобильно-планшетной версии (≤1024px) прижимается CSS-ом
+               к правому верхнему углу окна на той же строке, что и
+               «Сохранить/Загрузить» (см. финальный блок responsive.css).
+               Второй крестик не нужен — убран во избежание наложений. -->
           <button id="journal-close" class="journal-close-btn">✕</button>
 
-          <!-- Фиксированный ✕ закрытия дневника (мобильно-планшетная
-               версия ≤1024px): всегда в правом верхнем углу, независимо
-               от переноса кнопок шапки на вторую строку. На десктопе
-               скрыт (CSS). -->
-          <button id="journal-close-mob" class="journal-close-mob-btn" type="button" aria-label="Закрыть дневник и вернуться">✕</button>
       
           <!-- Скрытое поле для выбора файла -->
           <input type="file" id="journal-load-input" accept=".json" style="display: none;">

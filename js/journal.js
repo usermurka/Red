@@ -31,14 +31,10 @@ const Journal = {
             if (modal && !modal.classList.contains('hidden')) this.close();
             else this.open();
         });
+        // Единая кнопка закрытия ✕ (десктоп — в строке шапки, мобильно-
+        // планшетная версия — прижата CSS-ом к правому верхнему углу на
+        // той же строке, что «Сохранить/Загрузить»). Второй кнопки нет.
         bind('journal-close', 'click', () => this.close());
-
-        // Фиксированный ✕ закрытия дневника (мобильно-планшетная версия,
-        // ≤1024px): дублирует исходную кнопку шапки — одна логика.
-        const journalCloseMob = document.getElementById('journal-close-mob');
-        if (journalCloseMob) {
-            journalCloseMob.addEventListener('click', () => this.close());
-        }
 
         // Мобильно-планшетная панель над карточками: «🗺 Открыть карту»
         const openMapBtn = document.getElementById('journal-open-map-btn');
@@ -627,7 +623,7 @@ const Journal = {
 
             card.innerHTML = `
                 <div class="j-card-actions">
-                    <button class="journal-open-map-btn" type="button" title="Открыть карту с метками этой записи">🗺</button>
+                    ${this.isCompactLayout() ? '<button class="journal-open-map-btn" type="button" title="Открыть карту с метками этой записи">🗺</button>' : ''}
                     <button class="j-delete" title="Удалить">✕</button>
                 </div>
                 <h4>${safeName}</h4>
