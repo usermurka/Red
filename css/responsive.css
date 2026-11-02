@@ -466,9 +466,21 @@ body {
   }
 
   .journal-titlebar {
-    padding: 10px 12px calc(10px + env(safe-area-inset-top)) 12px;
+    /* Правый край шапки зарезервирован под фиксированный ✕ (см. блок
+       ≤1024px ниже): reserve = ✕(46) + right(12) + зазор(8) = 66px.
+       Верхний паддинг увеличен, чтобы вторая строка кнопок
+       («💾 Сохранить» / «📂 Загрузить») при переносе стартовала НИЖЕ
+       уровня крестика и не залезала под него. */
+    padding: calc(56px + env(safe-area-inset-top)) 66px 10px 12px;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  /* Кнопки шапки дневника — с минимальной шириной, чтобы текст
+     «💾 Сохранить» / «📂 Загрузить» не ломался и не «сползал». */
+  .journal-titlebar-actions button {
+    min-width: 92px;
+    justify-content: center;
   }
 
   .journal-titlebar h3 {
