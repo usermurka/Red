@@ -37,6 +37,26 @@ const FamilyGame = {
     TOTAL_ROUNDS: 5,
     ROUND_TIME: 150, // секунд на раунд (12 карточек)
 
+    // Мобильные/тач-устройства: перетаскивание HTML5-drag&drop на них
+    // работает плохо (длинный тап запускает системный drag), поэтому
+    // там draggable отключается и раскладка выполняется ДВУМЯ ТАПАМИ:
+    // тап по карточке (выделение) → тап по корзине.
+    get isTouch() {
+        if (this._isTouch === undefined) {
+            this._isTouch = (window.matchMedia &&
+                window.matchMedia('(pointer: coarse)').matches) ||
+                ('ontouchstart' in window);
+        }
+        return this._isTouch;
+    },
+
+    // Подсветка корзин, когда карточка выбрана — «теперь просто нажми
+    // на категорию» (виден режим ожидания выбора корзины).
+    refreshAwaitState() {
+        document.querySelectorAll('#family-baskets .family-basket')
+            .forEach(b => b.classList.toggle('fb-await', !!this.selectedCard));
+    },
+
     init() {
         document.getElementById('btn-family').addEventListener('click', () => this.open());
         document.getElementById('family-close').addEventListener('click', () => this.close());
@@ -249,7 +269,10 @@ const FamilyGame = {
     buildCard(item, inTray) {
         const card = document.createElement('div');
         card.className = 'family-card' + (inTray ? '' : ' fb-in-basket');
-        card.draggable = !this.lockedAfterCheck;
+        // На тач-устройствах HTML5-drag отключён: длинный тап запускал
+        // системный перетаскиватель/нативный drag картинки и «глушил»
+        // обычный клик. Раскладка — двумя тапами (см. selectCard/placeInto).
+        card.draggable = !this.lockedAfterCheck && !this.isTouch;
         card.dataset.speciesId = item.sp.id;
 
         const img = document.createElement('img');
@@ -285,19 +308,32 @@ const FamilyGame = {
         // Тап-режим (мобильные): выделить карточку, затем нажать на корзину.
         // Тап по строке в корзине — вернуть её в лоток (обработчик навешивается
         // отдельно в buildBasketRow).
-        card.addEventListener('click', () => {
-            if (this.lockedAfterCheck) return;
-            if (card.classList.contains('selected')) {
-                card.classList.remove('selected');
-                this.selectedCard = null;
-                return;
+        card.addEventListener('click', () => this.selectCard(card, item));
+        // Надёжный тач-клик: на iOS click по div с картинкой может
+        // запаздывать/теряться; реагируем на touchend сразу.
+        card.addEventListener('touchend', (e) => {
+            if (this.isTouch) {
+                e.preventDefault();
+                this.selectCard(card, item);
             }
-            const trayEl = document.getElementById('family-tray');
-            trayEl.querySelectorAll('.family-card.selected').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            this.selectedCard = item;
-        });
+        }, { passive: false });
         return card;
+    },
+
+    // Выделение/снятие выделения карточки (тап-режим раскладки).
+    selectCard(cardEl, item) {
+        if (this.lockedAfterCheck) return;
+        if (cardEl.classList.contains('selected')) {
+            cardEl.classList.remove('selected');
+            this.selectedCard = null;
+            this.refreshAwaitState();
+            return;
+        }
+        document.querySelectorAll('.family-card.selected')
+            .forEach(c => c.classList.remove('selected'));
+        cardEl.classList.add('selected');
+        this.selectedCard = item;
+        this.refreshAwaitState();
     },
 
     // Строка с названием вида — так карточка «встаёт» в зоне распределения
@@ -306,7 +342,7 @@ const FamilyGame = {
         const row = document.createElement('div');
         row.className = 'family-card fb-row';
         row.dataset.speciesId = item.sp.id;
-        row.draggable = !this.lockedAfterCheck;
+        row.draggable = !this.lockedAfterCheck && !this.isTouch;
 
         const name = document.createElement('div');
         name.className = 'fc-name fb-row-name';
@@ -323,10 +359,18 @@ const FamilyGame = {
             } catch (err) { /* noop */ }
         });
         row.addEventListener('dragend', () => row.classList.remove('dragging'));
-        row.addEventListener('click', () => {
+        const returnRow = () => {
             if (this.lockedAfterCheck) return;
             this.returnToTray(item, row);
-        });
+        };
+        row.addEventListener('click', returnRow);
+        // Надёжный тач-клик для возврата строки из корзины в лоток.
+        row.addEventListener('touchend', (e) => {
+            if (this.isTouch) {
+                e.preventDefault();
+                returnRow();
+            }
+        }, { passive: false });
         return row;
     },
 
@@ -339,6 +383,7 @@ const FamilyGame = {
         this.selectedCard = null;
         this.renderTray();
         this.refreshBasketEmptiness();
+        this.refreshAwaitState();
     },
 
     refreshBasketEmptiness() {
@@ -385,10 +430,21 @@ const FamilyGame = {
                 this.placeInto(g.key, basket, item);
             });
             // Тап-режим: выбрал карточку → тап по корзине
-            basket.addEventListener('click', (e) => {
+            const tapPlace = (e) => {
                 if (e.target.closest('.family-card')) return; // тап по самой плитке обработан ниже
                 this.placeInto(g.key, basket, this.selectedCard);
-            });
+                this.refreshAwaitState();
+            };
+            basket.addEventListener('click', tapPlace);
+            // Надёжный тач-клик по корзине (iOS может не генерировать
+            // timely click после touchend на неинтерактивных div).
+            basket.addEventListener('touchend', (e) => {
+                if (!this.isTouch) return;
+                if (e.target.closest('.family-card')) return;
+                e.preventDefault();
+                this.placeInto(g.key, basket, this.selectedCard);
+                this.refreshAwaitState();
+            }, { passive: false });
 
             zone.appendChild(basket);
         });
@@ -447,6 +503,7 @@ const FamilyGame = {
         if (cardEl) cardEl.remove();
         this.renderTray();          // обновить пустую заглушку лотка
         this.refreshBasketEmptiness();
+        this.refreshAwaitState();
     },
 
     // ---------- Проверка раскладки ----------

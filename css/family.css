@@ -365,3 +365,27 @@
         overflow-x: hidden !important;
     }
 }
+/* ===== Мобильные: раскладка ДВУМЯ ТАПАМИ вместо перетаскивания =====
+   На тач-устройствах draggable отключён в js (FamilyGame.isTouch),
+   поэтому здесь — только поведение касаний и подсветка режима
+   «карточка выбрана, ждём тапа по категории». */
+@media (max-width: 900px) {
+    .family-card,
+    .family-card img {
+        touch-action: manipulation;          /* без задержки двойного зума */
+        -webkit-user-drag: none;             /* запрет нативного drag картинки на iOS */
+        -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
+    }
+    .family-tray,
+    .family-basket {
+        touch-action: pan-y;                 /* вертикальный лифт страницы не перехватывается */
+    }
+    /* Корзины «подсвечиваются», когда карточка выбрана — значит,
+       достаточно тапа по категории, чтобы поместить вид туда. */
+    .family-basket.fb-await {
+        border-color: var(--gold-soft, #d9b45b);
+        background: rgba(212, 180, 90, 0.18);
+        box-shadow: 0 0 0 2px rgba(217, 180, 91, 0.35);
+    }
+}
