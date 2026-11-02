@@ -2475,3 +2475,47 @@ body.game-end-active #latin-modal .quiz-top-controls {
 .journal-close-mob-btn {
   display: none !important;
 }
+
+/* ============================================================
+   КОМПАКТНОЕ ВЫПАДАЮЩЕЕ ПОДМЕНЮ СЛОЁВ (мобильно-планшетная версия)
+   ------------------------------------------------------------
+   Появляется, когда JS добавляет класс .layer-submenu--compact
+   (см. App._isCompactLayerMenu в js/app-ui.js): меню рендерится
+   прямо внутри боковой панели — сразу под строкой слоя, а не
+   поверх карты. Десктопная версия не затронута: там у меню нет
+   этого класса и действуют обычные правила из style.css.
+   ============================================================ */
+
+.layer-submenu.layer-submenu--compact {
+  position: static !important; /* «прилипает» к панели, без fixed-позиционирования */
+  left: auto !important;
+  top: auto !important;
+  width: auto !important;
+  max-width: 100%;
+  max-height: 42vh;           /* компактная высота — меню помещается в панель */
+  margin: 2px 0 6px;
+  font-size: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+.layer-submenu.layer-submenu--compact .submenu-header {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.layer-submenu.layer-submenu--compact .submenu-icon {
+  font-size: 13px;
+}
+
+.layer-submenu.layer-submenu--compact .submenu-item {
+  padding: 6px 10px 6px 14px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.layer-submenu.layer-submenu--compact .submenu-class > .submenu-item {
+  padding-left: 28px;
+  font-size: 11px;
+  min-height: 28px;
+}
