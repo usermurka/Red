@@ -124,7 +124,7 @@ Object.assign(App, {
         ev.stopPropagation();
         const sid = gotoEl.dataset.speciesId;
         this.tooltip.style.display = 'none';
-        this.openSpeciesPanel('browse', { focusSpeciesId: sid });
+        this.openSpeciesPanel('browse', { focusSpeciesId: sid, userGesture: true });
       });
     }
 
@@ -181,7 +181,7 @@ Object.assign(App, {
         this.updateHintUI(); // <-- Обновляем плашку
 
         // Открываем справочник и скроллим к виду
-        this.openSpeciesPanel('browse');
+        this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
       });
       
@@ -239,7 +239,7 @@ Object.assign(App, {
         this.updateHintUI(); // <-- Обновляем плашку
 
         // Открываем справочник и скроллим к виду
-        this.openSpeciesPanel('browse');
+        this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(target.speciesId), 50);
       });
     });
@@ -567,7 +567,7 @@ Object.assign(App, {
         this._migrationToAddSpecies = migration.id;
         this.tooltip.style.display = 'none';
         this.speciesPanelMode = 'pick';
-        this.openSpeciesPanel('pick');
+        this.openSpeciesPanel('pick', { userGesture: true });
       });
       document.getElementById('btn-merge-migration').addEventListener('click', () => {
         this._migrationToMergeSource = migration.id;
@@ -668,7 +668,7 @@ Object.assign(App, {
         this.updateIsAllHighlightedFlag();
 
         // Открываем справочник и скроллим к виду
-        this.openSpeciesPanel('browse');
+        this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
       });
     });
@@ -927,7 +927,7 @@ Object.assign(App, {
         this.updateHintUI(); // <-- Обновляем плашку
 
         // Открываем справочник и скроллим к виду
-        this.openSpeciesPanel('browse');
+        this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
 
         // ТУЛТИП НЕ ЗАКРЫВАЕМ И НЕ ПЕРЕКЛЮЧАЕМ!
@@ -1024,7 +1024,7 @@ Object.assign(App, {
         this._regionToAddSpecies = currentRegion.id;
         this.tooltip.style.display = 'none';
         this.speciesPanelMode = 'pick';
-        this.openSpeciesPanel('pick');
+        this.openSpeciesPanel('pick', { userGesture: true });
       });
     }
 

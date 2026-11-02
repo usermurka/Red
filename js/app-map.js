@@ -206,7 +206,7 @@ Object.assign(App, {
       this.listSpeciesIds = null;
       this.updateLayerFilterHighlight();
       this.updateStatusLayerHighlight();
-      this.openSpeciesPanel('browse');
+      this.openSpeciesPanel('browse', { userGesture: true });
     });
 
     // --- Радиус зоны «поблизости» ---
@@ -394,7 +394,7 @@ Object.assign(App, {
     // Модалка миграции — клик по полю открывает справочник
     document.getElementById('migration-species').addEventListener('click', () => {
       this.pickingMigrationSpecies = true;
-      this.openSpeciesPanel('pick');
+      this.openSpeciesPanel('pick', { userGesture: true });
     });
 
     // Сохранить линию миграции
@@ -410,7 +410,7 @@ Object.assign(App, {
     // Модалка области — клик по полю открывает справочник
     document.getElementById('region-species').addEventListener('click', () => {
       this.pickingRegionSpecies = true;
-      this.openSpeciesPanel('pick');
+      this.openSpeciesPanel('pick', { userGesture: true });
     });
 
     // Интенсивность
@@ -455,7 +455,7 @@ Object.assign(App, {
 
     // Модалка маркера — клик по полю открывает справочник
     document.getElementById('input-species').addEventListener('click', () => {
-      this.openSpeciesPanel('pick');
+      this.openSpeciesPanel('pick', { userGesture: true });
     });
 
     document.getElementById('btn-species-close').addEventListener('click', () => {
