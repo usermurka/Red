@@ -3709,6 +3709,11 @@ details[open]>.scroll-heading::before {
 .layer-submenu {
   position: fixed;
   z-index: 900;
+  /* padding-bottom = нижняя «бахрома» clip-path (var(--torn-edge) срезает
+     3px у нижнего края). Без неё последние строки меню обрезались, а фон
+     не дотягивался до низа вырезанной формы — на мобильных сквозь дыру
+     в боковой панели проступал бежевый фон страницы. */
+  padding-bottom: 3px;
   max-height: 70vh;
   overflow-y: auto;
   background:
