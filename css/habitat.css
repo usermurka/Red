@@ -26,56 +26,57 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin: 8px auto 20px; /* Добавили отступ снизу, чтобы не наезжало на кнопки */
+    gap: 6px;
+    margin: 4px auto 10px;
     width: 100%;
-    max-width: 400px;      /* Ограничили ширину карточки, чтобы текст переносился красиво */
+    max-width: 400px;
     text-align: center;
+    flex-shrink: 0;
+    /* карточка не сжимается */
 }
 
 .habitat-card .latin-photo-card {
-    width: 160px;
-    height: 160px;
+    width: 280px !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    max-height: 280px !important;
+    aspect-ratio: 1 / 1;
 }
 
-.habitat-name {
-    font-family: Georgia, serif;
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--dark-green);
-    text-align: center;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    line-height: 1.3;
-    padding: 0 10px;
+.habitat-card .latin-photo-card .latin-photo-inner {
+    width: 100% !important;
+    height: 100% !important;
 }
 
-.habitat-latin {
-    font-family: Georgia, serif;
-    font-size: 13px;
-    font-style: italic;
-    color: var(--gold-deep);
-    text-align: center;
+/* В игровой зоне подписи под фото больше не нужны — они есть в свитке.
+   Правила оставляем как страховку (display:none), чтобы не сломать
+   другие возможные использования класса. */
+.habitat-card .habitat-name,
+.habitat-card .habitat-latin {
+    display: none;
 }
 
-/* Кнопки биомов */
+/* Кнопки биомов: 8 в один ряд (десктоп) */
 .habitat-biomes {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
     width: 100%;
-    max-width: 100%;           /* Убираем 640px — растягиваем на всю ширину колонки */
+    max-width: 100%;
     margin-top: 10px;
+    margin-bottom: 0;
+    flex-shrink: 0;
 }
+
 
 .habitat-biom {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    min-height: 74px;
-    padding: 10px 6px;
+    gap: 2px;
+    min-height: 60px;
+    padding: 6px 3px;
     background: var(--parchment, #f0e6cf);
     border: 2px solid var(--gold-deep);
     border-radius: 6px;
@@ -93,13 +94,17 @@
 }
 
 .hb-icon {
-    font-size: 26px;
+    font-size: 22px;
     line-height: 1;
 }
 
 .hb-label {
-    font-size: 14px;
+    font-size: 11px;
     font-weight: bold;
+    line-height: 1.1;
+    text-align: center;
+    word-break: break-word;
+    display: none;
 }
 
 .habitat-biom.hab-correct {
@@ -107,19 +112,78 @@
     border-color: var(--green);
 }
 
+/* Биом «собран» (верный клик): кнопка становится неактивной,
+   с зелёной галочкой-подложкой. */
+.habitat-biom.hab-matched {
+    cursor: default;
+    opacity: 0.85;
+    box-shadow: inset 0 0 0 2px rgba(46, 107, 62, 0.6);
+    position: relative;
+}
+
+.habitat-biom.hab-matched::after {
+    content: '✔';
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 12px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.habitat-biom.hab-matched:hover {
+    transform: none;
+}
+
 .habitat-biom.hab-wrong {
     background: rgba(170, 51, 51, 0.25);
     border-color: #a33;
     animation: latin-shake 0.45s;
+    position: relative;
+}
+
+/* Крестик на неправильной кнопке — как галочка у собранной.
+   Появляется и остаётся, пока висит класс .hab-wrong (снимается
+   в answer() через setTimeout 600 мс — за это время игрок видит
+   отметку, затем кнопка возвращается в исходный вид). */
+.habitat-biom.hab-wrong::after {
+    content: '✘';
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 12px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 480px) {
-    .habitat-card .latin-photo-card { width: 120px; height: 120px; }
-    .habitat-biomes { gap: 6px; }
-    .habitat-biom { min-height: 62px; }
-    .hb-icon { font-size: 22px; }
-    .hb-label { font-size: 12px; }
-    .habitat-name { font-size: 16px; }
+    .habitat-card .latin-photo-card {
+        width: 200px !important;
+        height: 200px !important;
+        min-height: 200px !important;
+        max-height: 200px !important;
+    }
+
+    .habitat-biomes {
+        gap: 4px;
+    }
+
+    .habitat-biom {
+        min-height: 52px;
+        padding: 4px 2px;
+    }
+
+    .hb-icon {
+        font-size: 18px;
+    }
+
+    .hb-label {
+        font-size: 9px;
+    }
+
+    .habitat-name {
+        font-size: 16px;
+    }
 }
 
 /* ===== Доработки по замечаниям игрока ===== */
@@ -148,9 +212,12 @@
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: stretch;
+    /* обе панели растягиваются по самой высокой */
     gap: 16px;
-    flex: 1 1 auto;            
+    flex: 1 1 auto;
     min-width: 0;
+    /* Не даём контейнеру растягиваться больше нужного */
+    height: 100%;
 }
 
 .habitat-log-pane {
@@ -194,69 +261,16 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    flex: 0 1 520px;
+    flex: 1 1 auto;
     min-width: 0;
+    width: 100%;
+    height: 100%;
+    /* Контент прижат к верху: карточка + биомы идут подряд,
+       а «пустое место» остаётся внизу панели. Игровая панель при
+       этом всё равно растянута до высоты журнала (через
+       .habitat-cols { align-items: stretch; }). */
+    justify-content: flex-start;
 }
-
-/* Боковая панель «Данные из Красной книги» */
-.habitat-info {
-    flex: 1 1 340px;
-    max-width: 420px;
-    max-height: 420px;
-    overflow-y: auto;
-    padding: 10px 12px;
-    background: rgba(36, 53, 42, 0.05);
-    border: 2px solid var(--gold-deep);
-    border-radius: 8px;
-    box-sizing: border-box;
-}
-
-.hi-title {
-    font-family: Georgia, serif;
-    font-size: 14px;
-    font-weight: bold;
-    color: var(--dark-green);
-    margin-bottom: 8px;
-    text-align: center;
-}
-
-.hi-body {
-    font-family: Georgia, serif;
-    font-size: 13px;
-    color: var(--dark-green);
-    line-height: 1.45;
-}
-
-.hi-section { margin-bottom: 10px; }
-
-.hi-label {
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gold-deep);
-    margin-bottom: 2px;
-}
-
-.hi-text { word-wrap: break-word; }
-.hi-small { font-size: 12px; opacity: 0.92; }
-
-.hi-note {
-    font-style: italic;
-    font-size: 12px;
-    color: rgba(36, 53, 42, 0.65);
-}
-
-/* Подсветка ключевых слов биома в тексте источника */
-#habitat-info-body mark {
-    padding: 0 2px;
-    border-radius: 3px;
-    font-weight: bold;
-}
-.hl-forest { background: rgba(76, 175, 80, 0.45); }
-.hl-steppe { background: rgba(251, 192, 45, 0.5); }
-.hl-water  { background: rgba(33, 150, 243, 0.4); }
-.hl-bog    { background: rgba(139, 69, 19, 0.35); }
 
 /* Подсказка «нажми на карточку» */
 .habitat-tap-hint {
@@ -291,12 +305,19 @@
    панели по ВЕРХУ и не даёт им «расползаться» при разной длине
    содержимого (см. правило ниже). */
 .habitat-pane {
-    min-height: 380px;
+    min-height: 0;
+    height: auto;
+    /* панель тянется по высоте контейнера (align-items: stretch
+       у родителя .habitat-cols) */
     box-sizing: border-box;
     padding: 10px 12px;
     background: rgba(36, 53, 42, 0.05);
     border: 2px solid var(--gold-deep);
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    /* Контент прижат к верху; пустое место — внизу панели. */
+    justify-content: flex-start;
 }
 
 .habitat-log-pane {
@@ -315,65 +336,30 @@
     margin-bottom: 6px;
 }
 
-/* Пустой журнал — аккуратная подсказка вместо «дыры» в окне */
-.habitat-log-empty-note {
-    font-family: Georgia, serif;
-    font-size: 12px;
-    font-style: italic;
-    color: rgba(36, 53, 42, 0.6);
-    text-align: center;
-    padding: 18px 6px;
-    line-height: 1.4;
-}
-
 .habitat-play-pane {
     flex: 1 1 560px;
     min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+    /* Точка отсчёта для кнопки «Продолжить» */
+    padding-bottom: 60px;
+    /* Резервируем место под кнопку, чтобы она не наезжала на биомы */
 }
-
-/* Журнал пар «вид — среда»: пары остаются до конца игры */
-.habitat-log {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 0;
-    width: 100%;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.hl-entry {
-    font-family: Georgia, serif;
-    font-size: 13px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    border-left: 4px solid transparent;
-    background: rgba(36, 53, 42, 0.05);
-    color: var(--dark-green);
-}
-
-.hl-entry.hl-hit { border-left-color: var(--green, #2e6b3e); }
-.hl-entry.hl-hit .hl-mark { color: var(--green, #2e6b3e); }
-.hl-entry.hl-miss { border-left-color: #a33; opacity: 0.85; }
-/* Записи журнала красятся по результату: «✔» — зелёным, «✘» — красным.
-   Раньше обе записи оставались тёмно-зелёными (наследие цвета .hl-entry),
-   из-за чего казалось, что «правильное/неправильное всегда зеленым». */
-.hl-entry.hl-miss .hl-mark { color: #a33; }
-.hl-entry.hl-miss b { color: #7c2d12; }
-.hl-mark { font-weight: bold; margin-right: 4px; }
 
 /* ===== ПЛАНШЕТЫ И МОБИЛЬНЫЕ (2 КОЛОНКИ + СВИТОК СНИЗУ) ===== */
 @media (max-width: 1100px) {
     .habitat-main {
-        flex-direction: column; /* Свиток падает вниз */
+        flex-direction: column;
+        /* Свиток падает вниз */
         align-items: stretch;
     }
 
     .habitat-cols {
         width: 100%;
+        height: auto;
+        /* на мобильных высота по контенту */
     }
 
     .habitat-log-pane {
@@ -385,13 +371,7 @@
         min-width: 0;
     }
 
-    /* Убираем внутреннюю прокрутку журнала, чтобы он не создавал свой "лифт" */
-    .habitat-log {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-
-    /* Свиток под колонками на всю ширину */
+        /* Свиток под колонками на всю ширину */
     #habitat-info-panel {
         flex: 1 1 100% !important;
         width: 100% !important;
@@ -408,8 +388,6 @@
 }
 
 @media (max-width: 760px) {
-    .habitat-info { max-width: none; max-height: 240px; }
-
     .habitat-cols {
         flex-direction: row;
         flex-wrap: nowrap;
@@ -434,25 +412,35 @@
        не должен быть выше левого. Карточка и биомы уплотнены так,
        чтобы «вид + выбор среды» занимали ровно свою колонку. */
     .habitat-cols { align-items: stretch; }
-    .habitat-play-pane .habitat-play { flex: 0 1 auto; }
+        .habitat-play-pane .habitat-play {
+            flex: 1 1 auto;
+        }
     .habitat-card { margin: 2px auto 8px; }
     .habitat-card .latin-photo-card {
         width: clamp(96px, 26vw, 130px);
         height: clamp(96px, 26vw, 130px);
     }
-    .habitat-biomes {
-        grid-template-columns: repeat(2, 1fr); /* 4 среды — 2×2 вместо длинной строки */
-        gap: 6px;
-    }
-    .habitat-biom { min-height: 52px; padding: 6px 4px; }
-    .hb-icon { font-size: 20px; }
-    .hb-label { font-size: 11px; }
-    .habitat-log {
-        max-height: none;
-        overflow: visible;      /* журнал растёт в высоту по мере добавления пар */
-    }
-    #habitat-info-panel {
-        width: 100% !important; /* выровнять со столбцами: не шире окна игры */
+        .habitat-biomes {
+            grid-template-columns: repeat(4, 1fr);
+            /* 8 биомов — 4×2 */
+            gap: 4px;
+        }
+        .habitat-biom {
+            min-height: 52px;
+            padding: 6px 4px;
+        }
+    
+        .hb-icon {
+            font-size: 20px;
+        }
+    
+        .hb-label {
+            font-size: 11px;
+        }
+    
+        #habitat-info-panel {
+            width: 100% !important;
+            /* выровнять со столбцами: не шире окна игры */
         max-width: none !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
@@ -476,57 +464,12 @@
     }
 }
 
-/* ===== Панель данных и заглушка до ответа ===== */
+/* ===== Служебные классы ===== */
 
-/* is-hidden — класс, который JS (habitat.js: setInfoVisible) вешает на
-   тело панели «Данные из Красной книги», пока игрок не ответит.
-   Дублируем правило здесь, чтобы скрытие работало даже при загрузке
-   только habitat.css (в full-сборке покрыто style.css). */
+/* is-hidden — общий класс скрытия (используется в других играх,
+   дублирует правило из style.css на случай загрузки только habitat.css). */
 .is-hidden {
     display: none !important;
-}
-
-/* Заглушка «данные откроются после ответа» внутри боковой панели */
-.hp-locked-note {
-    font-family: Georgia, serif;
-    font-size: 13px;
-    font-style: italic;
-    color: rgba(36, 53, 42, 0.65);
-    text-align: center;
-    padding: 14px 8px;
-    line-height: 1.4;
-}
-
-.hp-locked-note.hidden {
-    display: none;
-}
-
-/* Подсветка выбранного биома в тексте источника (после ответа):
-   класс hl-<биом> добавляется к каждому <mark> в highlightBiomeWords(),
-   поэтому выбранный биом выделяется рамкой по всей площади текста. */
-#habitat-info-body mark[class*="hl-"] {
-    outline: 2px solid rgba(176, 141, 47, 0.55);
-    outline-offset: -2px;
-}
-
-/* Совместимость: если класс hl-selected навешивается на кнопку биома */
-.habitat-biom.hl-selected {
-    outline: 3px solid var(--gold-deep, #b08d2f);
-    outline-offset: -3px;
-}
-
-/* Подсказка-выбор под сеткой биомов (index.html: habitat-pick-note).
-   Скрыта по умолчанию — класс .hidden покрыт правилом в style.css. */
-.hp-pick-note {
-    font-family: Georgia, serif;
-    font-size: 13px;
-    line-height: 1.4;
-    text-align: center;
-    margin-top: 10px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: rgba(212, 193, 156, 0.25);
-    color: rgba(36, 53, 42, 0.85);
 }
 
 /* Панель-«книга»: единая рамка для боковых панелей игр */
@@ -617,19 +560,19 @@ body.game-end-habitat #habitat-modal #habitat-restart {
         padding-bottom: 20px !important;
     }
 
-    /* 3. Убираем внутренние лифты у панелей (правая колонка и журнал) */
-    #habitat-modal #habitat-info-panel,
-    #habitat-modal .habitat-info,
-    #habitat-modal .habitat-log {
-        max-height: none !important;
-        overflow-y: visible !important;
-    }
+        /* 3. Убираем внутренние лифты у панелей (правая колонка) */
+        #habitat-modal #habitat-info-panel {
+            max-height: none !important;
+            overflow-y: visible !important;
+        }
 
-    /* 4. Выравниваем колонки по верху, чтобы они не растягивались */
-    #habitat-modal .habitat-main,
-    #habitat-modal .habitat-cols {
-        align-items: flex-start !important;
-    }
+        /* 4. Выравниваем колонки по верху, чтобы они не растягивались —
+           НО только .habitat-main. Для .habitat-cols оставляем
+           align-items: stretch (из базового правила), чтобы игровая
+           панель растягивалась до высоты журнала биомов. */
+        #habitat-modal .habitat-main {
+            align-items: flex-start !important;
+        }
 
     /* 5. Жесткая страховка: снимаем возможные ограничения по высоте с панелей */
     #habitat-modal .habitat-pane {
@@ -666,5 +609,206 @@ body.game-end-habitat #habitat-modal #habitat-restart {
        самого (в базовых правилах их нет, но пусть будет явно). */
     #habitat-modal #habitat-end-screen:not(.hidden) {
         margin: 0 !important;
+    }
+}
+
+/* ============================================================
+   ЖУРНАЛ БИОМОВ (Среда обитания)
+   ВСЕГДА всплывающее окно (и на десктопе, и на мобильном).
+   Фон — тёмный, текст — светлый (одинаково в списке и в окне).
+   ============================================================ */
+.habitat-biomes-journal {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+}
+
+.hbiome-card {
+    border: 1px solid var(--parchment-deep, #d4c19c);
+    border-radius: 3px;
+    background: rgba(255, 253, 247, 0.85);
+    overflow: hidden;
+}
+
+/* Свёрнутая карточка в списке — обычный (тёмный на светлом) вид. */
+.hbiome-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--dark-green, #24352a);
+    background: linear-gradient(180deg, rgba(212, 180, 90, 0.12), transparent);
+    list-style: none;
+    user-select: none;
+}
+
+.hbiome-card-head::-webkit-details-marker {
+    display: none;
+}
+
+.hbiome-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.hbiome-label {
+    flex: 1;
+}
+
+/* Открытая карточка = всплывающее окно. */
+.hbiome-card[open] {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(92vw, 560px);
+    max-height: 80dvh;
+    overflow-y: auto;
+    z-index: 3500;
+    background: var(--dark-green, #24352a) !important;
+    color: var(--parchment-light, #f8f1e0) !important;
+    border: 2px solid var(--gold-deep, #8a6a1e);
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.hbiome-card[open]::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 30, 24, 0.6);
+    z-index: -1;
+}
+
+/* Заголовок в открытом окне — светлый на тёмном. */
+.hbiome-card[open] .hbiome-card-head {
+    position: sticky;
+    top: 0;
+    background: var(--dark-green, #24352a) !important;
+    color: var(--gold-soft, #d4b45a) !important;
+    z-index: 1;
+    border-bottom: 1px solid rgba(212, 180, 90, 0.4);
+}
+
+/* Текст подсказки — светлый на тёмном. */
+.hbiome-card[open] .hbiome-card-body {
+    padding: 10px 14px 14px;
+    font-family: Georgia, serif;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--parchment-light, #f8f1e0) !important;
+    background: transparent !important;
+    border-top: 1px dashed rgba(184, 145, 47, 0.4);
+}
+
+/* На мобильно-планшетной версии в списке — только иконки. */
+@media (max-width: 1024px) {
+
+    .habitat-biomes-journal .hbiome-card:not([open]) .hbiome-label,
+    .habitat-biomes-journal .hbiome-card:not([open]) .hbiome-toggle {
+        display: none;
+    }
+
+    .habitat-biomes-journal .hbiome-card:not([open]) .hbiome-card-head {
+        justify-content: center;
+        padding: 8px 6px;
+    }
+
+    .habitat-biomes-journal .hbiome-icon {
+        font-size: 22px;
+    }
+}
+
+
+.habitat-biom[data-biom="bog"] {
+    background: linear-gradient(160deg, #6b5b4a, #3e342a);
+    color: #fff;
+}
+
+.habitat-biom[data-biom="forest"] {
+    background: linear-gradient(160deg, #4e7a3d, #24352a);
+    color: #fff;
+}
+
+.habitat-biom[data-biom="meadow"] {
+    background: linear-gradient(160deg, #7fb069, #4e7a3d);
+    color: #fff;
+}
+
+.habitat-biom[data-biom="riparian"] {
+    background: linear-gradient(160deg, #5c9bd1, #2c5f8a);
+    color: #fff;
+}
+
+.habitat-biom[data-biom="rock"] {
+    background: linear-gradient(160deg, #8a8178, #4f4a45);
+    color: #fff;
+}
+
+.habitat-biom[data-biom="saline"] {
+    background: linear-gradient(160deg, #d9c9a8, #b09a6a);
+    color: var(--dark-green, #24352a);
+}
+
+.habitat-biom[data-biom="steppe"] {
+    background: linear-gradient(160deg, #d9a441, #8a6a1e);
+    color: #24352a;
+}
+
+.habitat-biom[data-biom="water"] {
+    background: linear-gradient(160deg, #4a90c2, #1f4e79);
+    color: #fff;
+}
+
+/* ============================================================
+   КНОПКА «ПРОДОЛЖИТЬ →»
+   ============================================================ */
+#habitat-next-round-btn {
+    margin-top: auto !important;
+    /* отталкиваем к низу */
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 400px !important;
+    flex-shrink: 0;
+}
+
+/* Убираем старый отступ, который был нужен для absolute-кнопки,
+   но оставляем небольшой отступ снизу, чтобы кнопка «Продолжить»
+   не прилипала вплотную к нижней рамке панели. */
+.habitat-play-pane {
+    padding-bottom: 20px !important;
+}
+
+/* Плашка «Все верно!», когда карточка собрана полностью */
+.habitat-card-complete-banner {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 400px;
+    padding: 8px 12px;
+    background: rgba(46, 107, 62, 0.85);
+    color: #fff;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
     }
 }

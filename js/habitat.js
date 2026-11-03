@@ -22,146 +22,47 @@
 // ============================================================
 
 const HabitatGame = {
-    ROUND_SIZE: 10,          // видов в раунде
+    ROUND_SIZE: 1,          // видов в раунде
     TOTAL_ROUNDS: 3,        // раундов в игре
-    ROUND_TIME: 40,         // секунд на раунд
+    ROUND_TIME: 180,         // секунд на раунд
 
-    // Ключевые слова для отнесения вида к биому по тексту
-    // «Места обитания» из карточки вида
+    // Восемь биомов (ключи совпадают с HABITATS_DB и Лист4 «биомы»).
+    // tip — текст всплывающей подсказки для «Журнала биомов».
     BIOMES: [
-        { key: 'forest', label: 'Лес', icon: '🌲' },
-        { key: 'steppe', label: 'Степь', icon: '🌾' },
-        { key: 'water', label: 'Водоём', icon: '💧' },
-        { key: 'bog', label: 'Болото', icon: '🥀' }
+        {
+            key: 'bog', label: 'Болота', icon: '🥀',
+            tip: 'Болота и заболоченные местообитания: верховые (сфагновые, рямы), переходные и низинные болота, осоково-гипновые топи, травяные и моховые болота, заболоченные луга и леса, сплавины, окраины болот, ключевые болота, заболоченные вырубки и гари, тростниковые займища, заболоченные поймы и берега водоёмов.'
+        },
+        {
+            key: 'forest', label: 'Леса', icon: '🌲',
+            tip: 'Лесные местообитания: темнохвойные (еловые, пихтовые, кедровые), светлохвойные (сосновые, лиственничные), смешанные, лиственные (берёзовые, осиновые, липовые, дубовые), пойменные и островные леса, колки, боры, лесополосы, лесные поляны, опушки, просеки, вырубки, старые гари, редколесья, закустаренные склоны, долинные и приречные леса, а также лесные болота и заболоченные леса.'
+        },
+        {
+            key: 'meadow', label: 'Луга', icon: '🌿',
+            tip: 'Луговые и остепнённые луговые местообитания: пойменные, суходольные, заливные, низинные, разнотравные, злаково-разнотравные, солонцеватые и остепнённые луга, лесные луга и поляны, опушки, залежи, пастбища, сенокосы, луговые степи, луговины, кустарниковые заросли по лугам, влажные высокотравные луга, прибрежные и приозёрные луга.'
+        },
+        {
+            key: 'riparian', label: 'Прибрежные и пойменные', icon: '🌊',
+            tip: 'Прибрежные и пойменные местообитания: берега рек, ручьёв, озёр, прудов, стариц, проток, затонов, водохранилищ, морей и морских побережий; поймы и речные долины; приречные леса и кустарники; ивняки, тростниковые заросли по берегам; песчаные, галечные, илистые и каменистые берега; речные острова, косы, отмели, пляжи; обрывистые берега; затопляемые и пересыхающие прибрежья.'
+        },
+        {
+            key: 'rock', label: 'Скалы и каменистые обнажения', icon: '🪨',
+            tip: 'Скальные и каменистые местообитания: выходы горных пород, скалы, обрывы, каменистые и щебнистые склоны, известняковые и меловые обнажения, гранитные валуны, каменистые россыпи, осыпи, песчаниковые обнажения, каменистые субстраты в степях и лесостепях, обрывистые склоны речных долин и озёрных котловин, скалы морских побережий, искусственные каменистые субстраты.'
+        },
+        {
+            key: 'saline', label: 'Солончаки и засолённые', icon: '🧂',
+            tip: 'Засолённые и солончаковые местообитания: солончаки (пухлые, мокрые, прибрежные), солонцы, солонцеватые и солончаковые луга, солоноватые и солёные озёра, горько-солёные водоёмы, засолённые почвы, галофитные сообщества (солеросово-лебедовые, поташниковые), солончаковые степи, солончаковые плешины, засолённые прибрежья, котловины солёных озёр.'
+        },
+        {
+            key: 'steppe', label: 'Степи', icon: '🌾',
+            tip: 'Степные и полупустынные местообитания: ковыльные, типчаково-ковыльные, полынно-злаковые, разнотравно-злаковые, луговые и опустыненные степи, каменистые и щебнистые степи, солонцеватые степи, степные склоны, балки, овраги, древние ложбины стока, степные западины, остепнённые участки, залежи, целинные степи, пастбища, агроландшафты в степной зоне, полупустыни.'
+        },
+        {
+            key: 'water', label: 'Водоёмы', icon: '💧',
+            tip: 'Водные и прибрежно-водные местообитания: реки (крупные, малые, таёжные, степные), озёра (пресные, солоноватые, солёные, эвтрофные, мезотрофные), пруды, старицы, затоны, протоки, водохранилища, лиманы, дельты рек, ручьи, ключи, временные водоёмы, пересыхающие лужи, сплавины, плёсы, мелководья, глубинные участки, илистые, песчаные и каменистые грунты, подводные и плавающие растения.'
+        }
     ],
-    KEYWORDS: {
-        water: ['водоём', 'водоем', 'озеро', 'река', 'рек', 'пруда', 'пруд', 'водохранилищ',
-            'пойменн', 'заросли тростника', 'надводн', 'прибрежн', 'болотн', 'топи', 'тальник',
-            'сыроватн', 'влага', 'гидро', 'русла', 'русле', 'мелководий', 'нерест', 'стрежен',
-            'омут', 'затопл', 'канал', 'ключев'],
-        forest: ['лес', 'дремуч', 'хвойн', 'широколиствен', 'смешанн', 'березов', 'берёзов',
-            'соснов', 'осин', 'ивняк', 'кустарников', 'подлесок', 'лесная подстилка',
-            'лесов', 'леса', 'лесной', 'олышк', 'ельник', 'пихтов', 'кедров', 'лиственнич'],
-        steppe: ['степь', 'полын', 'ковыл', 'разнотравь', 'засушлив', 'сухотняк',
-            'открыт', 'луг', 'сольц', 'барабан', 'типчаков', 'склонов', 'берег',
-            'отлог', 'пустыр', 'солонц', 'степных', 'степной'],
-        bog: ['болото', 'торф', 'сфагн', 'осоков', 'кочкар', 'заболочен', 'мокр', 'сыр']
-    },
-
-    /* ============================================================
-       ВЗВЕШЕННОЕ ОПРЕДЕЛЕНИЕ БИОМА (по замечанию игрока)
-       ------------------------------------------------------------
-       Подсчёт «сколько ключевых слов встретилось» устарел: редкие,
-       но точные слова («дерево», «берег») весели столько же, сколько
-       расплывчатые («открыт»). Теперь каждое слово имеет вес, а
-       бонусные группы засчитываются ОДИН РАЗ на текст.
-
-       Пример из замечания: «Предпочитает отдельные ДЕРЕВЬЯ у северной
-       границы ЛЕСА, обрывы в долинах РЕК и ОЗЁР, скалы морских
-       ПОБЕРЕЖИЙ.» → лес: 2+1 = 3; водоём: 3×(рек, озёр) + 2(побережий)
-       = 8 → побеждает ВОДОЁМ, как и должно быть.
-
-       Спорные stems разведены по биомам:
-        • «берег/береж» — берег РЕКИ/ОЗЕРА (водоём, +2), крутой берег
-          степного лога (степь, +1);
-        • «болотн-» — прилагательное от «болото» (болото +2), но
-          «луговато-болотные» луга остаются лугом (болото +1);
-        • «сыр/влажн» — слабый признак (по +1), не решает исход.
-       ============================================================ */
-    BIOME_WEIGHTS: {
-        water: [
-            ['водоём', 3], ['водоем', 3], ['озер', 3], ['река', 3], ['рек', 3],
-            ['пруд', 3], ['водохранилищ', 3], ['русел', 2], ['русла', 2], ['русле', 2],
-            ['мелковод', 3], ['глубок', 2], ['нерест', 3], ['стрежен', 2], ['омут', 2],
-            ['затопл', 2], ['разлив', 2], ['паводк', 2], ['пойменн', 2], ['пойм', 2],
-            ['притоков', 2], ['канал', 2], ['ключев', 2], ['родник', 2],
-            /* «берег» сам по себе — не водоём (берег может быть степного лога),
-           поэтому общие stems ['берег'],['береж'] из водоёма убраны
-           (по замечанию игрока про болотную камышевку); остаются только
-           явные водные формы. */
-        ['берег рек', 2], ['берегам рек', 2], ['берегах рек', 2], ['берега рек', 2],
-        ['берег озер', 2], ['берегах озер', 2], ['берегам озер', 2],
-        ['берег прудов', 2], ['берегах прудов', 2], ['берегам прудов', 2],
-        ['морских побережий', 3], ['побереж', 2], ['прибрежн', 2], ['надводн', 2],
-            ['заросли тростника', 3], ['тростник', 2], ['камыш', 2], ['рогоз', 2],
-            ['чакан', 2], ['болотн', 1], ['тальник', 1], ['сыроватн', 1], ['влага', 1],
-            ['влажн', 1], ['гидро', 2],
-            /* Дополнения по замечанию игрока (подкаменщик сибирский):
-               «в Иртыше в затонах ... у опор мостов, гидротехнических
-               сооружений, дамб, ледорезов» — рыба живёт В ВОДОЁМЕ, но
-               раньше водоём набирал лишь 2 балла («гидро»), и побеждала
-               степь из-за фразы «степной ... природно-климатической зоны». */
-            ['иртыш', 3], ['зырян', 2], ['ишим', 2],
-            ['затон', 3], ['дамб', 3], ['ледорез', 2],
-            ['проточн', 2], ['течени', 2], ['рыб', 2]
-        ],
-        forest: [
-            ['лес', 2], ['дремуч', 3], ['хвойн', 3], ['широколиствен', 3], ['смешанн', 2],
-            ['елов', 2], ['ельник', 3], ['пихтов', 2], ['кедров', 2], ['лиственнич', 2],
-            ['соснов', 2], ['березов', 2], ['берёзов', 2], ['осин', 2], ['ивняк', 2],
-            ['олышк', 2], ['кустарник', 2], ['подлесок', 2], ['лесная подстилка', 3],
-            ['дерев', 2], ['древесн', 2], ['полян', 1], ['глухарин', 2], ['таёжн', 3],
-            ['тайг', 3]
-        ],
-        steppe: [
-            ['степь', 3], ['степных', 3], ['степной', 3], ['полын', 3], ['ковыл', 3],
-            ['разнотравь', 3], ['засушлив', 2], ['сухотняк', 3], ['типчаков', 3],
-            ['типчак', 3], ['солонц', 3], ['сольц', 3], ['пустыр', 3], ['отлог', 2],
-            ['открыт', 1], ['луг', 2], ['лугов', 2], ['склонов', 1],
-            ['склон', 1], ['берег', 1], ['береж', 1], ['барабан', 2],
-            /* Дополнения по замечанию игрока («Сарсазан шишковатый»:
-               «Мезогигрофит, галофит. Растет на пухлых солончаках»,
-               местонахождения — котловина оз. Эбейты). Слово «солонц»
-               раньше не ловило форму «солончак/солончаковый», а марке-
-               ров засолённых степей не было вовсе — вид уходил в ЛЕС
-               из-за слов «деревянистый» и «листочков» в описании. */
-            ['солончак', 3], ['солончаков', 3], ['галофит', 3], ['галофильн', 3],
-            ['поташник', 3], ['солянк', 2], ['шайоров', 2]
-        ],
-        bog: [
-            ['болото', 4], ['заболочен', 3], ['торф', 3], ['сфагн', 3], ['осоков', 2],
-            ['кочкар', 2], ['мокр', 2], ['сыр', 1], ['камыш', 1],
-            ['топи', 2], ['болотн', 2],
-            /* Дополнения по замечанию игрока (болотная камышевка):
-               «низинные ... болота», «гипновые (сфагновые) мхи», «топкие
-               зарастающие карьеры торфяных болот» — сильные болотные
-               признаки. Слово «болото» в тексте встречается только в
-               словосочетаниях («торфяных болот»), поэтому добавлены
-               отдельные stems прилагательных. */
-            ['низинн', 3], ['болотн', 2], ['гипнов', 3], ['мохов', 2], ['мхов', 2]
-        ]
-    },
-
-    // Порядок приоритета при одинаковом числе совпадений:
-    // болото — самый специфичный биом, затем водоём, лес, степь
-    BIOME_PRIORITY: ['bog', 'water', 'forest', 'steppe'],
-
-    /* ============================================================
-       СОЛОНЧАКИ И ГАЛОФИТЫ — ЭТО СТЕПЬ (по замечанию игрока)
-       ------------------------------------------------------------
-       Вид «Сарсазан шишковатый» («Мезогигрофит, галофит. Растет на
-       пухлых солончаках.» + ботаническое описание «деревянистыми
-       ветвями», «продолговатых… листочков») система упорно ставила
-       в ЛЕС: слова «деревянистый» и «листочков» случайно содержат
-       корни «дерев» и «елов» из лесного списка. А настоящих маркеров
-       солончаковой степи в весах не было вовсе.
-
-       Лечим двумя шагами:
-        1) «солончак», «солонец», «галофит», «поташник» — сильные
-           признаки ЗАСОЛЁННОЙ СТЕПИ (+3): именно так трактует их
-           Красная книга Омской обл. (котловина оз. Эбейты —
-           солончаковая степь, а не водоём и не лес);
-        2) ложные срабатывания лесных корней убираем отрицательным
-           весом −2 (сумма не может уйти ниже нуля — см. biomeOf).
-       ============================================================ */
-    NEGATIVE_WEIGHTS: {
-        forest: [
-            ['деревянист', -2],   // «деревянистые ветви» — про стебель, не про лес
-            ['листочк', -2],      // «листочков околоцветника» ≠ «ель»
-            ['одревеснев', -2]
-        ]
-    },
-
+    
     init() {
         document.getElementById('btn-habitat').addEventListener('click', () => this.open());
         document.getElementById('habitat-close').addEventListener('click', () => this.close());
@@ -188,6 +89,12 @@ const HabitatGame = {
     },
 
     startGame() {
+        // Страховка: без базы HABITATS_DB игра не сможет собрать пул
+        // видов (biomesOf вернёт [] для всех). Сообщаем игроку и выходим.
+        if (!window.HABITATS_DB) {
+            alert('База биомов не загружена (js/habitats-db.js).');
+            return;
+        }
         this.round = 0;
         this.score = 0;        // верные определения за игру
         this.mistakes = 0;     // всего ошибочных ответов (после первой попытки вопроса)
@@ -195,57 +102,62 @@ const HabitatGame = {
         this.bestStreak = 0;
         this.fastest = null;   // самый быстрый верный ответ (сек)
         this.usedIds = new Set();
-        this.logEntries = [];  // пары «вид — среда» за всю игру
         this.waitingContinue = false; // пауза после ответа до «Продолжить →»
         this._endAfterContinue = false; // финал показываем по кнопке, не по таймеру
         this._lastAnswerCorrect = null;
+        this._matchedBiomes = new Set();
+        this._nextEnabled = false;
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
+        // Свиток активен всегда: класс «пусто» мог остаться с прошлой игры.
+        const modal = document.getElementById('habitat-modal');
+        if (modal) modal.classList.remove('habitat-info-empty');
 
         // Возвращаем кнопки управления при старте новой игры
         const topControls = document.querySelector('#habitat-modal .quiz-top-controls');
         if (topControls) {
             topControls.style.display = '';
         }
-        // Пустой журнал не должен выглядеть «дырой» в окне —
-        // показываем аккуратную подсказку, пока нет ни одной пары.
-        this.renderEmptyLogNote();
+        this.renderBiomesJournal();
         document.getElementById('habitat-end-screen').classList.add('hidden');
         GameEnd.leave('habitat'); // игровое поле снова видимо
         this.nextRound();
     },
 
-    renderEmptyLogNote() {
-        const log = document.getElementById('habitat-log');
-        if (!log) return;
-        log.innerHTML = '';
-        const note = document.createElement('div');
-        note.className = 'habitat-log-empty-note';
-        note.textContent = 'Здесь будут появляться пары «вид — среда» по вашим ответам.';
-        log.appendChild(note);
-    },
-
-    removeEmptyLogNote() {
-        const log = document.getElementById('habitat-log');
-        if (!log) return;
-        const note = log.querySelector('.habitat-log-empty-note');
-        if (note) note.remove();
-    },
+    // «Журнал биомов»: карточки всех биомов с подсказками.
+    // Десктоп — аккордеон (<details>), мобильный — тот же <details>
+    // работает как всплывающее окно за счёт CSS (см. habitat.css).
+    renderBiomesJournal() {
+        const host = document.getElementById('habitat-biomes-journal');
+        if (!host) return;
+        host.innerHTML = '';
+        this.BIOMES.forEach(b => {
+            const det = document.createElement('details');
+            det.className = 'hbiome-card hbiome-card-' + b.key;
+            const sum = document.createElement('summary');
+            sum.className = 'hbiome-card-head';
+            sum.innerHTML = `<span class="hbiome-icon">${b.icon}</span>` +
+                `<span class="hbiome-label">${escHtml(b.label)}</span>` +
+                `<span class="hbiome-toggle">▶</span>`;
+            const body = document.createElement('div');
+            body.className = 'hbiome-card-body';
+            body.textContent = b.tip;
+            det.appendChild(sum);
+            det.appendChild(body);
+            // Аккордеон: при раскрытии одной карточки остальные
+            // закрываются. Событие 'toggle' срабатывает и на открытие,
+            // и на закрытие; реагируем только на open === true.
+            det.addEventListener('toggle', () => {
+                if (!det.open) return;
+                host.querySelectorAll('details[open]').forEach(other => {
+                    if (other !== det) other.open = false;
+                });
+            });
+            host.appendChild(det);
+        });
+    },    
 
     // ---------- Переходы между раундами — ТОЛЬКО по кнопке ----------
-
-    // Мини-свиток «Данные из Красной книги» (единый для всех игр,
-    // js/mini-scroll.js) скрыт до первого ответа в текущем вопросе:
-    // текст поля «Места обитания» подсказывает биом.
-    setInfoVisible(visible) {
-        if (visible) return; // показ строится в renderInfoPanel()
-        MiniScroll.hide('habitat-info-panel');
-        // Свиток — отдельная третья колонка на десктопе: пока данных нет,
-        // колонка не должна «схлопываться»/сдвигать игру. На мобильных
-        // скрытие панели просто убирает блок под игрой.
-        const modal = document.getElementById('habitat-modal');
-        if (modal) modal.classList.toggle('habitat-info-empty', true);
-    },
 
     showNextRoundBtn(label) {
         const btn = document.getElementById('habitat-next-round-btn');
@@ -279,14 +191,8 @@ const HabitatGame = {
     continueToNextRound() {
         const btn = document.getElementById('habitat-next-round-btn');
 
-        // ГЛАВНАЯ ЗАЩИТА ОТ «ЖДАТЬ ТАЙМЕР» (по замечанию игрока: «после пяти
-        // определений все еще нужно ждать истечения таймера, кнопка
-        // „Продолжить“ не активна … игра как бы начинает шестой вид, но не
-        // даёт картинку и закончить не даёт»).
-        // Если ВСЕ ПЯТЬ ВИДОВ раунда отвечены верно — независимо от того,
-        // в каком внутреннем состоянии («пауза после ответа», баннер) мы
-        // находимся и активна ли кнопка, — переходим дальше СРАЗУ: к
-        // следующему раунду или к финалу. Никакого ожидания ⏱ больше нет.
+        // ① Раунд полностью закрыт (все ROUND_SIZE карточек собраны
+        // и текущая — последняя). Это может быть и «финал игры».
         if (this.roundFinished()) {
             this.waitingContinue = false;
             this.locked = true;
@@ -298,51 +204,50 @@ const HabitatGame = {
                 this.hideNextRoundBtn();
                 const banner = document.getElementById('habitat-round-banner');
                 if (banner) banner.classList.add('hidden');
-                MiniScroll.hide('habitat-info-panel');
                 this.nextRound();
             }
             return;
         }
 
-        // Кнопка бледная (is-idle/disabled), а раунд НЕ завершён — значит
-        // идти вперёд по-настоящему некуда: просто снимаем зависшую паузу
-        // и продолжаем таймер.
-        if (btn && btn.disabled) {
-            if (this.waitingContinue) {
-                this.waitingContinue = false;
-                this.locked = false;
-                this.resumeTimer();
-            }
+        // ② «Продолжить →» после неполного/неверного ответа.
+        if (this._nextEnabled) {
+            this._nextEnabled = false;
+            this.waitingContinue = false;
+            this.locked = false;
+            this.hideNextRoundBtn();
+
+            // Считаем неотмеченные правильные биомы за ошибки
+            this._applyMissedBiomesAsErrors();
+
+            this.resetScrollState(); // Сбрасываем свиток (закрываем details)
+            MiniScroll.hide('habitat-info-panel');
+            this.showNextCard();
             return;
         }
 
-        // Пауза ПОСЛЕ ОТВЕТА (не путать с паузой между раундами):
-        // игра стоит, открыт мини-свиток. «Продолжить →» снимает паузу
-        // и ОБЯЗАТЕЛЬНО двигает игру вперёд:
-        //  • если последний ответ был ВЕРНЫМ — переходим к СЛЕДУЮЩЕМУ
-        //    виду этого же раунда (по замечанию игрока кнопка раньше
-        //    вновь открывала ПЕРВЫЙ вид и игра «стояла» на нём);
-        //  • если ответ был НЕВЕРНЫМ — возвращаемся к ТОМУ ЖЕ виду,
-        //    чтобы игрок мог выбрать другую среду, глядя на свиток.
+        // ③ Карточка собрана целиком (waitingContinue === true) —
+        // «Продолжить →» переводит к следующей карточке.
         if (this.waitingContinue) {
-            const wasCorrect = !!this._lastAnswerCorrect;
             this.waitingContinue = false;
             this._lastAnswerCorrect = null;
-            this.locked = false;   // снова принимаем ответы
+            this.locked = false;
             this.hideNextRoundBtn();
-            MiniScroll.hide('habitat-info-panel');
-            if (wasCorrect) {
-                // Верный ответ засчитан и пара уже в журнале — идём дальше.
-                // showNextCard() сам снимает паузу таймера (resumeTimer).
-                this.showNextCard();
-            } else {
-                this.resumeTimer();
-            }
+
+            this.resetScrollState(); // Сбрасываем свиток (закрываем details)
+            this.showNextCard();
             return;
         }
 
-        // Баннер «раунд завершён» (кнопка активна по завершении раунда) —
-        // сразу ведём игрока дальше, не заставляя ждать истечения таймера.
+        // ③ Кнопка бледная (is-idle/disabled) — значит активной паузы
+        // нет, и «Продолжить» нажата вне сценария (например, повторный
+        // клик). На всякий случай возобновляем таймер, если он стоял.
+        if (btn && btn.disabled) {
+            this.resumeTimer();
+            return;
+        }
+
+        // ④ Баннер «раунд завершён» (кнопка активна) — сразу ведём
+        // игрока дальше, не заставляя ждать истечения таймера.
         this.proceedAfterRound();
     },
 
@@ -379,54 +284,23 @@ const HabitatGame = {
         this.nextRound();
     },
 
-    // ---------- Отнесение вида к кому-то из четырёх биомов ----------
+    // ---------- Отнесение вида к биомам (по базе HABITATS_DB) ----------
 
-    normalize(str) {
-        return String(str || '').toLowerCase().replace(/ё/g, 'е');
+    // Возвращает массив ключей биомов вида (может быть пустым).
+    biomesOf(species) {
+        if (!species || species.id == null) return [];
+        const db = window.HABITATS_DB || {};
+        const list = db[species.id] || db[String(species.id)] || [];
+        // дедупликация и валидация по известным ключам
+        const known = new Set(this.BIOMES.map(b => b.key));
+        return [...new Set(list)].filter(k => known.has(k));
     },
 
-    // Формулы названий ПРИРОДНЫХ ЗОН («в пределах степной и лесостепной
-    // природно-климатических зон») — это административно-географическая
-    // справка, а не место обитания. Вырезаем их из текста перед подсчётом
-    // весов, иначе рыба из Иртыша получала +3 степи за слово «степной».
-    stripZonePhrases(hay) {
-        return hay
-            .replace(/(лесостеп|степ|полупустын|пустын|тундр|тайжн|лес)[а-яё]*(\s+-?\s*[а-яё]+){0,4}\s+природно[-\s]?[а-яё]*/g, ' ')
-            .replace(/природно[-\s]?(климатичес|зон|област)[а-яё]*/g, ' ');
-    },
-
+    // Возвращает один биом — используется для счётчиков/подсветки,
+    // но карточка принимает любой из biomesOf().
     biomeOf(species) {
-        // Поля habitats/description_short есть только в подробной карточке
-        // из window.SPECIES_DATA (js/species-data.js), а не в списке SPECIES
-        const full = (window.SPECIES_DATA && species && species.id)
-            ? window.SPECIES_DATA[species.id] : null;
-        let hay = this.normalize(((full && full.habitats) || '') + ' ' +
-            ((full && full.description_short) || ''));
-        if (!hay.trim()) return null;
-        hay = this.stripZonePhrases(hay);
-
-        // Взвешенный подсчёт (см. BIOME_WEIGHTS): побеждает биом с
-        // наибольшей суммой весов встретившихся ключевых слов.
-        // Порог уверенности — 3 балла (например, одно «болото» или
-        // «степь»+«полынь» уже достаточно).
-        let best = null, bestScore = 0;
-        this.BIOME_PRIORITY.forEach(key => {
-            const table = this.BIOME_WEIGHTS[key] || [];
-            const neg = this.NEGATIVE_WEIGHTS[key] || [];
-            let score = 0;
-            for (const [stem, w] of table) {
-                if (w > 0 && hay.includes(stem)) score += w;
-            }
-            // Отрицательные веса: ложные срабатывания корней-омонимов
-            // («деревянистый» ⊃ «дерев», «листочков» ⊃ «елов») вычитаем,
-            // но сумму не отпускаем ниже нуля.
-            for (const [stem, w] of neg) {
-                if (w < 0 && hay.includes(stem)) score += w;
-            }
-            if (score < 0) score = 0;
-            if (score > bestScore) { best = key; bestScore = score; }
-        });
-        return bestScore >= 3 ? best : null; // нужен уверенный сигнал
+        const arr = this.biomesOf(species);
+        return arr.length ? arr[0] : null;
     },
 
     pickRoundSpecies() {
@@ -444,8 +318,8 @@ const HabitatGame = {
                 if (this.usedIds.has(id)) continue;
                 const sp = byId.get(id) || { id: rawId, name: (window.SPECIES_DATA[rawId] || {}).name || '' };
                 if (!sp.name) continue;
-                const biome = this.biomeOf(sp);
-                if (biome) entries.push({ sp, biome });
+                const biomes = this.biomesOf(sp);
+                if (biomes.length) entries.push({ sp, biomes });
             }
         }
         const pool = this.shuffle(entries);
@@ -462,9 +336,9 @@ const HabitatGame = {
         this.round++;
         this.roundMistakes = 0;
         this.matchedCount = 0;
+        this._matchedBiomes = new Set();   // собранные биомы текущей карточки
         
-        // Очищаем журнал пар в начале каждого нового раунда
-        this.renderEmptyLogNote();
+        this.renderBiomesJournal();
         this.locked = false;
         this.questionStartTs = Date.now();
         this.hideNextRoundBtn();
@@ -495,6 +369,11 @@ const HabitatGame = {
             btn.type = 'button';
             btn.className = 'habitat-biom habitat-biom-' + b.key;
             btn.dataset.biom = b.key;
+            // Подпись оставляем в DOM (для accessibility и всплывающей
+            // подсказки title), но визуально скрываем через CSS на
+            // десктопе и мобильных. Текст подписи виден в «Журнале
+            // биомов» и в title-тултипе при наведении.
+            btn.title = b.label;
             btn.innerHTML = `<span class="hb-icon">${b.icon}</span><span class="hb-label">${b.label}</span>`;
             btn.addEventListener('click', () => this.answer(b.key, btn));
             zone.appendChild(btn);
@@ -531,6 +410,17 @@ const HabitatGame = {
         this.currentIdx++;
         this._answeredCurrent = false;
         this._matchedCurrent = false; // новая карточка — пару ещё не собран
+        this._matchedBiomes = new Set(); // обнуляем собранные биомы
+        this._openDetails = null;        // раскрытые секции свитка — заново
+        this._nextEnabled = false;       // «Продолжить →» ещё не активна
+
+        // Сбрасываем визуальные отметки (галочки/крестики) со всех кнопок
+        document.querySelectorAll('#habitat-biomes .habitat-biom').forEach(btn => {
+            btn.classList.remove('hab-correct', 'hab-matched', 'hab-wrong');
+            btn.disabled = false;
+        });
+        this.hideCardCompleteFeedback(); // Убираем плашку «Все верно!»
+
         const item = this.currentCard();
         const card = document.getElementById('habitat-card');
         if (!item) { card.innerHTML = ''; return; }
@@ -542,8 +432,6 @@ const HabitatGame = {
                     <div class="latin-photo-front"></div>
                 </div>
             </div>
-            <div class="habitat-name">${escHtml(sp.name)}</div>
-            <div class="habitat-latin">${escHtml(String(sp.latin || '').split(',')[0].trim())}</div>
             <div class="habitat-tap-hint">👆 Нажми на карточку, чтобы открыть фото</div>`;
         const photo = card.querySelector('.habitat-photo');
         const front = card.querySelector('.latin-photo-front');
@@ -571,9 +459,10 @@ const HabitatGame = {
         // Не заставляем ждать анимацию: открываем сразу после короткой паузы
         setTimeout(reveal, 450);
         this.questionStartTs = Date.now();
-        // Мини-свиток с данными из Красной книги — только после ответа.
         this._lastPickKey = null;
-        this.setInfoVisible(false);
+        // Свиток активен ВСЕГДА: сразу при показе карточки строим его
+        // в режиме «без ответа» — подсветки нет, но текст читается.
+        this.renderInfoPanel(item, null, false);
     },
 
     // Мини-свиток справа от игровой панели (единый дизайн как в
@@ -587,25 +476,51 @@ const HabitatGame = {
         const habitats = String((full && full.habitats) || '').replace(/\s+/g, ' ').trim();
         const spread = String((full && full.spread_omsk) || '').replace(/\s+/g, ' ').trim();
 
-        // Подсветка ключевых слов — ТОЛЬКО при правильном ответе.
-        // При ошибке свиток показывается чистым текстом, без подсветок.
-        const hlText = (txt) => {
-            let html = escHtml(txt).replace(/\n/g, '<br>');
-            if (!correct) return html;
-            const words = this.KEYWORDS[biomKey] || [];
-            // длинные слова раньше — иначе короткие «съедят» вхождения длинных
-            [...words].sort((a, b) => b.length - a.length).forEach(w => {
-                const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[а-яё]*)', 'gi');
-                html = html.replace(re, '<mark class="hl-' + biomKey + '" data-w>$1</mark>');
+        // Запоминаем, какие <details> были раскрыты в прошлом рендере
+        // (по тексту summary), чтобы после перерисовки свитка вернуть
+        // их в открытое состояние. Сбрасывается только при переходе
+        // к новой карточке (см. showNextCard → this._openDetails = null).
+        const prevPanel = document.getElementById('habitat-info-panel');
+        const prevOpen = new Set();
+        if (prevPanel) {
+            prevPanel.querySelectorAll('details[open]').forEach(d => {
+                const s = d.querySelector('summary');
+                if (s) prevOpen.add(s.textContent.trim());
             });
-            return html;
-        };
+        }
+        const restoreOpen = this._openDetails !== null
+            ? new Set([...prevOpen, ...this._openDetails])
+            : prevOpen;
+
+        // Подсветка больше не нужна: база HABITATS_DB даёт точный
+        // список биомов, а ключевые слова в тексте могут вводить в
+        // заблуждение. Оставляем чистый текст с переносами строк.
+        const hlText = (txt) => escHtml(txt).replace(/\n/g, '<br>');
 
         const blocks = [];
+        // «Места обитания» — свёрнутый <details>, как «Распространение…».
+        // Заголовок кладём внутрь <summary>, title=null — иначе
+        // mini-scroll.js нарисует дубликат заголовка.
         if (habitats) {
-            blocks.push({ title: 'Места обитания', html: hlText(habitats) });
+            blocks.push({
+                title: null,
+                html: `
+                    <details class="ms-details">
+                        <summary class="ms-block-title">Места обитания</summary>
+                        <div class="ms-block-body" style="margin-top: 6px;">${hlText(habitats)}</div>
+                    </details>
+                `
+            });
         } else {
-            blocks.push({ title: 'Места обитания', text: 'Поле «Места обитания» в базе пусто — ориентируйтесь на описание.' });
+            blocks.push({
+                title: null,
+                html: `
+                    <details class="ms-details">
+                        <summary class="ms-block-title">Места обитания</summary>
+                        <div class="ms-block-body" style="margin-top: 6px;">Поле «Места обитания» в базе пусто — ориентируйтесь на описание.</div>
+                    </details>
+                `
+            });
         }
         if (spread) {
             // Оборачиваем блок в <details>, а сам ЗАГОЛОВОК кладём внутрь <summary>.
@@ -647,6 +562,26 @@ const HabitatGame = {
         if (panel && !panel.querySelector('.ms-open-full')) {
             panel.appendChild(MiniScroll.footerButton(sp.id, () => this.close()));
         }
+
+        // Восстанавливаем раскрытые <details> после перерисовки свитка.
+        // Так «Места обитания» / «Распространение…», открытые игроком,
+        // не сворачиваются при кликах по биомам этой же карточки.
+        if (panel && restoreOpen.size) {
+            panel.querySelectorAll('details').forEach(d => {
+                const s = d.querySelector('summary');
+                if (s && restoreOpen.has(s.textContent.trim())) d.open = true;
+            });
+        }
+        // Запоминаем актуальный набор открытых секций — чтобы при
+        // следующем рендере внутри той же карточки он сохранился.
+        const currentOpen = new Set();
+        if (panel) {
+            panel.querySelectorAll('details[open]').forEach(d => {
+                const s = d.querySelector('summary');
+                if (s) currentOpen.add(s.textContent.trim());
+            });
+        }
+        this._openDetails = currentOpen;
     },
 
     updateScoreboard() {
@@ -661,165 +596,180 @@ const HabitatGame = {
         if (!item) return;
         // Игра на паузе до нажатия «Продолжить →» — ответы не принимаем
         if (this.waitingContinue || this.locked) return;
-        const correct = biomKey === item.biome;
-        const firstTry = !this._answeredCurrent;
-        // Запоминаем исход последнего ответа — по нему «Продолжить →»
-        // решает: идти к следующему виду (верный) или остаться на
-        // текущем для повторного выбора (неверный).
-        this._lastAnswerCorrect = correct;
 
-        // Любой ответ: ставим игру на паузу (таймер заморожен), чтобы
-        // игрок мог спокойно прочитать мини-свиток с данными из
-        // Красной книги. Снимается пауза кнопкой «Продолжить →».
+        // Биомы текущего вида (из базы HABITATS_DB)
+        const needed = Array.isArray(item.biomes) ? item.biomes
+            : (item.biome ? [item.biome] : []);
+        if (!needed.length) return;
+
+        // Уже собранный биом повторно не принимаем (и не штрафуем):
+        // защита от «долбёжки» одной и той же кнопки.
+        if (this._matchedBiomes.has(biomKey)) {
+            btn.classList.add('hab-correct');
+            setTimeout(() => btn.classList.remove('hab-correct'), 400);
+            return;
+        }
+
+        const isTarget = needed.includes(biomKey);
+
+        // Любой ответ: пауза таймера, свиток открыт (как было).
         this.pauseTimer();
         this._lastPickKey = biomKey;
-        // Свиток показываем при ЛЮБОМ ответе (верном и неверном);
-        // подсветка ключевых слов — только при верном.
-        this.renderInfoPanel(item, biomKey, correct); // свиток + подсветка выбранной среды
+        // Свиток теперь активен всегда (см. showNextCard), но обновляем
+        // его на случай, если игрок ранее не открывал.
+        this.renderInfoPanel(item, biomKey, isTarget);
 
-        if (correct) {
-            const elapsed = (Date.now() - this.questionStartTs) / 1000;
-            btn.classList.add('hab-correct');
-            setTimeout(() => btn.classList.remove('hab-correct'), 600);
+        if (isTarget) {
+            // ВЕРНО: +1 правильный, кнопка «собирается»
+            this._matchedBiomes.add(biomKey);
+            btn.classList.add('hab-correct', 'hab-matched');
+            btn.disabled = true;
 
-            // ВАЖНО (по замечанию игрока: «после пяти определений игра не
-            // понимает, что раунд закончился, как бы начинает шестой вид,
-            // но не даёт картинку и не даёт закончить»):
-            // засчитываем пару ОДИН РАЗ на вопрос — по флагу _matchedCurrent.
-            // Раньше счётчик верных нёс только firstTry-защиту, и второй
-            // верный клик по тому же виду завышал matchedCount. Теперь при
-            // повторном верном ответе счётчик стоит, а защита от перелёта
-            // за пятый вопрос в showNextCard() не даёт игре «начать шестой
-            // вид без картинки».
-            if (!this._matchedCurrent) {
+            // Счёт верных: в этом варианте каждый верный клик = +1.
+            this.score++;
+            this.updateScoreboard();
+
+            // Если собран ВЕСЬ набор биомов вида — карточка закрыта.
+            if (this._matchedBiomes.size >= needed.length) {
                 this._matchedCurrent = true;
                 this.matchedCount++;
-                if (firstTry) {
-                    this.score++;
+                // Первая попытка была верной на всех биомах? Тогда серия.
+                if (!this._answeredCurrent) {
                     this.streak++;
                     this.bestStreak = Math.max(this.bestStreak, this.streak);
-                    if (this.fastest == null || elapsed < this.fastest) this.fastest = elapsed;
-                    if (elapsed <= 2) this.unlockAch('quick');
-                    if (this.streak >= 8) this.unlockAch('serial');
-                }
-            }
-            this.locked = false;
-            this.updateScoreboard();
-            // В журнал пишем ВЫБРАННУЮ игроком среду (биом), а не эталон:
-            // «Стрепет — Лес ✘», затем при верном выборе «Стрепет — Степь ✔».
-            this.addLogPair(item, true, biomKey);
-
-            if (this.roundFinished()) {
-                // Все пять ВИДОВ раунда отвечены верно — это КЛЮЧЕВОЕ
-                // отличие от прежней логики (по замечанию игрока: «после
-                // пяти определений все еще нужно ждать истечения таймера,
-                // кнопка „Продолжить“ не активна; игра как бы начинает
-                // шестой вид, но не даёт картинку и закончить не даёт»).
-                // Раньше раунд закрывался по числу ВЕРНЫХ ОТВЕТОВ, и если
-                // игрок сначала ошибался, а затем исправлялся на том же
-                // виде, счётчик мог дойти до 5 раньше, чем реально разобраны
-                // все карточки (или наоборот — никогда не дойти, и тогда
-                // игра крутила шестую несуществующую карточку до конца
-                // таймера). Теперь закрытие раунда привязано к последней
-                // карточке: currentIdx === ROUND_SIZE - 1 И пятый вид
-                // угадан.
-                const allCardsAnswered = this.currentIdx >= this.ROUND_SIZE - 1;
-                if (allCardsAnswered) {
-                    this.stopTimer();
-                    if (this.round >= this.TOTAL_ROUNDS) {
-                        // Последний раунд закрыт — финал игры тоже по кнопке,
-                        // чтобы игрок успел дочитать мини-свиток.
-                        this.showRoundBanner(
-                            `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены!` +
-                            (this.mistakes ? ` Ошибок за игру: ${this.mistakes}.` : ' Ни одной ошибки!'),
-                            'Завершить игру 🏁');
-                        this._endAfterContinue = true;   // «Продолжить» → экран итогов
-                        // Прячем игровые ↺/✕ и поле игры под баннером финала
-                        GameEnd.enter('habitat');
-                    } else {
-                        this.showRoundBanner(
-                            `🎉 Раунд ${this.round} завершён!` +
-                            (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
-                            'Продолжить →');
-                    }
-                    this.waitingContinue = false;        // это пауза МЕЖДУ раундами
-                    this.locked = true;                  // ответы больше не нужны
                 } else {
-                    // Пятая верная пара собрана ДО того, как игрок дошёл до
-                    // последней карточки (были ошибки с исправлением) —
-                    // оставшиеся карточки всё равно надо разобрать: обычная
-                    // пауза после ответа.
+                    this.streak = 0;
+                }
+                this.updateScoreboard();
+
+                // Показываем явное сообщение, что карточка собрана
+                this.showCardCompleteFeedback();
+
+                if (this.roundFinished()) {
+                    this.finishRoundByButton();
+                } else {
                     this.showAnswerPauseBtn();
                 }
             } else {
-                // НЕ показываем следующую карточку сразу: игра встаёт на
-                // паузу до нажатия «Продолжить →» — есть время изучить свиток.
-                this.showAnswerPauseBtn();
+                // Собрали ЧАСТЬ биомов — игру НЕ блокируем, клики по
+                // оставшимся биомам принимаются. «Продолжить →» уже
+                // активна: игрок сам решит, когда перейти.
+                this.showAnswerButton();
             }
         } else {
-            if (firstTry) {
-                // Первая ошибка в вопросе: засчитываем, но даём шанс
-                // выбрать другой вариант, глядя на текст в свитке.
-                this.mistakes++;
-                this.roundMistakes++;
-                this.streak = 0;
+            // НЕВЕРНО: +1 неправильный, кнопка мигает красным,
+            // карточка остаётся открытой.
+            this.mistakes++;
+            this.roundMistakes++;
+            if (!this._answeredCurrent) {
                 this._answeredCurrent = true;
-                this.updateScoreboard();
-                this.addLogPair(item, false, biomKey);
-            } else {
-                // Повторная ошибка — тоже обновляем запись журнала
-                this.addLogPair(item, false, biomKey);
+                this.streak = 0;
             }
+            this.updateScoreboard();
             btn.classList.add('hab-wrong');
             setTimeout(() => btn.classList.remove('hab-wrong'), 600);
-            // Пауза после любого ответа: ждём «Продолжить →». После
-            // снятия паузы можно выбрать другую среду для этого же вида.
-            this.showAnswerPauseBtn();
+            // Неверный клик НЕ блокирует игру: можно пробовать другие
+            // биомы. «Продолжить →» уже активна.
+            this.showAnswerButton();
         }
+    },
+
+    // Считает неотмеченные правильные биомы текущей карточки ошибками.
+    // Вызывается, когда игрок нажимает «Продолжить →», не собрав все
+    // правильные биомы (или вообще не кликнув).
+    _applyMissedBiomesAsErrors() {
+        const item = this.currentCard();
+        if (!item) return;
+        const needed = Array.isArray(item.biomes) ? item.biomes : (item.biome ? [item.biome] : []);
+
+        let missed = 0;
+        needed.forEach(b => {
+            if (!this._matchedBiomes.has(b)) missed++;
+        });
+
+        if (missed > 0) {
+            this.mistakes += missed;
+            this.roundMistakes += missed;
+            this.streak = 0; // пропуск верных биомов сбрасывает серию
+            this.updateScoreboard();
+        }
+    },
+
+    // Раунд закрыт: баннер с итогом и активной кнопкой «Продолжить».
+    finishRoundByButton() {
+        this.stopTimer();
+        if (this.round >= this.TOTAL_ROUNDS) {
+            this.showRoundBanner(
+                `🏆 Все ${this.TOTAL_ROUNDS} раунда пройдены!` +
+                (this.mistakes ? ` Ошибок за игру: ${this.mistakes}.` : ' Ни одной ошибки!'),
+                'Завершить игру 🏁');
+            this._endAfterContinue = true;
+            GameEnd.enter('habitat');
+        } else {
+            this.showRoundBanner(
+                `🎉 Раунд ${this.round} завершён!` +
+                (this.roundMistakes ? ` Ошибок в раунде: ${this.roundMistakes}.` : ' Ни одной ошибки!'),
+                'Продолжить →');
+        }
+        this.waitingContinue = false;
+        this.locked = true;
     },
 
     // Активировать кнопку «Продолжить →» как сигнал ПАУЗЫ ПОСЛЕ ОТВЕТА:
     // таймер стоит, свиток открыт, новые ответы не принимаются, пока
     // игрок не нажмёт кнопку (см. continueToNextRound -> waitingContinue).
+    // Визуальный фидбек: все биомы вида найдены.
+    showCardCompleteFeedback() {
+        let banner = document.getElementById('habitat-card-complete');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'habitat-card-complete';
+            banner.className = 'habitat-card-complete-banner';
+            banner.textContent = '✔ Все верно!';
+            // Вставляем сразу после сетки биомов
+            const biomes = document.getElementById('habitat-biomes');
+            if (biomes && biomes.parentNode) {
+                biomes.parentNode.insertBefore(banner, biomes.nextSibling);
+            }
+        }
+        banner.classList.remove('hidden');
+    },
+
+    hideCardCompleteFeedback() {
+        const banner = document.getElementById('habitat-card-complete');
+        if (banner) banner.classList.add('hidden');
+    },
+
+    // Полный сброс состояния мини-свитка. Закрывает все раскрытые
+    // <details> и очищает сохранённый массив _openDetails, чтобы при
+    // переходе на новую карточку свиток был полностью свёрнут.
+    resetScrollState() {
+        this._openDetails = null; // Забываем, что было раскрыто
+        const panel = document.getElementById('habitat-info-panel');
+        if (panel) {
+            // На всякий случай принудительно закрываем все details в DOM
+            panel.querySelectorAll('details').forEach(d => d.open = false);
+        }
+    },
+
+    // Показывает активную «Продолжить →», но НЕ блокирует игру:
+    // клики по биомам продолжают приниматься, пока игрок не нажмёт
+    // кнопку. Флаг _nextEnabled используется в continueToNextRound.
+    showAnswerButton() {
+        this._nextEnabled = true;
+        this.waitingContinue = false;
+        this.locked = false;
+        this.showNextRoundBtn('Продолжить →');
+    },
+
+    // Полная блокировка — только когда карточка собрана целиком
+    // (все биомы угаданы). Это состояние «ждём перехода».
     showAnswerPauseBtn() {
         this.waitingContinue = true;
         this.locked = true;
         this.showNextRoundBtn('Продолжить →');
     },
 
-    // Журнал пар «вид — среда»: записи остаются до конца игры.
-    // pickKey — биом, который реально выбрал игрок (пишем его, а не
-    // правильный ответ). При верном выборе запись перечёркивается
-    // крестиком и заменяется/подсвечивается галочкой.
-    addLogPair(item, correct, pickKey) {
-        const log = document.getElementById('habitat-log');
-        if (!log) return;
-        this.removeEmptyLogNote();
-        const key = item.sp.id;
-        const existing = log.querySelector(`[data-pair="${CSS.escape(key)}"]`);
-        const pickedLabel = this.biomeLabel(pickKey || item.biome);
-        if (existing) {
-            if (correct) {
-                existing.classList.remove('hl-miss');
-                existing.classList.add('hl-hit');
-                existing.innerHTML = `<span class="hl-mark">✔</span> ${escHtml(item.sp.name)} — <b>${pickedLabel}</b>`;
-            } else {
-                existing.innerHTML = `<span class="hl-mark">✘</span> ${escHtml(item.sp.name)} — <b>${pickedLabel}</b>`;
-            }
-            return;
-        }
-        const div = document.createElement('div');
-        div.className = 'hl-entry ' + (correct ? 'hl-hit' : 'hl-miss');
-        div.dataset.pair = key;
-        div.innerHTML = `<span class="hl-mark">${correct ? '✔' : '✘'}</span> ` +
-            `${escHtml(item.sp.name)} — <b>${pickedLabel}</b>`;
-        log.appendChild(div);
-    },
-
-    biomeLabel(key) {
-        const b = this.BIOMES.find(x => x.key === key);
-        return b ? `${b.icon} ${b.label}` : '?';
-    },
 
     showRoundBanner(text, btnLabel) {
         const banner = document.getElementById('habitat-round-banner');

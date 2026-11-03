@@ -738,24 +738,30 @@
           <!-- Два столбца: слева журнал пар, справа карточка + выбор среды -->
           <div class="habitat-cols">
             <div id="habitat-log-wrap" class="habitat-pane habitat-log-pane">
-              <div class="hp-title">📒 Журнал пар</div>
-              <div id="habitat-log" class="habitat-log" aria-label="Журнал пар «вид — среда»"></div>
+              <div class="hp-title">📒 Журнал биомов</div>
+              <div id="habitat-biomes-journal" class="habitat-biomes-journal"></div>
             </div>
+        
             <div class="habitat-pane habitat-play-pane">
               <div class="hp-title">🎲 Игра</div>
               <div class="habitat-play">
                 <div id="habitat-card" class="habitat-card"></div>
                 <div id="habitat-biomes" class="habitat-biomes" role="group" aria-label="Типы местообитаний"></div>
+        
+                <!-- Кнопка «Продолжить» теперь ВНУТРИ игровой зоны, 
+                             чтобы с помощью margin-top: auto всегда прижиматься к её низу. -->
+                <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button"
+                  disabled>Продолжить →</button>
               </div>
             </div>
           </div>
-          <!-- Мини-свиток «Данные из Красной книги»: НИЖЕ обоих столбцов,
-               на всю ширину окна игры (js/mini-scroll.js вложит свиток сюда). -->
+        
+          <!-- Мини-свиток «Данные из Красной книги»: НИЖЕ обоих столбцов -->
           <div id="habitat-info-panel" class="mini-scroll-panel habitat-info-pane hidden" aria-live="polite"></div>
         </div>
+        
         <!-- Баннер между раундами: явно сообщаем, что раунд закончен -->
         <div id="habitat-round-banner" class="habitat-round-banner hidden" role="status"></div>
-        <button id="habitat-next-round-btn" class="quiz-next-btn latin-next-btn is-idle" type="button" disabled>Продолжить →</button>
       </div>
       <div id="habitat-end-screen" class="hidden" data-game="habitat"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(240, 230, 207, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;">
@@ -902,6 +908,7 @@
   <script defer src="js/memo.js"></script>
   <script defer src="js/erudite.js"></script>
   <script defer src="js/latin.js"></script>
+  <script defer src="js/habitats-db.js"></script>
   <script defer src="js/habitat.js"></script>
   <script defer src="js/status.js"></script>
   <script defer src="js/family.js"></script>
