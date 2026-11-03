@@ -142,6 +142,14 @@ JS_GAMES_MENU = """() => {
   document.getElementById('btn-games').click();
 }"""
 
+# Кадр «Выбор игры»: в режиме игр витрина медалей лежит поверх рабочей
+# области — временно скрываем её, чтобы в кадр попали только крупные
+# кнопки восьми мини-игр.
+JS_GAMES_MENU_ONLY = """() => {
+  const sc = document.getElementById('games-showcase');
+  if (sc) sc.style.visibility = 'hidden';
+}"""
+
 JS_HABITAT_GAME = """() => {
   HabitatGame.open();
 }"""
@@ -180,8 +188,18 @@ def main():
             shot("01_main_map.png")
 
             # 2. Боковая панель навигации — снимем только сам сайдбар
-            page.locator("#sidebar").screenshot(path=str(OUT_DIR / "02_sidebar_nav.png"))
-            print("  ✔ 02_sidebar_nav.png (только панель)")
+            sidebar = page.locator("#sidebar")
+            if sidebar.bounding_box()["width"] >= 50:   # на десктопе виден всегда
+                sidebar.screenshot(path=str(OUT_DIR / "02_sidebar_nav.png"))
+                print("  ✔ 02_sidebar_nav.png (только панель)")
+            else:
+                # узкий вьюпорт: панель скрыта — раскрыть через бургер
+                page.evaluate("""() => {
+                  document.getElementById('sidebar').classList.add('open');
+                }""")
+                page.wait_for_timeout(400)
+                sidebar.screenshot(path=str(OUT_DIR / "02_sidebar_nav.png"))
+                print("  ✔ 02_sidebar_nav.png (панель раскрыта)")
 
             # 3. Режим разработчика
             page.evaluate("""() => {
@@ -224,10 +242,13 @@ def main():
               if (jm) jm.classList.add('hidden');
             }""")
 
-            # 7. Меню игр (с предварительно «наигранным» прогрессом медалей)
+            # 7. Меню игр (с предварительно «наигранным» прогрессом медалей):
+            #    витрина скрыта, в кадре — только выбор восьми игр
             page.evaluate(JS_SEED_PROGRESS)
             page.evaluate(JS_GAMES_MENU)
-            page.wait_for_timeout(600)
+            page.wait_for_timeout(400)
+            page.evaluate(JS_GAMES_MENU_ONLY)
+            page.wait_for_timeout(200)
             shot("07_games_menu.png")
 
             # 8. Игра «Среда обитания»
@@ -237,7 +258,15 @@ def main():
             page.evaluate("() => HabitatGame.close()")
             page.wait_for_timeout(400)
 
-            # 9. Витрина медалей
+            # 9. Витрина медалей: сначала полный выход из режима игр, затем
+            #    повторный вход — витрина перерисовывается с «наигранным»
+            #    прогрессом и снова становится видимой (shot 7 её скрывал).
+            page.evaluate("() => Achievements.exitGamesMode && Achievements.exitGamesMode()")
+            page.wait_for_timeout(300)
+            page.evaluate("""() => {
+              const sc = document.getElementById('games-showcase');
+              if (sc) sc.style.visibility = '';
+            }""")
             page.evaluate(JS_MEDALS)
             page.wait_for_timeout(600)
             shot("09_medals_showcase.png")
