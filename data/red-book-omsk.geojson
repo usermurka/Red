@@ -2607,40 +2607,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          70.97051498330767,
-          54.58697570507808
-        ]
-      },
-      "properties": {
-        "name": "Шмель малый каменный",
-        "speciesId": "bombus_ruderarius",
-        "category": "animals",
-        "status": 3,
-        "markerType": "breeding"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          71.15665494658911,
-          54.52003757992273
-        ]
-      },
-      "properties": {
-        "name": "Шмель малый каменный",
-        "speciesId": "bombus_ruderarius",
-        "category": "animals",
-        "status": 3,
-        "markerType": "breeding"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
           71.05868654486204,
           57.36490789902541
         ]
@@ -46382,23 +46348,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          71.04888970468933,
-          56.81824654358999
-        ]
-      },
-      "properties": {
-        "name": "Кокушник комарниковый",
-        "speciesId": "gymnadenia_conopsea",
-        "category": "plants",
-        "status": 3,
-        "markerType": "monitoring"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
           71.05868654486204,
           57.420689669988214
         ]
@@ -52817,6 +52766,2556 @@
         "speciesId": "crypsis_aculeata",
         "category": "plants",
         "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.62618097249535,
+          54.0849397664129
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.35114714527576,
+          53.850656328369155
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.50789658803909,
+          53.84507815127287
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.8402668515274,
+          54.023579818353824
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.98721945411802,
+          54.107252474798024
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.2825692640668,
+          54.994182633106504
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.41972502648471,
+          54.93282268504743
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.34062800271928,
+          54.40289586090085
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.4777837651372,
+          54.31364502736037
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.60514268738241,
+          54.218816016723615
+        ]
+      },
+      "properties": {
+        "name": "Хвойник двухколосковый",
+        "speciesId": "ephedra_distachya",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.32103432237386,
+          56.95212279390071
+        ]
+      },
+      "properties": {
+        "name": "Ужовник обыкновенный",
+        "speciesId": "ophioglossum_vulgatum",
+        "category": "plants",
+        "status": 1,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.51697112582804,
+          56.91865373132303
+        ]
+      },
+      "properties": {
+        "name": "Ужовник обыкновенный",
+        "speciesId": "ophioglossum_vulgatum",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.94803209342719,
+          56.132130760747586
+        ]
+      },
+      "properties": {
+        "name": "Ужовник обыкновенный",
+        "speciesId": "ophioglossum_vulgatum",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.12654212368723,
+          56.7066830016644
+        ]
+      },
+      "properties": {
+        "name": "Ужовник обыкновенный",
+        "speciesId": "ophioglossum_vulgatum",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.73250160962762,
+          56.115396229458746
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.56595532669158,
+          56.69552664747184
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.20347224030137,
+          56.78477748101231
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.13489435909241,
+          56.985591856478386
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.69403655132054,
+          57.113889929692824
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.09642930078535,
+          57.013482741959784
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.98866405888555,
+          57.309126128062616
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.13633896385994,
+          56.68437029327928
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.16645178676183,
+          56.27716336525086
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.30360754917974,
+          56.37757055298389
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.14613580403265,
+          56.82940289778256
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.6352555102843,
+          56.90191920003419
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.30144064202845,
+          56.90749737713047
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник виргинский",
+        "speciesId": "botrychium_virginianum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.77168897031845,
+          56.27716336525086
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник многораздельный",
+        "speciesId": "botrychium_multifidum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.43859640444637,
+          56.86845013745651
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник многораздельный",
+        "speciesId": "botrychium_multifidum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.91028933750388,
+          57.24776618000354
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник многораздельный",
+        "speciesId": "botrychium_multifidum",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.43859640444637,
+          56.86287196036023
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник полулунный",
+        "speciesId": "botrychium_lunaria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.23358506320325,
+          55.094589820839545
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник полулунный",
+        "speciesId": "botrychium_lunaria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.45819008479178,
+          56.48913409490949
+        ]
+      },
+      "properties": {
+        "name": "Гроздовник полулунный",
+        "speciesId": "botrychium_lunaria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.37981536341012,
+          56.87960649164907
+        ]
+      },
+      "properties": {
+        "name": "Пузырник судетский",
+        "speciesId": "cystopteris_sudetica",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.70383339149325,
+          57.63823857674312
+        ]
+      },
+      "properties": {
+        "name": "Пузырник судетский",
+        "speciesId": "cystopteris_sudetica",
+        "category": "plants",
+        "status": 3,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.0292960243439,
+          57.878100191883156
+        ]
+      },
+      "properties": {
+        "name": "Пузырник судетский",
+        "speciesId": "cystopteris_sudetica",
+        "category": "plants",
+        "status": 3,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.30216294441222,
+          55.05554258116558
+        ]
+      },
+      "properties": {
+        "name": "Сальвиния плавающая",
+        "speciesId": "salvinia_natans",
+        "category": "plants",
+        "status": 2,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.02712911719262,
+          54.609288413463204
+        ]
+      },
+      "properties": {
+        "name": "Сальвиния плавающая",
+        "speciesId": "salvinia_natans",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.73322391201138,
+          54.03473617254639
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.89904789256366,
+          53.98453257867987
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.76189213014574,
+          54.05147070383522
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.65412688824594,
+          54.123987006086864
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.3700185232374,
+          54.39731768380457
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.92916071546554,
+          54.57024117378924
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.30216294441222,
+          54.94955721633627
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.2923661042395,
+          54.88261909118091
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.5274902683845,
+          54.787790080544156
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.03764825974909,
+          55.323295081787016
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.95927353836743,
+          55.222887894053976
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.16428487961053,
+          55.76397107239312
+        ]
+      },
+      "properties": {
+        "name": "Хвощ ветвистый",
+        "speciesId": "equisetum_ramosissimum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.10622614095806,
+          56.93538826261187
+        ]
+      },
+      "properties": {
+        "name": "Фиссиденс адиантовидный",
+        "speciesId": "fissidens_adianthoides",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.82284007833327,
+          56.95212279390071
+        ]
+      },
+      "properties": {
+        "name": "Палюделла оттопыренная",
+        "speciesId": "paludella_squarrosa",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.82211777594951,
+          57.57687862868404
+        ]
+      },
+      "properties": {
+        "name": "Палюделла оттопыренная",
+        "speciesId": "paludella_squarrosa",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.92080848006036,
+          57.00790456486351
+        ]
+      },
+      "properties": {
+        "name": "Бриум нейдаммский",
+        "speciesId": "bryum_neodamense",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.67372056859136,
+          56.99117003357467
+        ]
+      },
+      "properties": {
+        "name": "Бриум нейдаммский",
+        "speciesId": "bryum_neodamense",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0851878558451,
+          57.29796977387006
+        ]
+      },
+      "properties": {
+        "name": "Плагиотециум скрытный",
+        "speciesId": "plagiothecium_latebricola",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.4777837651372,
+          56.840559251975115
+        ]
+      },
+      "properties": {
+        "name": "Плагиотециум скрытный",
+        "speciesId": "plagiothecium_latebricola",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.59606814959346,
+          57.00790456486351
+        ]
+      },
+      "properties": {
+        "name": "Циррифиллум волосконосный",
+        "speciesId": "cirriphyllum_piliferum",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.0753910156724,
+          56.7345738871458
+        ]
+      },
+      "properties": {
+        "name": "Конардия компактная",
+        "speciesId": "conardia_compacta",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.12581982130347,
+          56.93538826261187
+        ]
+      },
+      "properties": {
+        "name": "Псевдокаллиергон плауновидный",
+        "speciesId": "pseudocalliergon_lycopodioides",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.2727724238941,
+          56.86287196036023
+        ]
+      },
+      "properties": {
+        "name": "Псевдокаллиергон плауновидный",
+        "speciesId": "pseudocalliergon_lycopodioides",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.43931870683014,
+          56.76804294972348
+        ]
+      },
+      "properties": {
+        "name": "Псевдокаллиергон плауновидный",
+        "speciesId": "pseudocalliergon_lycopodioides",
+        "category": "plants",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.88162111936953,
+          56.95770097099699
+        ]
+      },
+      "properties": {
+        "name": "Псевдокаллиергон трёхрядный",
+        "speciesId": "pseudocalliergon_trifarium",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.64505235045701,
+          56.890762845841635
+        ]
+      },
+      "properties": {
+        "name": "Псевдокаллиергон трёхрядный",
+        "speciesId": "pseudocalliergon_trifarium",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.95019900057848,
+          56.33294513621365
+        ]
+      },
+      "properties": {
+        "name": "Риччиокарпос плавающий",
+        "speciesId": "ricciocarpos_natans",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.52676796600073,
+          56.83498107487883
+        ]
+      },
+      "properties": {
+        "name": "Риччиокарпос плавающий",
+        "speciesId": "ricciocarpos_natans",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.81304323816057,
+          55.496218571771685
+        ]
+      },
+      "properties": {
+        "name": "Цефалозия обильноголовая",
+        "speciesId": "cephalozia_pleniceps",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.28112465929927,
+          57.46531508675845
+        ]
+      },
+      "properties": {
+        "name": "Кроссокаликс Геллера",
+        "speciesId": "crossocalyx_hellerianus",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.61493952755511,
+          56.76804294972348
+        ]
+      },
+      "properties": {
+        "name": "Гетерогемма головчатая",
+        "speciesId": "heterogemma_capitata",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.30071833964469,
+          57.47089326385473
+        ]
+      },
+      "properties": {
+        "name": "Геокаликс пахучий",
+        "speciesId": "geocalyx_graveolens",
+        "category": "plants",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.25245644116491,
+          57.019060919056066
+        ]
+      },
+      "properties": {
+        "name": "Хара Брауна",
+        "speciesId": "chara_braunii",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.56595532669158,
+          56.561650397161124
+        ]
+      },
+      "properties": {
+        "name": "Хара Брауна",
+        "speciesId": "chara_braunii",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.30144064202845,
+          57.019060919056066
+        ]
+      },
+      "properties": {
+        "name": "Хара противоположная",
+        "speciesId": "chara_contraria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.13633896385994,
+          55.37349867565353
+        ]
+      },
+      "properties": {
+        "name": "Хара противоположная",
+        "speciesId": "chara_contraria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.27205012151033,
+          54.64833565313716
+        ]
+      },
+      "properties": {
+        "name": "Хара противоположная",
+        "speciesId": "chara_contraria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.18387855995596,
+          54.59813205927065
+        ]
+      },
+      "properties": {
+        "name": "Хара противоположная",
+        "speciesId": "chara_contraria",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.37981536341012,
+          54.59813205927065
+        ]
+      },
+      "properties": {
+        "name": "Хара седеющая",
+        "speciesId": "chara_canescens",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.26225328133762,
+          54.54792846540413
+        ]
+      },
+      "properties": {
+        "name": "Хара седеющая",
+        "speciesId": "chara_canescens",
+        "category": "plants",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.29164380185574,
+          56.52260315748717
+        ]
+      },
+      "properties": {
+        "name": "Спирогира полусвязанная",
+        "speciesId": "spirogyra_subcolligata",
+        "category": "plants",
+        "status": 4,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.22306592064679,
+          55.84764372883731
+        ]
+      },
+      "properties": {
+        "name": "Спирогира полусвязанная",
+        "speciesId": "spirogyra_subcolligata",
+        "category": "plants",
+        "status": 4,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.96834807615637,
+          54.64833565313716
+        ]
+      },
+      "properties": {
+        "name": "Перкурсария пронизанная",
+        "speciesId": "percursaria_percursa",
+        "category": "plants",
+        "status": 4,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.41900272410095,
+          57.013482741959784
+        ]
+      },
+      "properties": {
+        "name": "Вошерия отвернутая",
+        "speciesId": "vaucheria_aversa",
+        "category": "plants",
+        "status": 4,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.40920588392824,
+          55.708189301430316
+        ]
+      },
+      "properties": {
+        "name": "Бацидия Баглитто",
+        "speciesId": "bacidia_bagliettoana",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.40920588392824,
+          55.708189301430316
+        ]
+      },
+      "properties": {
+        "name": "Бацидия многоцветная",
+        "speciesId": "bacidia_polychroa",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.37074082562117,
+          54.11840882899058
+        ]
+      },
+      "properties": {
+        "name": "Тониния вздутолистная",
+        "speciesId": "toninia_sedifolia",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.87945421221823,
+          54.090517943509184
+        ]
+      },
+      "properties": {
+        "name": "Тониния вздутолистная",
+        "speciesId": "toninia_sedifolia",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.76189213014574,
+          54.12956518318314
+        ]
+      },
+      "properties": {
+        "name": "Кладония листоватая",
+        "speciesId": "cladonia_foliacea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.63453320790053,
+          54.21323783962734
+        ]
+      },
+      "properties": {
+        "name": "Кладония листоватая",
+        "speciesId": "cladonia_foliacea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.9977385966745,
+          54.079361589316626
+        ]
+      },
+      "properties": {
+        "name": "Кладония листоватая",
+        "speciesId": "cladonia_foliacea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.32175662475763,
+          53.83949997417659
+        ]
+      },
+      "properties": {
+        "name": "Кладония листоватая",
+        "speciesId": "cladonia_foliacea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.43931870683014,
+          53.6442637758068
+        ]
+      },
+      "properties": {
+        "name": "Кладония листоватая",
+        "speciesId": "cladonia_foliacea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.33083116254657,
+          56.90749737713047
+        ]
+      },
+      "properties": {
+        "name": "Кладония листоватая",
+        "speciesId": "cladonia_foliacea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.32175662475763,
+          53.83949997417659
+        ]
+      },
+      "properties": {
+        "name": "Диплосхистес неровный",
+        "speciesId": "diploschistes_scruposus",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.39033450596659,
+          54.1128306518943
+        ]
+      },
+      "properties": {
+        "name": "Диплосхистес неровный",
+        "speciesId": "diploschistes_scruposus",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.33083116254657,
+          56.890762845841635
+        ]
+      },
+      "properties": {
+        "name": "Графис написанный",
+        "speciesId": "graphis_scripta",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.60514268738241,
+          56.77919930391604
+        ]
+      },
+      "properties": {
+        "name": "Графис написанный",
+        "speciesId": "graphis_scripta",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.75353989474056,
+          57.30354795096633
+        ]
+      },
+      "properties": {
+        "name": "Гиалекта Флотова",
+        "speciesId": "gyalecta_flotovii",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.98866405888555,
+          57.24776618000354
+        ]
+      },
+      "properties": {
+        "name": "Гиалекта чернеющая",
+        "speciesId": "gyalecta_nigricans",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.5673999314591,
+          54.107252474798024
+        ]
+      },
+      "properties": {
+        "name": "Леканора рассеянная",
+        "speciesId": "lecanora_dispersa",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.20347224030137,
+          55.69703294723776
+        ]
+      },
+      "properties": {
+        "name": "Леканора рассеянная",
+        "speciesId": "lecanora_dispersa",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.49809974786638,
+          53.716780078058434
+        ]
+      },
+      "properties": {
+        "name": "Леканора обломочная",
+        "speciesId": "lecanora_frustulosa",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.8522305988514,
+          54.70969560119624
+        ]
+      },
+      "properties": {
+        "name": "Леканора обломочная",
+        "speciesId": "lecanora_frustulosa",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.90121479971494,
+          54.69853924700368
+        ]
+      },
+      "properties": {
+        "name": "Леканора настенная",
+        "speciesId": "lecanora_muralis",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.39033450596659,
+          54.11840882899058
+        ]
+      },
+      "properties": {
+        "name": "Леканора настенная",
+        "speciesId": "lecanora_muralis",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.54708394872992,
+          53.733514609347274
+        ]
+      },
+      "properties": {
+        "name": "Леканора настенная",
+        "speciesId": "lecanora_muralis",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.02785141957638,
+          55.010917164395345
+        ]
+      },
+      "properties": {
+        "name": "Дендрискокаулон Умгаузена",
+        "speciesId": "dendriscocaulon_umhausense",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.38198227056141,
+          55.26193513372794
+        ]
+      },
+      "properties": {
+        "name": "Дендрискокаулон Умгаузена",
+        "speciesId": "dendriscocaulon_umhausense",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.88997335477471,
+          55.74723654110428
+        ]
+      },
+      "properties": {
+        "name": "Дендрискокаулон Умгаузена",
+        "speciesId": "dendriscocaulon_umhausense",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.91864157290907,
+          56.517024980390886
+        ]
+      },
+      "properties": {
+        "name": "Дендрискокаулон Умгаузена",
+        "speciesId": "dendriscocaulon_umhausense",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.127264426071,
+          57.6717076393208
+        ]
+      },
+      "properties": {
+        "name": "Лобария лёгочная",
+        "speciesId": "lobaria_pulmonaria",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.73322391201138,
+          57.258922534196095
+        ]
+      },
+      "properties": {
+        "name": "Лобария лёгочная",
+        "speciesId": "lobaria_pulmonaria",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.2426596009922,
+          57.097155398403984
+        ]
+      },
+      "properties": {
+        "name": "Еверния сливовая",
+        "speciesId": "evernia_prunastri",
+        "category": "lichens",
+        "status": 4,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.60514268738241,
+          56.807090189397435
+        ]
+      },
+      "properties": {
+        "name": "Еверниаструм усиковый",
+        "speciesId": "everniastrum_cirratum",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.4777837651372,
+          56.82940289778256
+        ]
+      },
+      "properties": {
+        "name": "Гипогимния энтероморфная",
+        "speciesId": "hypogymnia_enteromorpha",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.53728710855721,
+          57.788849358342674
+        ]
+      },
+      "properties": {
+        "name": "Менегацция пробуравленная",
+        "speciesId": "menegazzia_terebrata",
+        "category": "lichens",
+        "status": 0,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.69548115608806,
+          54.837993674410676
+        ]
+      },
+      "properties": {
+        "name": "Неофусцелия грубоморщинистая",
+        "speciesId": "neofuscelia_ryssolea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.47850606752097,
+          53.716780078058434
+        ]
+      },
+      "properties": {
+        "name": "Неофусцелия грубоморщинистая",
+        "speciesId": "neofuscelia_ryssolea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.95855123598366,
+          54.045892526738946
+        ]
+      },
+      "properties": {
+        "name": "Неофусцелия грубоморщинистая",
+        "speciesId": "neofuscelia_ryssolea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.74229844980032,
+          54.13514336027942
+        ]
+      },
+      "properties": {
+        "name": "Неофусцелия грубоморщинистая",
+        "speciesId": "neofuscelia_ryssolea",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.2328627608195,
+          57.113889929692824
+        ]
+      },
+      "properties": {
+        "name": "Пармелина дубовая",
+        "speciesId": "parmelina_quercina",
+        "category": "lichens",
+        "status": 4,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.56595532669158,
+          56.77919930391604
+        ]
+      },
+      "properties": {
+        "name": "Пармелина липовая",
+        "speciesId": "parmelina_tiliacea",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.63453320790053,
+          56.78477748101231
+        ]
+      },
+      "properties": {
+        "name": "Уснея Васмута",
+        "speciesId": "usnea_wasmuthii",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.93823525325449,
+          54.140721537375704
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.02640681480887,
+          54.98860445601023
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.45819008479178,
+          54.88819726827719
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "literature"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.2027499379176,
+          54.787790080544156
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.31123748220116,
+          55.64125117627496
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.76405903729703,
+          54.78221190344787
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.66536833318618,
+          54.0849397664129
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.53728710855721,
+          53.69446736967332
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.38053766579388,
+          53.817187265791475
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.35114714527576,
+          54.107252474798024
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.0075354368472,
+          54.079361589316626
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.83119231373846,
+          54.52003757992273
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.85986053187281,
+          54.029157995450106
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.7129079292822,
+          54.12956518318314
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.20347224030137,
+          54.63160112184832
+        ]
+      },
+      "properties": {
+        "name": "Ксантопармелия камчатская",
+        "speciesId": "xanthoparmelia_camtschadalis",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.4001313461393,
+          54.1128306518943
+        ]
+      },
+      "properties": {
+        "name": "Псора обманная",
+        "speciesId": "psora_decipiens",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.4001313461393,
+          53.86181268256171
+        ]
+      },
+      "properties": {
+        "name": "Псора обманная",
+        "speciesId": "psora_decipiens",
+        "category": "lichens",
+        "status": 1,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.07683562043992,
+          57.242188002907255
+        ]
+      },
+      "properties": {
+        "name": "Рамалина чашечковая",
+        "speciesId": "ramalina_calicaris",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.58699361180452,
+          57.28123524258122
+        ]
+      },
+      "properties": {
+        "name": "Сфинктрина кубарчатая",
+        "speciesId": "sphinctrina_turbinata",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.45819008479178,
+          56.890762845841635
+        ]
+      },
+      "properties": {
+        "name": "Сфинктрина кубарчатая",
+        "speciesId": "sphinctrina_turbinata",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.53728710855721,
+          53.72235825515472
+        ]
+      },
+      "properties": {
+        "name": "Калоплака желточно-жёлтая",
+        "speciesId": "caloplaca_vitellinula",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.31123748220116,
+          55.66914206175636
+        ]
+      },
+      "properties": {
+        "name": "Калоплака желточно-жёлтая",
+        "speciesId": "caloplaca_vitellinula",
+        "category": "lichens",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.5673999314591,
+          54.090517943509184
+        ]
+      },
+      "properties": {
+        "name": "Веррукария черноватая",
+        "speciesId": "verrucaria_nigrescens",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.44911554700283,
+          54.0849397664129
+        ]
+      },
+      "properties": {
+        "name": "Веррукария черноватая",
+        "speciesId": "verrucaria_nigrescens",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.16428487961053,
+          55.6858765930452
+        ]
+      },
+      "properties": {
+        "name": "Веррукария черноватая",
+        "speciesId": "verrucaria_nigrescens",
+        "category": "lichens",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.07683562043992,
+          55.29540419630562
+        ]
+      },
+      "properties": {
+        "name": "Звездовик полевой",
+        "speciesId": "geastrum_campestre",
+        "category": "fungi",
+        "status": 2,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.2727724238941,
+          55.03880804987674
+        ]
+      },
+      "properties": {
+        "name": "Мутинус собачий",
+        "speciesId": "mutinus_caninus",
+        "category": "fungi",
+        "status": 3,
+        "markerType": "monitoring"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.8424337586787,
+          56.29947607363597
+        ]
+      },
+      "properties": {
+        "name": "Спарассис курчавый",
+        "speciesId": "sparassis_crispa",
+        "category": "fungi",
+        "status": 3,
         "markerType": "monitoring"
       }
     },

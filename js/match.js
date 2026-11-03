@@ -34,10 +34,14 @@ const MatchGame = {
     close() {
         document.getElementById('match-modal').classList.add('hidden');
         GameEnd.leave('match');
+        document.body.classList.remove('quiz-end-open');
+        GameEnd.leave('match');
         document.getElementById('app').style.pointerEvents = '';
     },
     startGame() {
         document.getElementById('match-end-screen').classList.add('hidden');
+        GameEnd.leave('match');
+        document.body.classList.remove('quiz-end-open'); // вернуть игровые ↺/✕
         GameEnd.leave('match');
         const grid = document.getElementById('match-grid');
         grid.innerHTML = '';
@@ -149,7 +153,12 @@ const MatchGame = {
                         this.unlockAch('persistent');
 
                         document.getElementById('match-end-screen').classList.remove('hidden');
-                        GameEnd.enter('match'); // скрыть поле игры и ↺/✕
+                        try { GameEnd.enter('match'); } catch (e) { /* noop */ }
+                        // Прячем игровые ↺/✕ на финале — см. responsive.css
+                        // (body.quiz-end-open). Класс вешаем ВСЕГДА и НА ВСЕХ ширинах:
+                        // раньше это правило жило только в @media (max-width:900px),
+                        // и на десктопе на финале оставались два крестика.
+                        document.body.classList.add('quiz-end-open');
                     }, 500);
                 }
             } else {

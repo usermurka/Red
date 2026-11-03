@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "exportedAt": "2026-10-27T03:43:15.694Z",
+  "exportedAt": "2026-11-03T04:18:20.153Z",
   "markers": [
     {
       "id": 1791101344537,
@@ -1715,28 +1715,6 @@
       "markerType": "breeding",
       "x": 57.32259320549012,
       "y": 87.4744781735653
-    },
-    {
-      "id": 1791896720652,
-      "name": "Шмель малый каменный",
-      "speciesId": "bombus_ruderarius",
-      "speciesName": "Шмель малый каменный",
-      "category": "animals",
-      "status": 3,
-      "markerType": "breeding",
-      "x": 12.934391122359584,
-      "y": 77.10713261225385
-    },
-    {
-      "id": 1791896721992,
-      "name": "Шмель малый каменный",
-      "speciesId": "bombus_ruderarius",
-      "speciesName": "Шмель малый каменный",
-      "category": "animals",
-      "status": 3,
-      "markerType": "breeding",
-      "x": 15.893604594568286,
-      "y": 78.40305080741778
     },
     {
       "id": 1791896809131,

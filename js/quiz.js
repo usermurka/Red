@@ -7,7 +7,7 @@ const Quiz = {
     scoreWrong: 0,
     currentStreak: 0,
     currentQuestionNum: 1,
-    totalQuestions: 30,
+    totalQuestions: 30, // количество вопросов
     currentSpecies: null,
     isAnswered: false,
     timerId: null,

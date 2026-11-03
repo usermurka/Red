@@ -194,6 +194,32 @@ const Journal = {
                 reader.readAsText(file);
             });
         }
+
+        // ============================================================
+        // ПЕРЕРИСОВКА СПИСКА ПРИ ИЗМЕНЕНИИ РАЗМЕРА ОКНА
+        // ------------------------------------------------------------
+        // Кнопка «🗺 Открыть карту» рендерится в renderList() только
+        // при isCompactLayout() === true (окно ≤ 1024px). Если список
+        // был отрисован на широком окне (или DevTools «съел» ширину),
+        // кнопка не создавалась и не появлялась при сужении окна.
+        // Теперь при пересечении границы 1024px список перерисовывается
+        // автоматически (если дневник открыт).
+        // ============================================================
+        let lastCompact = this.isCompactLayout();
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const nowCompact = this.isCompactLayout();
+                if (nowCompact !== lastCompact) {
+                    lastCompact = nowCompact;
+                    const modal = document.getElementById('journal-modal');
+                    if (modal && !modal.classList.contains('hidden')) {
+                        this.renderList();
+                    }
+                }
+            }, 150);
+        });
     },
 
     // Подсветка кнопки «Дневник» в меню как активной, пока дневник открыт.
@@ -357,7 +383,7 @@ const Journal = {
         // Меняем заголовок, если меток несколько
         const title = document.querySelector('#journal-form-modal h3');
         if (this.pendingPins.length > 1) {
-            title.textContent = `Наблюдение ${this.currentDescribingIndex + 1} из ${this.pendingPins.length}`;
+            title.textContent = 'Новое наблюдение';
         } else {
             title.textContent = 'Новое наблюдение';
         }

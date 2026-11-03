@@ -750,25 +750,78 @@ body {
     padding: 8px;
   }
 
-  /* --- Галерея фото --- */
-  .photo-gallery-content {
-    width: 100vw;
-    height: 100dvh;
-  }
-
-  .gallery-nav-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 22px;
-  }
-
-  #gallery-prev { left: 8px; }
-  #gallery-next { right: 8px; }
-
-  .gallery-counter {
-    bottom: calc(16px + env(safe-area-inset-bottom));
-  }
-}
+    /* --- Галерея фото --- */
+    .photo-gallery-content {
+      width: 100vw;
+      height: 100dvh;
+    }
+  
+    .gallery-nav-btn {
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+    }
+  
+    #gallery-prev {
+      left: 8px;
+    }
+  
+    #gallery-next {
+      right: 8px;
+    }
+  
+    .gallery-counter {
+      bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+  
+    /* ============================================================
+       КРЕСТИК ЗАКРЫТИЯ ГАЛЕРЕИ НА МОБИЛЬНЫХ/ПЛАНШЕТАХ
+       ------------------------------------------------------------
+       В базовых правилах .gallery-close-btn стоит
+       position: absolute; top: -40px; right: 0 — относительно
+       .photo-gallery-content. На телефонах/планшетах это:
+         • выносит кнопку за верхний край экрана (её не видно
+           и по ней нельзя кликнуть);
+         • на устройствах с «чёлкой» прячет её под системной
+           панелью браузера (safe-area-inset-top не учтён).
+       Здесь переопределяем позиционирование: кнопка — фиксирована
+       к экрану, сидит в правом верхнем углу с учётом safe-area,
+       z-index выше стрелок навигации и счётчика, крупный
+       тач-таргет 44×44. Мобильные правила выше не затрагиваются.
+       ============================================================ */
+    #photo-gallery-modal .gallery-close-btn {
+      position: fixed !important;
+      top: calc(12px + env(safe-area-inset-top)) !important;
+      right: 12px !important;
+      left: auto !important;
+      z-index: 3200 !important;
+      /* выше стрелок (.gallery-nav-btn, z-index 10) и счётчика */
+      width: 44px !important;
+      height: 44px !important;
+      padding: 0 !important;
+      font-size: 26px !important;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: rgba(240, 230, 207, 0.15) !important;
+      border: 2px solid var(--parchment-light, #f8f1e0) !important;
+      border-radius: 50% !important;
+      color: var(--parchment-light, #f8f1e0) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+  
+    /* На тач-устройствах :hover «залипает» — отключаем поворот,
+       чтобы кнопка не «уезжала» и не дёргалась после тапа. */
+    #photo-gallery-modal .gallery-close-btn:hover,
+    #photo-gallery-modal .gallery-close-btn:active {
+      transform: none !important;
+      background: rgba(240, 230, 207, 0.28) !important;
+      color: #fff !important;
+    }
+    }
 
 /* ============================================================
    МОБИЛЬНЫЕ ТЕЛЕФОНЫ (до 640px)
@@ -999,6 +1052,17 @@ body {
 
   .journal-sidebar {
     max-height: 60dvh;
+  }
+
+  /* Крестик галереи в альбомной ориентации на низких экранах:
+     top/right меньше, чтобы 44×44-кнопка не наезжала на стрелки
+     навигации и счётчик; safe-area остаётся учтённой. */
+  #photo-gallery-modal .gallery-close-btn {
+    top: calc(8px + env(safe-area-inset-top)) !important;
+    right: 8px !important;
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 22px !important;
   }
 }
 
@@ -1795,13 +1859,55 @@ body.game-end-active #family-modal .latin-body {
    принудительно прячем игровые кнопки по их ID. Это перебьёт любые
    другие стили, так как используется ID и !important.
    ============================================================ */
-#latin-end-screen:not(.hidden) ~ #latin-close,
-#latin-end-screen:not(.hidden) ~ #latin-restart,
-#latin-end-screen:not(.hidden) ~ .quiz-top-controls,
+#latin-end-screen:not(.hidden)~#latin-close,
+#latin-end-screen:not(.hidden)~#latin-restart,
+#latin-end-screen:not(.hidden)~.quiz-top-controls,
 body.game-end-active #latin-close,
 body.game-end-active #latin-restart,
 body.game-end-active #latin-modal .quiz-top-controls {
-    display: none !important;
+  display: none !important;
+}
+
+/* ============================================================
+   ДЕСКТОП: один крестик на финале ВСЕХ игр
+   ------------------------------------------------------------
+   Мобильная версия прячет игровые ↺/✕ через
+   body.quiz-end-open (это правило живёт в @media max-width:900px).
+   На десктопе на финале оставались ДВА крестика: круглый
+   .game-close-x финального экрана + игровой ✕ из
+   .quiz-top-controls.
+
+   Здесь тот же класс quiz-end-open (его вешают finishGame()
+   каждой игры и снимают startGame()/close()), но БЕЗ
+   media-запроса — значит действует на всех ширинах, включая
+   десктоп. Селектор [id$="-end-screen"] ловит финал любой игры
+   (quiz/match/memo/erudite/latin/habitat/status/family), а
+   #quiz-modal/#match-modal/#memo-modal и т.д. — их контейнеры.
+   Мобильные правила не затрагиваем: они остаются как были.
+   ============================================================ */
+body.quiz-end-open #quiz-modal .quiz-top-controls,
+body.quiz-end-open #match-modal .quiz-top-controls,
+body.quiz-end-open #memo-modal .quiz-top-controls,
+body.quiz-end-open #erudite-modal .quiz-top-controls,
+body.quiz-end-open #latin-modal .quiz-top-controls,
+body.quiz-end-open #habitat-modal .quiz-top-controls,
+body.quiz-end-open #status-modal .quiz-top-controls,
+body.quiz-end-open #family-modal .quiz-top-controls {
+  display: none !important;
+}
+
+/* На всякий случай: финальный круглый крестик — выше игровых,
+   чтобы клик гарантированно доходил до него (страховка уже есть
+   в конце файла, дублируем явно для десктопа). */
+#quiz-modal [id$="-end-screen"] .game-close-x,
+#match-modal [id$="-end-screen"] .game-close-x,
+#memo-modal [id$="-end-screen"] .game-close-x,
+#erudite-modal [id$="-end-screen"] .game-close-x,
+#latin-modal [id$="-end-screen"] .game-close-x,
+#habitat-modal [id$="-end-screen"] .game-close-x,
+#status-modal [id$="-end-screen"] .game-close-x,
+#family-modal [id$="-end-screen"] .game-close-x {
+  z-index: 90;
 }
 
 /* ============================================================
@@ -2351,8 +2457,13 @@ body.game-end-active #latin-modal .quiz-top-controls {
      в каждой карточке записи. */
   .journal-card {
     position: relative;
+    /* место в правом верхнем углу под крестик и 🗺, чтобы текст
+         комментария не наезжал на кнопки */
+    padding-right: 64px;
   }
-
+  
+  /* Обёртка кнопок карточки (если JS её рендерит) — в правом
+     верхнем углу, поверх текста комментария. */
   .journal-card .j-card-actions {
     position: absolute;
     top: 6px;
@@ -2360,15 +2471,32 @@ body.game-end-active #latin-modal .quiz-top-controls {
     display: flex;
     gap: 6px;
     align-items: center;
+    z-index: 3;
+    /* выше j-comment (у него нет z-index, но на всякий) */
   }
-
+  
+  /* Крестик удаления: в обёртке — static (сидит в flex-ряду),
+     вне обёртки — absolute в правом верхнем углу. */
   .journal-card .j-delete {
-    position: static;
     opacity: 0.7;
     padding: 2px 4px;
     font-size: 14px;
   }
-
+  
+  .journal-card .j-card-actions .j-delete {
+    position: static;
+  }
+  
+  .journal-card>.j-delete {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 3;
+  }
+  
+  /* Кнопка «🗺 Открыть карту»: если лежит в обёртке — static
+     (flex-ряд), если лежит прямо в карточке — absolute и встаёт
+     левее крестика. В обоих случаях она видима и кликабельна. */
   .journal-card .journal-open-map-btn {
     background: none;
     border: 1px solid var(--gold-deep);
@@ -2378,8 +2506,21 @@ body.game-end-active #latin-modal .quiz-top-controls {
     line-height: 1;
     padding: 2px 5px;
     cursor: pointer;
+    z-index: 3;
   }
-
+  
+  .journal-card .j-card-actions .journal-open-map-btn {
+    position: static;
+  }
+  
+  .journal-card>.journal-open-map-btn {
+    position: absolute;
+    top: 5px;
+    right: 28px;
+    /* левее крестика удаления */
+    z-index: 3;
+  }
+  
   .journal-card .journal-open-map-btn:active {
     transform: scale(0.92);
     background: var(--gold-soft);
@@ -2487,20 +2628,13 @@ body.game-end-active #latin-modal .quiz-top-controls {
     transform: scale(0.92);
   }
 
-  /* --- 4) Десктоп (>1024px): значок «🗺» в карточках записей не нужен —
-     карта дневника и так видна рядом со списком. Скрываем целиком
-     (кнопки «Поставить метку / Открыть карту» над карточками уже
-     скрыты базовым правилом .journal-top-actions{display:none}).
-     Дополнительно на десктопе скрывается второй крестик
-     (#journal-close-mob), если он остался в закешированной разметке. --- */
-  @media (min-width: 1025px) {
-    .journal-card .j-card-actions .journal-open-map-btn,
-    #journal-close-mob,
-    .journal-close-mob-btn {
-      display: none !important;
-    }
+  /* --- 4) Скрытие «🗺» и второго крестика на десктопе
+     вынесено в отдельный блок @media (min-width: 1025px) ниже —
+     внутри @media (max-width: 1024px) условие «≥1025px» никогда
+     не выполнялось (пересечение пусто), и правило просто
+     игнорировалось. См. блок «ДЕСКТОП: скрыть 🗺 в карточках»
+     в конце файла. --- */
   }
-}
 
 /* Второй (мобильный дублирующий) крестик закрытия дневника больше не
    используется нигде — скрыт на всех разрешениях как страховка от
@@ -2508,6 +2642,122 @@ body.game-end-active #latin-modal .quiz-top-controls {
 #journal-close-mob,
 .journal-close-mob-btn {
   display: none !important;
+}
+
+/* ============================================================
+   ФИНАЛЬНАЯ СТРАХОВКА: кнопки «🗺 Открыть карту» и «✕ Удалить»
+   в карточках полевого дневника (мобильно-планшетная версия)
+   ------------------------------------------------------------
+   Идёт ПОСЛЕДНИМ блоком в файле — перебивает и «2) Полевой
+   дневник», и «Компактная кнопка 🗺» (порядок которых в каскаде
+   мог меняться). Всё внутри @media (max-width: 1024px) —
+   десктоп не затрагивается.
+
+   Разметка карточки (journal.js → renderList):
+     <div class="journal-card">
+       <div class="j-card-actions">
+         <button class="journal-open-map-btn">🗺</button>
+         <button class="j-delete">✕</button>
+       </div>
+       <h4>…</h4>
+       <div class="j-comment">…</div>
+       …
+     </div>
+
+   Обёртка .j-card-actions ОБЯЗАНА быть position:absolute в правом
+   верхнем углу — иначе кнопки стоят в потоке над заголовком и
+   не видны (их перекрывает h4). Кнопка 🗺 должна быть display:
+   inline-flex и видима; скрывать её на десктопе будет отдельный
+   блок @media (min-width: 1025px) ниже.
+   ============================================================ */
+@media (max-width: 1024px) {
+  .journal-card {
+    position: relative !important;
+    /* место под кнопки в правом верхнем углу, чтобы текст под ними
+       не «прятался» */
+    padding-right: 64px !important;
+  }
+
+  .journal-card .j-card-actions {
+    position: absolute !important;
+    top: 6px !important;
+    right: 6px !important;
+    left: auto !important;
+    bottom: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    z-index: 5 !important;
+  }
+
+  /* Кнопка «🗺 Открыть карту»: видима и кликабельна */
+  .journal-card .j-card-actions .journal-open-map-btn,
+  .journal-card>.journal-open-map-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: static !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: rgba(240, 230, 207, 0.9) !important;
+    border: 1px solid var(--gold-deep, #8a6a1e) !important;
+    border-radius: 3px !important;
+    color: var(--dark-green, #24352a) !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    z-index: 6 !important;
+  }
+
+  .journal-card .j-card-actions .journal-open-map-btn:active,
+  .journal-card>.journal-open-map-btn:active {
+    transform: scale(0.92);
+    background: var(--gold-soft, #d4b45a) !important;
+  }
+
+  /* Крестик удаления: в обёртке — static (flex-ряд), вне её —
+     absolute в правом верхнем углу. z-index выше, чем у 🗺,
+     чтобы случайное наложение не перехватывало клик по 🗺. */
+  .journal-card .j-card-actions .j-delete {
+    position: static !important;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0.85 !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    z-index: 6 !important;
+  }
+
+  .journal-card>.j-delete {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    z-index: 6 !important;
+  }
+}
+
+/* ============================================================
+   ДЕСКТОП: скрыть «🗺 Открыть карту» в карточках записей
+   ------------------------------------------------------------
+   На десктопе карта дневника видна рядом со списком, отдельная
+   кнопка не нужна. Условие чистое «≥1025px» и стоит ВНЕ
+   @media (max-width: 1024px) — иначе пересечение пусто и правило
+   молча игнорируется (как было раньше с вложенным @media).
+   ============================================================ */
+@media (min-width: 1025px) {
+  .journal-card .journal-open-map-btn {
+    display: none !important;
+  }
 }
 
 /* ============================================================
@@ -2552,4 +2802,28 @@ body.game-end-active #latin-modal .quiz-top-controls {
   padding-left: 28px;
   font-size: 11px;
   min-height: 28px;
+}
+
+/* ============================================================
+   ДЕСКТОП: скрыть «🗺 Открыть карту» в карточках записей
+   ------------------------------------------------------------
+   На десктопе карта дневника и так видна рядом со списком —
+   отдельная кнопка «🗺» в каждой карточке не нужна. На
+   мобильно-планшетной версии (≤1024px) она остаётся и работает
+   (см. блок «Компактная кнопка «🗺 Открыть карту»» выше).
+
+   ВАЖНО: это правило — ВНЕ @media (max-width: 1024px). Раньше
+   оно лежало ВНУТРИ него вложенным @media (min-width: 1025px),
+   что давало пустое пересечение условий (≤1024 и ≥1025) —
+   правило молча игнорировалось, и кнопка «🗺» оставалась
+   видимой на десктопе. Теперь условие чистое: «ширина ≥1025px».
+   ============================================================ */
+@media (min-width: 1025px) {
+
+  .journal-card .j-card-actions .journal-open-map-btn,
+  .journal-card>.journal-open-map-btn,
+  #journal-close-mob,
+  .journal-close-mob-btn {
+    display: none !important;
+  }
 }

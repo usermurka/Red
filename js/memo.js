@@ -24,10 +24,14 @@ const MemoGame = {
     close() {
         document.getElementById('memo-modal').classList.add('hidden');
         GameEnd.leave('memo');
+        document.body.classList.remove('quiz-end-open');
+        GameEnd.leave('memo');
         document.getElementById('app').style.pointerEvents = '';
     },
     startGame() {
         document.getElementById('memo-end-screen').classList.add('hidden');
+        GameEnd.leave('memo');
+        document.body.classList.remove('quiz-end-open'); // вернуть игровые ↺/✕
         GameEnd.leave('memo');
         const grid = document.getElementById('memo-grid');
         grid.innerHTML = '';
@@ -198,7 +202,10 @@ const MemoGame = {
                         this.unlockAch('firststep');
 
                         document.getElementById('memo-end-screen').classList.remove('hidden');
-                        GameEnd.enter('memo'); // скрыть поле игры и ↺/✕
+                        try { GameEnd.enter('memo'); } catch (e) { /* noop */ }
+                        // Прячем игровые ↺/✕ на финале — см. responsive.css
+                        // (body.quiz-end-open). Класс вешаем ВСЕГДА и НА ВСЕХ ширинах.
+                        document.body.classList.add('quiz-end-open');
                     }, 500);
                 }
             } else {
