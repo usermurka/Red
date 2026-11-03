@@ -22,7 +22,7 @@
 // ============================================================
 
 const HabitatGame = {
-    ROUND_SIZE: 1,          // видов в раунде
+    ROUND_SIZE: 10,          // видов в раунде
     TOTAL_ROUNDS: 3,        // раундов в игре
     ROUND_TIME: 180,         // секунд на раунд
 
@@ -188,12 +188,30 @@ const HabitatGame = {
         if (modal) modal.style.pointerEvents = '';
     },
 
+    // Текущая карточка «закрыта»: все её биомы собраны (или вид был
+    // отмечен как собранный ранее). Пока карточка не закрыта,
+    // раунд считать завершённым нельзя.
+    cardFullyMatched() {
+        if (this._matchedCurrent) return true;
+        const item = this.currentCard();
+        if (!item) return false;
+        const needed = Array.isArray(item.biomes) ? item.biomes : (item.biome ? [item.biome] : []);
+        if (!needed.length) return false;
+        return needed.every(b => this._matchedBiomes.has(b));
+    },
+
     continueToNextRound() {
         const btn = document.getElementById('habitat-next-round-btn');
 
         // ① Раунд полностью закрыт (все ROUND_SIZE карточек собраны
         // и текущая — последняя). Это может быть и «финал игры».
-        if (this.roundFinished()) {
+        // Дополнительно проверяем, что ТЕКУЩАЯ карточка действительно
+        // собрана: иначе неверный ответ на единственном виде раунда
+        // (roundFinished по индексу уже true) заводил нас в ветку
+        // перехода к следующему раунду, «Продолжить →» скрывалась,
+        // а новая карточка не показывалась (баг: пустой экран вместо
+        // карточки после неверного ответа).
+        if (this.roundFinished() && this.cardFullyMatched()) {
             this.waitingContinue = false;
             this.locked = true;
             this.stopTimer();
@@ -221,7 +239,22 @@ const HabitatGame = {
 
             this.resetScrollState(); // Сбрасываем свиток (закрываем details)
             MiniScroll.hide('habitat-info-panel');
-            this.showNextCard();
+
+            // БУДЬТЕ ОСТОРОЖНЫ: раньше здесь вызывался showNextCard(),
+            // который при ROUND_SIZE === 1 переходил к несуществующей
+            // «второй карточке» текущего раунда — currentCard() возвращал
+            // undefined, DOM-карточка очищался и игрок видел пустой экран
+            // вместо новой карточки (баг: «если выбрать ТОЛЬКО неверный
+            // ответ в "Среде обитания", то при переходе в продолжить не
+            // показывается карточка»). Теперь при исчерпанных карточках
+            // раунда идём нормальным путём: следующий раунд (или финал).
+            const moreCardsInRound =
+                this.roundItems && this.currentIdx < this.roundItems.length - 1;
+            if (moreCardsInRound) {
+                this.showNextCard();
+            } else {
+                this.nextRound();   // внутри проверит TOTAL_ROUNDS и покажет финал
+            }
             return;
         }
 
@@ -389,7 +422,13 @@ const HabitatGame = {
         // Защита от «шестого вида без картинки» (замечание игрока): если
         // все пять карточек раунда уже показаны, дальше идти некуда —
         // вместо пустой карточки закрываем раунд активной кнопкой.
-        if (this.currentIdx >= this.ROUND_SIZE - 1 && this.matchedCount >= this.ROUND_SIZE) {
+        // Проверяем и текущую карточку (cardFullyMatched): иначе при
+        // единственном неверном ответе на последнем виде раунда сюда
+        // попадали по индексу/счётчику, баннер «раунд завершён» появлялся,
+        // а игрок терял возможность собрать карточку или увидеть новую.
+        if (this.currentIdx >= this.ROUND_SIZE - 1 &&
+            this.matchedCount >= this.ROUND_SIZE &&
+            this.cardFullyMatched()) {
             this.stopTimer();
             if (this.round >= this.TOTAL_ROUNDS) {
                 this.showRoundBanner(
