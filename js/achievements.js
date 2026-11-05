@@ -260,7 +260,14 @@ const Achievements = {
   // («Режим гостя», «Режим разработчика») — они же и выполняют выход.
 
   enterGamesMode() {
-    if (this.gamesModeActive) return;
+    // Если режим уже активен, но витрина пуста (например, renderShowcase
+    // упал из-за progress === null при восстановлении сессии) — не выходим,
+    // а доводим состояние до конца и перерисовываем.
+    if (this.gamesModeActive) {
+      const list = document.getElementById('medals-list');
+      if (list && list.childElementCount === 0) this.renderShowcase();
+      return;
+    }
     this.gamesModeActive = true;
     document.body.classList.add('games-mode');
     this.setModeButtons();
@@ -365,6 +372,11 @@ const Achievements = {
   },
 
   renderShowcase() {
+    // Прогресс мог ещё не загрузиться (init идёт через setTimeout(100)),
+    // а restoreSessionState вызывает enterGamesMode() сразу после App.init.
+    // Без этого список медалей остаётся пустым до выхода/возврата в режим.
+    if (!this.progress) this.load();
+
     const list = document.getElementById('medals-list');
     if (!list) return;
     list.innerHTML = '';
