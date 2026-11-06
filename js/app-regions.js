@@ -265,8 +265,8 @@ Object.assign(App, {
     // ---- Текст статуса: если у вида свой, берём его; иначе — типовой из config ----
     const statusDescription = (data.status_text || '').trim() || (statusConfig ? statusConfig.description : '');
 
-    // ---- Финальная сборка ----
-      return `
+      // ---- Финальная сборка ----
+      return this.wrapPrintPage(`
       <div class="scroll-fixed-header">
         <header class="scroll-titlebar">
           <div class="scroll-titlebar-left"></div>
@@ -330,7 +330,7 @@ Object.assign(App, {
         </div>
         ${this.renderScrollNeighbours(data.id, markerId)}
       </div>
-    `;
+    `, data);
   },
 
   // Рисует минимальный свиток, если JSON не найден
@@ -345,7 +345,7 @@ Object.assign(App, {
     const migrationCount = this.migrations.filter(m => m.speciesId === speciesId).length;
     const statusDescription = statusConfig ? statusConfig.description : '';
 
-    return `
+      return this.wrapPrintPage(`
       <div class="scroll-fixed-header">
         <header class="scroll-titlebar">
           <div class="scroll-titlebar-left"></div>
@@ -411,7 +411,7 @@ Object.assign(App, {
 
         ${this.renderScrollNeighbours(speciesId, markerId)}
       </div>
-    `;
+    `, { id: speciesId });
   },
 
   closeSpeciesScroll() {

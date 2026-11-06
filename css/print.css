@@ -1,0 +1,528 @@
+/* ============================================================
+   ПЕЧАТНАЯ ВЕРСИЯ КАРТОЧКИ ВИДА — «как страница из книги»
+   ============================================================ */
+
+@page {
+    margin: 15mm;
+
+    @bottom-center {
+        content: "— " counter(page) " —";
+        font-family: Georgia, serif;
+        font-size: 9pt;
+        color: #000;
+        padding-top: 5mm;
+    }
+}
+
+.scroll-print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(240, 230, 207, 0.12);
+    border: 1px solid rgba(184, 145, 47, 0.55);
+    border-radius: 2px;
+    color: var(--gold-soft, #d4b45a);
+    font-family: 'Georgia', serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.scroll-print-btn:hover {
+    background: rgba(184, 145, 47, 0.25);
+    color: #fff;
+}
+
+.scroll-print-btn svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+}
+
+/* ЭКРАН: обёртка прозрачна для вёрстки, печатные элементы скрыты */
+.print-page {
+    display: contents;
+}
+
+.print-header,
+.print-breadcrumbs,
+.print-footer,
+.print-minimap-wrap {
+    display: none;
+}
+
+/* ============================================================
+   ПЕЧАТЬ
+   ============================================================ */
+@media print {
+    .scroll-print-btn {
+        display: none !important;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+        color: #000 !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+    }
+
+    body>*:not(#species-scroll) {
+        display: none !important;
+    }
+
+    #species-scroll.hidden {
+        display: none !important;
+    }
+
+    #species-scroll {
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        background: none !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        z-index: auto !important;
+        animation: none !important;
+        display: block !important;
+    }
+
+    #species-scroll .scroll-content {
+        width: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        clip-path: none !important;
+        animation: none !important;
+        display: block !important;
+    }
+
+    #scroll-close,
+    .scroll-titlebar {
+        display: none !important;
+    }
+
+    #scroll-body {
+        display: block !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .scroll-fixed-header {
+        position: static !important;
+        box-shadow: none !important;
+        background: none !important;
+        border-bottom: none !important;
+    }
+
+    .scroll-body-scroll {
+        overflow: visible !important;
+        padding: 0 !important;
+        max-height: none !important;
+    }
+
+    /* ---- Печатная обёртка ---- */
+    .print-page {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 11pt;
+        line-height: 1.5;
+        color: #000;
+    }
+
+    .print-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 8pt;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border-bottom: 1pt solid #000;
+        padding-bottom: 3mm;
+        margin-bottom: 3mm;
+    }
+
+    .print-breadcrumbs {
+        display: block !important;
+        font-size: 8pt;
+        letter-spacing: 0;
+        padding-bottom: 2mm;
+        border-bottom: 1pt solid #000;
+        margin-bottom: 4mm;
+        text-transform: none !important;
+    }
+
+    .print-breadcrumbs .print-sep {
+        padding: 0 1.5mm;
+        color: #555;
+    }
+
+    .print-footer {
+        display: block !important;
+        border-top: 1pt solid #000;
+        margin-top: auto !important;
+        padding-top: 2mm;
+        font-size: 8pt;
+        line-height: 1.4;
+        clear: both !important;
+        page-break-inside: avoid !important;
+    }
+
+    .print-footer-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 6mm;
+    }
+
+    .print-footer-site {
+        display: none !important;
+    }
+
+    /* ---- ПЛОСКИЙ ПОТОК С ОБТЕКАНИЕМ ---- */
+    .scroll-columns {
+        display: block !important;
+        padding: 0 !important;
+    }
+
+    /* Скрываем опустевшую правую колонку */
+    .scroll-col-right.print-col-collapsed {
+        display: none !important;
+    }
+
+        /* Левая колонка — обычный блок без BFC, чтобы текст обтекал float'ы
+           и затекал под них после окончания. */
+        .scroll-col-left {
+            display: block !important;
+            width: auto !important;
+            margin: 0 !important;
+            overflow: visible !important;
+        }
+
+    /* Float-обёртки, созданные JS перед печатью */
+    .print-float {
+        float: left;
+        width: 300px;
+        margin: 0 6mm 4mm 0;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .print-float-clear {
+        clear: left;
+    }
+
+    /* Внутри float'ов убираем лишние отступы, чтобы не разъезжалось */
+    .print-float .scroll-figure,
+    .print-float .scroll-taxonomy,
+    .print-float .print-minimap-wrap {
+        margin: 0 !important;
+    }
+
+    /* Скрываем соседей */
+    .scroll-neighbours {
+        display: none !important;
+    }
+
+    /* ---- Типографика ---- */
+    .scroll-name {
+        font-size: 18pt;
+        line-height: 1.15;
+        color: #000 !important;
+        margin: 0 0 2mm;
+        padding-bottom: 2mm;
+        border-bottom: none !important;
+        text-shadow: none !important;
+        width: auto !important;
+        overflow: visible !important;
+    }
+
+    .scroll-latin {
+        font-size: 10pt;
+        font-style: italic;
+        color: #333 !important;
+        margin: 0 0 5mm;
+        width: auto !important;
+        overflow: visible !important;
+    }
+
+    .scroll-heading {
+        font-size: 10pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #000 !important;
+        padding: 2mm 0 1mm;
+        border-bottom: 0.3pt dotted #000;
+        margin-bottom: 1.5mm;
+        width: auto !important;
+        overflow: visible !important;
+    }
+
+        .scroll-heading::before {
+            content: none !important;
+        }
+
+    .scroll-section {
+        font-size: 11pt;
+        text-align: justify;
+        color: #000 !important;
+        padding: 0 0 2mm;
+        hyphens: auto;
+        width: auto !important;
+        overflow: visible !important;
+    }
+
+    .scroll-section:empty {
+        display: none;
+    }
+
+    /* Буквица на печати отключена (класс снимается в JS,
+       но подстрахуемся и на случай, если класс остался) */
+    .scroll-dropcap::first-letter,
+    .scroll-section.scroll-dropcap::first-letter {
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        color: inherit !important;
+        float: none !important;
+        line-height: inherit !important;
+        margin: 0 !important;
+        text-shadow: none !important;
+    }
+
+    /* Аккордеон и разрывы страниц */
+    details.scroll-block {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }
+
+    details.scroll-block>.scroll-heading {
+        cursor: default;
+        page-break-after: avoid !important;
+    }
+
+    details.scroll-block:not([open])>*:not(summary) {
+        display: block !important;
+    }
+
+    /* ---- Статус ---- */
+    .scroll-status-block {
+        display: flex;
+        gap: 5mm;
+        align-items: flex-start;
+        margin: 0 0 5mm;
+        padding: 2mm 0;
+        page-break-inside: avoid;
+    }
+
+    .scroll-status-seal {
+        width: 18mm;
+        height: 18mm;
+        flex-shrink: 0;
+        filter: none !important;
+        transform: none !important;
+    }
+
+    .scroll-status-seal svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .scroll-status-caption {
+        font-size: 9pt;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #000 !important;
+        border-bottom: 0.3pt dotted #000;
+        padding-bottom: 1mm;
+        margin-bottom: 1.5mm;
+    }
+
+    .scroll-status-text {
+        font-size: 10pt;
+        font-style: italic;
+        text-align: justify;
+        color: #000 !important;
+    }
+
+    /* ---- Фото и карта ---- */
+    .scroll-figure {
+        background: none !important;
+        border: 1pt solid #000 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        padding: 2mm !important;
+        margin: 0 0 4mm;
+        page-break-inside: avoid !important;
+    }
+
+    .scroll-photo {
+        border: none !important;
+        background: none !important;
+    }
+
+    .scroll-caption {
+        font-size: 9pt;
+        color: #333 !important;
+        border-top: 0.3pt dotted #000;
+        padding-top: 1.5mm;
+        margin-top: 2mm;
+    }
+
+    .scroll-photo-globe-btn {
+        display: none !important;
+    }
+
+    /* Мини-карта */
+    .print-minimap-wrap {
+        display: block !important;
+        margin-bottom: 4mm;
+        border: none !important;
+        page-break-inside: avoid !important;
+    }
+
+    .print-minimap-wrap .scroll-photo-map-wrap {
+        background: #f4f4f4 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: hidden;
+        margin-bottom: 0;
+    }
+
+    .print-minimap-wrap .scroll-photo-map-inner {
+        aspect-ratio: 1103 / 1600;
+        width: 100%;
+    }
+
+    .print-minimap-wrap .scroll-photo-map-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+    }
+
+    .print-minimap-wrap .scroll-photo-marker {
+        font-size: 8px !important;
+        width: 9px !important;
+        height: 9px !important;
+    }
+
+    .print-minimap-wrap .scroll-photo-marker-badge {
+        display: none !important;
+    }
+
+    .print-minimap-wrap .scroll-photo-map-legend {
+        display: none !important;
+    }
+
+    .print-minimap-wrap .scroll-photo-map-svg,
+    .print-minimap-wrap .scroll-photo-map-markers {
+        pointer-events: none !important;
+    }
+
+    /* Карта без данных */
+    .print-minimap-wrap.is-empty-map .scroll-photo-map-img {
+        filter: grayscale(100%) opacity(0.4);
+    }
+
+    .print-minimap-wrap.is-empty-map .scroll-photo-map-wrap {
+        background: none !important;
+        border: none !important;
+    }
+
+    .print-minimap-wrap.is-empty-map .scroll-photo-map-empty {
+        background: transparent !important;
+        font-size: 11pt;
+        font-style: italic;
+        color: #000;
+        border: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 5mm;
+        text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+    }
+
+    /* ---- Таксономия ---- */
+    .scroll-taxonomy {
+        margin: 0 0 4mm !important;
+        padding: 2mm 3mm !important;
+        background: none !important;
+        border-left: 2pt solid #000 !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        font-size: 9pt;
+        page-break-inside: avoid !important;
+    }
+
+    .scroll-taxonomy::before {
+        content: none !important;
+    }
+
+    .scroll-taxonomy dt {
+        font-size: 8pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #000 !important;
+        margin-top: 1.5mm;
+    }
+
+    .scroll-taxonomy dt:first-child {
+        margin-top: 0;
+    }
+
+    .scroll-taxonomy dd {
+        font-style: italic;
+        color: #222 !important;
+        margin: 0 0 0.5mm;
+    }
+
+    /* ---- Авторы ---- */
+    .scroll-authors {
+        clear: both !important;
+        border-top: none !important;
+        margin-top: 4mm !important;
+        padding-top: 2mm !important;
+        padding-bottom: 2mm !important;
+        page-break-inside: avoid !important;
+    }
+
+    .scroll-authors .scroll-heading {
+        border-bottom: 0.3pt dotted #000 !important;
+    }
+
+    .scroll-authors .scroll-section {
+        font-style: italic;
+        text-align: right;
+        font-size: 10pt;
+    }
+
+    .scroll-counts {
+        display: none !important;
+    }
+
+        /* Бледная линия под разделом — это border-bottom у .scroll-block.
+           На печати убираем: она не обтекает float. */
+        .scroll-block,
+        details.scroll-block {
+            border-bottom: none !important;
+        }
+}
