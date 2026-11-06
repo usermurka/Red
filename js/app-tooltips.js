@@ -46,7 +46,7 @@ Object.assign(App, {
       : '';
 
     // Проверяем, участвует ли вид в миграциях
-    const migrationsForSpecies = this.migrations.filter(m => m.speciesId === marker.speciesId);
+    const migrationsForSpecies = this.migrations.filter(m => this.migrationBelongsToSpecies(m, marker.speciesId));
     const migrationsInfo = migrationsForSpecies.length > 0
       ? `<div class="comment" style="margin-top:8px;padding-top:8px;border-top:1px dashed #ddd; color: var(--red-dark);">
            <strong style="color:#1a3a2e;">⇔ Участвует в миграциях:</strong> ${migrationsForSpecies.length} линий на карте
@@ -461,6 +461,7 @@ Object.assign(App, {
         // Удаляем вторую линию
         this.migrations = this.migrations.filter(m => m.id !== migration.id);
         LocalStore.saveMigrations(this.migrations);
+        this.getMigrationSpeciesIds(sourceMig).forEach(id => this.highlightedSpeciesMigrations.add(id));
       }
 
       this._migrationToMergeSource = null;

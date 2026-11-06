@@ -429,9 +429,9 @@ Object.assign(App, {
 
     this.highlightedSpeciesMigrations.clear();
     this.migrations.forEach(m => {
-      if (m.speciesId && allowedIds.has(m.speciesId)) {
-        this.highlightedSpeciesMigrations.add(m.speciesId);
-      }
+      this.getMigrationSpeciesIds(m).forEach(id => {
+        if (allowedIds.has(id)) this.highlightedSpeciesMigrations.add(id);
+      });
     });
 
     // Перерисовка карты и справочника

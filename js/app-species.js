@@ -385,7 +385,7 @@ return;
     // Собираем данные по этому виду
     const markers = this.markers.filter(m => m.speciesId === speciesId);
     const regions = this.regions.filter(r => r.speciesList && r.speciesList.some(sp => sp.speciesId === speciesId));
-    const migrations = this.migrations.filter(m => m.speciesId === speciesId);
+    const migrations = this.migrations.filter(m => this.migrationBelongsToSpecies(m, speciesId));
     const hasData = markers.length > 0 || regions.length > 0 || migrations.length > 0;
     // Если данных нет — рисуем строку с пустой ячейкой под стрелку,
     // чтобы бейдж статуса встал в один ряд с видами, у которых есть данные.
@@ -714,7 +714,7 @@ getVisibleSpecies() {
     const hasRegion = this.regions.some(r =>
       r.speciesList && r.speciesList.some(x => x.speciesId === sp.id)
     );
-    const hasMigration = this.migrations.some(m => m.speciesId === sp.id);
+    const hasMigration = this.migrations.some(m => this.migrationBelongsToSpecies(m, sp.id));
     return hasMarker || hasRegion || hasMigration;
   });
 
@@ -774,9 +774,11 @@ updateIsAllHighlightedFlag() {
     // Уникальные виды с выделенными миграциями
     const highlightedMigrationsSet = new Set();
     this.migrations.forEach(m => {
-      if (m.speciesId && this.highlightedSpeciesMigrations.has(m.speciesId)) {
-        highlightedMigrationsSet.add(m.speciesId);
-      }
+      this.getMigrationSpeciesIds(m).forEach(id => {
+        if (this.highlightedSpeciesMigrations.has(id)) {
+          highlightedMigrationsSet.add(id);
+        }
+      });
     });
     const migrationsCount = highlightedMigrationsSet.size;
 
@@ -816,7 +818,7 @@ updateIsAllHighlightedFlag() {
 
       const markers = this.markers.filter(m => m.speciesId === speciesId);
       const regions = this.regions.filter(r => r.speciesList && r.speciesList.some(sp => sp.speciesId === speciesId));
-      const migrations = this.migrations.filter(m => m.speciesId === speciesId);
+      const migrations = this.migrations.filter(m => this.migrationBelongsToSpecies(m, speciesId));
 
       // Собираем иконки в том же порядке, в котором они создавались
       const iconItems = wrapper.querySelectorAll('.species-browse-icons-row .species-browse-icon-item');

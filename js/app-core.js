@@ -185,6 +185,26 @@ window.App = {
   minZoom: 1,
   maxZoom: 5,
 
+  // Относится ли миграция к виду: либо основной speciesId, либо любой из speciesList
+  migrationBelongsToSpecies(migration, speciesId) {
+    if (!migration || !speciesId) return false;
+    if (migration.speciesId === speciesId) return true;
+    if (Array.isArray(migration.speciesList) &&
+      migration.speciesList.some(sp => sp && sp.speciesId === speciesId)) return true;
+    return false;
+  },
+
+  // Все speciesId, «привязанные» к миграции
+  getMigrationSpeciesIds(migration) {
+    const ids = new Set();
+    if (!migration) return [];
+    if (migration.speciesId) ids.add(migration.speciesId);
+    if (Array.isArray(migration.speciesList)) {
+      migration.speciesList.forEach(sp => { if (sp && sp.speciesId) ids.add(sp.speciesId); });
+    }
+    return [...ids];
+  },
+
   init() {
     this.map = document.getElementById('map');
     this.container = document.getElementById('map-container');

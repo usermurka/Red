@@ -252,7 +252,7 @@ Object.assign(App, {
     // ---- Счётчики ----
     const markerCount = this.markers.filter(m => m.speciesId === data.id).length;
     const regionCount = this.regions.filter(r => r.speciesId === data.id).length;
-    const migrationCount = this.migrations.filter(m => m.speciesId === data.id).length;
+    const migrationCount = this.migrations.filter(m => this.migrationBelongsToSpecies(m, data.id)).length;
 
     const countsHtml = (markerCount > 0 || regionCount > 0 || migrationCount > 0) ? `
       <div class="scroll-counts">
@@ -342,7 +342,7 @@ Object.assign(App, {
     const statusConfig = CONFIG.statuses.find(s => s.value === speciesMeta.status);
     const markerCount = this.markers.filter(m => m.speciesId === speciesId).length;
     const regionCount = this.regions.filter(r => r.speciesId === speciesId).length;
-    const migrationCount = this.migrations.filter(m => m.speciesId === speciesId).length;
+    const migrationCount = this.migrations.filter(m => this.migrationBelongsToSpecies(m, speciesId)).length;
     const statusDescription = statusConfig ? statusConfig.description : '';
 
       return this.wrapPrintPage(`
