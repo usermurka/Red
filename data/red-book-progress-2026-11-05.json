@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "savedAt": 1793854226005,
+  "unlocked": {
+    "latin": [
+      "student",
+      "linguist"
+    ],
+    "erudite": [
+      "letters"
+    ],
+    "memo": [
+      "attentive",
+      "firststep"
+    ],
+    "match": [
+      "flawless",
+      "persistent",
+      "eagle",
+      "naturalist"
+    ],
+    "cross": [
+      "collector"
+    ],
+    "quiz": [
+      "good",
+      "first_win",
+      "perfect"
+    ],
+    "habitat": [
+      "quick",
+      "ranger",
+      "expert"
+    ],
+    "family": [
+      "perfectround"
+    ]
+  },
+  "_meta": {
+    "gamesPlayed:habitat": 18
+  }
+}

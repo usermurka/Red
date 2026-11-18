@@ -254,6 +254,10 @@ const LatinGame = {
             this.flipPhotoFor(first.dataset.speciesId);
 
             if (this.matchedCount === this.PAIRS_PER_ROUND) {
+                // «Быстрый систематик»: раунд закрыт за ≤20 секунд.
+                if (this.timeLeft >= this.ROUND_TIME - 20) {
+                    this.unlockAch('speedlatin');
+                }
                 this.stopTimer();
                 const streakBlock = document.getElementById('latin-streak-block');
                 if (this.roundMistakes === 0) {
@@ -349,6 +353,12 @@ const LatinGame = {
         let achieve = '';
         if (titleText.startsWith('🏆')) {
             this.unlockAch('student'); // пройдены все раунды — базовая медаль
+            // «Точный переводчик» — независимая медаль: ≤3 ошибок за игру.
+            // Выдаём ВСЕГДА, когда условие выполнено, даже если игрок
+            // заодно получил «Хранителя» (0 ошибок тоже ≤3).
+            if (this.mistakes <= 3) {
+                this.unlockAch('translator');
+            }
             if (this.mistakes === 0) {
                 achieve = 'Достижение: «Хранитель латыни» — ни одной ошибки!';
                 this.unlockAch('keeper');
@@ -357,7 +367,6 @@ const LatinGame = {
                 this.unlockAch('linguist');
             } else if (this.mistakes <= 3) {
                 achieve = 'Достижение: «Точный переводчик»';
-                this.unlockAch('translator');
             } else {
                 achieve = 'Достижение: «Ученик систематика»';
             }
@@ -367,6 +376,27 @@ const LatinGame = {
                 : 'Ни одна пара не решена. Не сдавайтесь!';
         }
         achieveEl.textContent = achieve;
+
+        // «Магистр латыни»: решены все 15 пар за игру (3 раунда × 5).
+        // «Глоссарий»: 50 пар суммарно за все партии — накопительный счётчик.
+        try {
+            if (typeof Achievements !== 'undefined') {
+                if (this.score >= this.PAIRS_PER_ROUND * this.TOTAL_ROUNDS) {
+                    this.unlockAch('allpairs');
+                }
+                if (Achievements.bumpMeta && this.score > 0) {
+                    const totalPairs = Achievements.bumpMeta('latinPairsTotal', this.score);
+                    if (totalPairs >= 50) Achievements.unlock('latin', 'glossary');
+                }
+            }
+        } catch (e) { /* noop */ }
+
+        // Счётчик партий (для кросс-медали «Игроман»)
+        try {
+            if (typeof Achievements !== 'undefined' && Achievements.bumpGameCounter) {
+                Achievements.bumpGameCounter('latin');
+            }
+        } catch (e) { /* noop */ }
 
         document.getElementById('latin-end-screen').classList.remove('hidden');
         GameEnd.enter('latin'); // скрыть поле игры и ↺/✕

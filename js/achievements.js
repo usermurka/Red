@@ -11,6 +11,7 @@
 const Achievements = {
 
   STORAGE_KEY: 'red_book_games_progress_v1',
+  SCROLLS_SEEN_KEY: 'red_book_scrolls_seen_v1',
 
   // Порядок обхода игр для кнопки «Следующая игра →»
   GAMES_ORDER: ['quiz', 'match', 'memo', 'erudite', 'latin', 'habitat', 'status', 'family'],
@@ -19,10 +20,12 @@ const Achievements = {
   // хранятся отдельно от медалей, обнуляются только при импорте прогресса.
   meta: null,
 
-  bumpMeta(key) {
+  bumpMeta(key, delta = 1) {
     if (!this.progress) this.load();
     this.meta = this.progress._meta || {};
-    this.meta[key] = (this.meta[key] || 0) + 1;
+    const step = (typeof delta === 'number' && Number.isFinite(delta) && delta > 0)
+      ? Math.floor(delta) : 1;
+    this.meta[key] = (this.meta[key] || 0) + step;
     this.progress._meta = this.meta;
     this.persist();
     return this.meta[key];
@@ -36,10 +39,233 @@ const Achievements = {
     return n;
   },
 
+  // ---------- Множество увиденных свитков видов ----------
+  // Хранится ОТДЕЛЬНО от progress._meta: sanitize() пропускает в _meta
+  // только числа, а для медалей «все птицы/растения/грибы» нужен
+  // именно набор speciesId.
+
+  loadScrollsSeen() {
+    try {
+      const raw = localStorage.getItem(this.SCROLLS_SEEN_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr)
+        ? arr.filter(x => typeof x === 'string' && x.length > 0 && x.length < 128)
+        : []);
+    } catch (e) {
+      return new Set();
+    }
+  },
+
+  saveScrollsSeen(set) {
+    try {
+      const arr = Array.from(set).filter(x => typeof x === 'string');
+      localStorage.setItem(this.SCROLLS_SEEN_KEY, JSON.stringify(arr));
+    } catch (e) { /* noop */ }
+  },
+
+  bumpScrollsSeen(speciesId) {
+    if (typeof speciesId !== 'string' || !speciesId) return;
+    const seen = this.loadScrollsSeen();
+    if (seen.has(speciesId)) {
+      // Уже видели — счётчик не трогаем, но медали проверить не мешает
+      // (на случай, если они были добавлены в реестр позже).
+      this.checkExplorerMedals();
+      return;
+    }
+    seen.add(speciesId);
+    this.saveScrollsSeen(seen);
+    // Счётчик для прогресс-бара дашборда
+    this.bumpMeta('scrollsSeen');
+    this.checkExplorerMedals();
+  },
+
+  // ---------- Справочники для медалей «Исследователя» ----------
+  // Список ID птиц из SPECIES (класс Птицы – AVES). Нужен отдельно,
+  // потому что App.detectCategory() различает только animals/plants/
+  // lichens/fungi, а «птицы» — подмножество animals.
+  BIRDS: [
+    'gavia_arctica', 'podiceps_ruficollis', 'podiceps_griseigena',
+    'pelecanus_crispus', 'pelecanus_onocrotalus',
+    'ixobrychus_minutus', 'egretta_alba', 'ciconia_nigra',
+    'phoenicopterus_roseus',
+    'branta_bernicla', 'rufibrenta_ruficollis', 'anser_erythropus',
+    'cygnus_olor', 'cygnus_cygnus', 'cygnus_bewickii',
+    'tadorna_ferruginea', 'tadorna_tadorna',
+    'aythya_nyroca', 'netta_rufina', 'oxyura_leucocephala',
+    'pandion_haliaetus', 'pernis_apivorus', 'circus_macrourus',
+    'buteo_rufinus', 'aquila_nipalensis', 'aquila_clanga',
+    'aquila_heliaca', 'aquila_chrysaetos', 'haliaeetus_albicilla',
+    'aegypius_monachus', 'falco_rusticolus', 'falco_cherrug',
+    'falco_peregrinus', 'falco_columbarius', 'falco_subbuteo',
+    'falco_vespertinus', 'falco_naumanni',
+    'perdix_perdix',
+    'grus_leucogeranus', 'grus_monacha', 'grus_grus',
+    'anthropoides_virgo', 'crex_crex', 'gallinula_chloropus',
+    'otis_tarda', 'tetrax_tetrax', 'chlamydotis_undulata',
+    'burhinus_oedicnemus', 'chettusia_gregaria',
+    'recurvirostra_avosetta', 'himantopus_himantopus',
+    'haematopus_ostralegus', 'tringa_nebularia',
+    'gallinago_megala', 'numenius_tenuirostris',
+    'numenius_arquata', 'numenius_phaeopus', 'limosa_limosa',
+    'limnodromus_semipalmatus', 'glareola_nordmanni',
+    'larus_ichthyaetus', 'hydroprogne_caspia', 'sterna_albifrons',
+    'nyctea_scandiaca', 'bubo_bubo', 'otus_scops',
+    'athene_noctua', 'aegolius_funereus', 'glaucidium_passerinum',
+    'surnia_ulula', 'strix_nebulosa',
+    'coracias_garrulus', 'alcedo_atthis', 'merops_apiaster', 'upupa_epops',
+    'dryocopus_martius',
+    'melanocorypha_leucoptera', 'melanocorypha_yeltoniensis',
+    'eremophila_alpestris', 'anthus_campestris', 'anthus_richardi',
+    'anthus_hodgsoni', 'lanius_excubitor', 'lanius_minor',
+    'locustella_certhiola', 'acrocephalus_paludicola',
+    'sylvia_atricapilla', 'regulus_regulus', 'luscinia_luscinia',
+    'zoothera_dauma', 'tarsiger_cyanurus', 'panurus_biarmicus',
+    'uragus_sibiricus', 'loxia_curvirostra', 'pinicola_enucleator'
+  ],
+
+  // Кэш: speciesId -> 'animals' | 'plants' | 'lichens' | 'fungi' | null.
+  // Заполняется один раз при первом обращении; сбрасывается при импорте
+  // прогресса (species-данные не меняются в рантайме).
+  _categoryCache: null,
+
+  _getCategoryCache() {
+    if (this._categoryCache) return this._categoryCache;
+    const cache = new Map();
+    if (typeof App !== 'undefined' && typeof App.detectCategory === 'function'
+      && typeof App.collectAllSpecies === 'function') {
+      try {
+        App.collectAllSpecies().forEach(sp => {
+          if (!sp || !sp.id) return;
+          const cat = App.detectCategory(sp.id);
+          if (cat) cache.set(String(sp.id), cat);
+        });
+      } catch (e) { /* App ещё не готов — соберём позже */ }
+    }
+    if (cache.size) this._categoryCache = cache;
+    return cache;
+  },
+
+  // Список всех speciesId из SPECIES_DATA (или пустой массив, если данных нет)
+  _allSpeciesIds() {
+    if (typeof window !== 'undefined' && window.SPECIES_DATA
+      && typeof window.SPECIES_DATA === 'object') {
+      return Object.keys(window.SPECIES_DATA);
+    }
+    return [];
+  },
+
+  // ID видов указанной категории (animals/plants/lichens/fungi)
+  _speciesIdsOfCategory(categoryKey) {
+    const cache = this._getCategoryCache();
+    const out = [];
+    cache.forEach((cat, id) => { if (cat === categoryKey) out.push(id); });
+    return out;
+  },
+
+  // Сколько «своих» видов у каждой категории (для прогресс-баров/медалей).
+  // Возвращает { animals: N, plants: N, lichens: N, fungi: N }.
+  _categoryTotals() {
+    const totals = { animals: 0, plants: 0, lichens: 0, fungi: 0 };
+    this._getCategoryCache().forEach((cat) => {
+      if (totals[cat] != null) totals[cat]++;
+    });
+    return totals;
+  },
+
+  // ---------- Медали «Исследователя» ----------
+  // Вызывается из:
+  //  • bumpScrollsSeen() — после добавления нового свитка;
+  //  • app-regions.js → saveRegion()/saveMigration() (обычная ветка);
+  //  • app-render.js  → saveModal() (обычная ветка);
+  //  • journal.js     → saveRecord() (после успешного сохранения).
+  // Идемпотентна: unlock() сам проверяет, получена ли медаль.
+  checkExplorerMedals() {
+    const seen = this.loadScrollsSeen();
+    const seenSize = seen.size;
+
+    // 1. Счётчики свитков
+    if (seenSize >= 1) this.unlock('explorer', 'first_scroll');
+    if (seenSize >= 10) this.unlock('explorer', 'explorer10');
+    if (seenSize >= 25) this.unlock('explorer', 'explorer25');
+    if (seenSize >= 50) this.unlock('explorer', 'explorer50');
+    const allIds = this._allSpeciesIds();
+    if (allIds.length > 0 && seenSize >= allIds.length) {
+      this.unlock('explorer', 'explorer_all');
+    }
+
+    // 2. Действия на карте и в дневнике
+    const App = (typeof window !== 'undefined') ? window.App : null;
+    if (App) {
+      if (Array.isArray(App.markers) && App.markers.length >= 1) {
+        this.unlock('explorer', 'first_marker');
+      }
+      if (Array.isArray(App.regions) && App.regions.length >= 1) {
+        this.unlock('explorer', 'cartographer');
+      }
+      if (Array.isArray(App.migrations) && App.migrations.length >= 1) {
+        this.unlock('explorer', 'first_migration');
+      }
+    }
+    if (typeof Journal !== 'undefined' && Array.isArray(Journal.records)
+      && Journal.records.length >= 1) {
+      this.unlock('explorer', 'diarist');
+    }
+
+    // 3. Категорийные медали — только когда кэш категорий уже собран
+    //    (App.detectCategory доступен). Иначе пропускаем: значит, App
+    //    ещё не инициализирован, а такие вызовы до App.init быть не могут.
+    const cache = this._getCategoryCache();
+    if (!cache.size) return;
+
+    // 3a. Хотя бы по одному виду из каждой категории
+    const coveredCats = new Set();
+    seen.forEach(id => {
+      const cat = cache.get(String(id));
+      if (cat) coveredCats.add(cat);
+    });
+    if (coveredCats.has('animals') && coveredCats.has('plants')
+      && coveredCats.has('lichens') && coveredCats.has('fungi')) {
+      this.unlock('explorer', 'all_groups');
+    }
+
+    // 3b. Полное покрытие категории. Сравниваем «увидено» с «всего»,
+    //     но только если для категории вообще есть виды в базе.
+    const totals = this._categoryTotals();
+    const seenOf = (cat) => {
+      let n = 0;
+      seen.forEach(id => { if (cache.get(String(id)) === cat) n++; });
+      return n;
+    };
+    if (totals.animals > 0 && seenOf('animals') >= totals.animals) {
+      this.unlock('explorer', 'zoologist');
+    }
+    if (totals.plants > 0 && seenOf('plants') >= totals.plants) {
+      this.unlock('explorer', 'botanist');
+    }
+    if (totals.lichens > 0 && seenOf('lichens') >= totals.lichens) {
+      this.unlock('explorer', 'lichenologist');
+    }
+    if (totals.fungi > 0 && seenOf('fungi') >= totals.fungi) {
+      this.unlock('explorer', 'mycologist');
+    }
+
+    // 3c. Орнитолог: все 95 птиц из явного списка BIRDS.
+    //     Проверяем, что каждая птица из списка есть в seen.
+    if (this.BIRDS.length > 0) {
+      let got = 0;
+      for (let i = 0; i < this.BIRDS.length; i++) {
+        if (seen.has(this.BIRDS[i])) got++;
+      }
+      if (got >= this.BIRDS.length) {
+        this.unlock('explorer', 'orinthologist');
+      }
+    }
+  },
+
   CATALOG: [
     { game: 'quiz', title: 'Викторина', icon: '🎲', openBtn: 'btn-quiz', achievements: [
       { id: 'perfect',    icon: '🏆', name: 'Настоящий биолог',          hint: '90%+ верных ответов' },
-      { id: 'good',       icon: '🌿', name: 'Хороший результат',         hint: '60%+ верных ответов' },
+      { id: 'good', icon: '✅', name: 'Хороший результат', hint: '60%+ верных ответов' },
       { id: 'first_win',  icon: '📖', name: 'Первое завершение',         hint: 'Пройти викторину до конца' },
       { id: 'centurion',  icon: '💯', name: 'Сотник знаний',             hint: 'Набрать 100 верных ответов суммарно' },
       { id: 'streak5',    icon: '🔥', name: 'Пять в ряд',                hint: 'Серия из 5 верных ответов подряд' },
@@ -51,25 +277,27 @@ const Achievements = {
       { id: 'flawless',   icon: '👑', name: 'Без единой ошибки',         hint: 'Полная победа без ошибок' },
       { id: 'eagle',      icon: '🏆', name: 'Орлиный глаз',              hint: 'Победа с ≤3 ошибками' },
       { id: 'naturalist', icon: '🌟', name: 'Внимательный натуралист',   hint: 'Победа с ≤8 ошибками' },
-      { id: 'persistent', icon: '🌱', name: 'Упорство и труд',           hint: 'Собрать все пары' },
+      { id: 'persistent', icon: '💪', name: 'Упорство и труд', hint: 'Собрать все пары' },
       { id: 'chain3',     icon: '⛓️', name: 'Тройная цепь',              hint: '3 пары подряд без единой ошибки' },
       { id: 'tenwins',    icon: '🗂️', name: 'Коллекционер пар',          hint: 'Собрать 10 побед в «Найди пару»' },
       { id: 'sharpshooter',icon:'🎯', name: 'Меткий систематик',         hint: 'Победить ровно с 1 ошибкой' }
     ]},
-    { game: 'memo', title: 'Мемо', icon: '🃏', openBtn: 'btn-memo', achievements: [
-      { id: 'photo',      icon: '👑', name: 'Фотографическая память',    hint: 'Победа за ≤14 ходов' },
-      { id: 'expert',     icon: '🏆', name: 'Знаток Красной книги',      hint: 'Победа за ≤20 ходов' },
-      { id: 'attentive',  icon: '🌟', name: 'Внимательный натуралист',   hint: 'Победа за ≤28 ходов' },
-      { id: 'firststep',  icon: '🌱', name: 'Первый шаг в науке',        hint: 'Выиграть партию мемо' },
-      { id: 'memoryking', icon: '♟️', name: 'Повелитель памяти',         hint: 'Победа за ≤16 ходов' },
-      { id: 'deduction',  icon: '🕵️', name: 'Дедукция',                  hint: '5 найденных пар подряд с первой попытки' },
-      { id: 'tenrounds',  icon: '🃏', name: 'Десять раундов',            hint: 'Выиграть 10 партий мемо' }
-    ]},
+    {
+      game: 'memo', title: 'Мемо', icon: '🃏', openBtn: 'btn-memo', achievements: [
+        { id: 'photo', icon: '👑', name: 'Фотографическая память', hint: 'Победа за ≤22 ходов' },
+        { id: 'expert', icon: '🏆', name: 'Знаток Красной книги', hint: 'Победа за ≤24 хода' },
+        { id: 'attentive', icon: '🌟', name: 'Внимательный натуралист', hint: 'Победа за ≤26 ходов' },
+        { id: 'firststep', icon: '🌱', name: 'Первый шаг в науке', hint: 'Выиграть партию мемо' },
+        { id: 'memoryking', icon: '♟️', name: 'Повелитель удачи', hint: 'Победа за ≤18 ходов' },
+        { id: 'deduction', icon: '🕵️', name: 'Дедукция', hint: '5 найденных пар подряд с первой попытки' },
+        { id: 'tenrounds', icon: '🃏', name: 'Десять раундов', hint: 'Выиграть 10 партий мемо' }
+      ]
+    },
     { game: 'erudite', title: 'Эрудит', icon: '🦉', openBtn: 'btn-erudite', achievements: [
       { id: 'linguist',   icon: '👑', name: 'Лингвист Красной книги',    hint: 'Все слова + серия 4+' },
       { id: 'ortho',      icon: '🏆', name: 'Знаток орфографии',         hint: '9 из 10 слов' },
       { id: 'philologist',icon: '🌟', name: 'Начинающий филолог',        hint: 'Решить половину слов' },
-      { id: 'letters',    icon: '🌱', name: 'Первые буквы',              hint: 'Завершить игру' },
+      { id: 'letters', icon: '✏️', name: 'Первые буквы', hint: 'Завершить игру' },
       { id: 'polyglot',   icon: '🈶', name: 'Полиглот',                  hint: 'Решить все 10 слов за игру' },
       { id: 'frugal',     icon: '🪙', name: 'Академик-экономист',        hint: 'Пройти игру вообще без подсказок' },
       { id: 'poet',       icon: '✒️', name: 'Поэт фауны',                hint: 'Серия из 6 слов подряд' },
@@ -87,26 +315,48 @@ const Achievements = {
     { game: 'habitat', title: 'Среда обитания', icon: '🌍', openBtn: 'btn-habitat', achievements: [
       { id: 'keeper',   icon: '👑', name: 'Хранитель экосистем',         hint: 'Пройти игру без единой ошибки' },
       { id: 'expert',   icon: '🏆', name: 'Знаток биотопов',             hint: 'Пройти игру с ≤2 ошибками' },
-      { id: 'ranger',   icon: '🌱', name: 'Лесной рейнджер',             hint: 'Пройти все раунды игры' },
+      { id: 'ranger', icon: '🌲', name: 'Лесной рейнджер', hint: 'Пройти все раунды игры' },
       { id: 'quick',    icon: '⚡', name: 'Молниеносный эколог',         hint: 'Верный ответ быстрее 2 секунд' },
       { id: 'serial',   icon: '🔥', name: 'Серия открытий',              hint: '8 верных ответов подряд' }
     ]},
     { game: 'status', title: 'Статус', icon: '🎖️', openBtn: 'btn-status', achievements: [
       { id: 'flawless', icon: '👑', name: 'Канцлер Красной книги',       hint: 'Финиш без единой ошибки' },
       { id: 'expert',   icon: '🏆', name: 'Знаток категорий',            hint: '90%+ верных ответов' },
-      { id: 'good',     icon: '🌿', name: 'Хороший результат',           hint: '60%+ верных ответов' },
-      { id: 'first_win',icon: '🌱', name: 'Первая категория',            hint: 'Завершить игру' },
+      { id: 'good', icon: '👍', name: 'Хороший результат', hint: '60%+ верных ответов' },
+      { id: 'first_win', icon: '🏁', name: 'Первая категория', hint: 'Завершить игру' },
       { id: 'streak5',  icon: '🔥', name: 'Пять статусов подряд',        hint: 'Серия из 5 верных ответов' },
       { id: 'speed',    icon: '⚡', name: 'Быстрый оценщик',             hint: 'Ответить верно быстрее 2 секунд' },
       { id: 'centurion',icon: '💯', name: 'Сотник категорий',            hint: '100 верных ответов суммарно' }
     ]},
-    { game: 'family', title: 'Систематик', icon: '🗂️', openBtn: 'btn-family', achievements: [
-      { id: 'professor',   icon: '👑', name: 'Академик систематике',     hint: 'Ни одной ошибки за игру' },
-      { id: 'practitioner',icon: '🏆', name: 'Систематик-практик',       hint: 'Победа с ≤2 ошибками' },
-      { id: 'systematicist',icon:'🌱', name: 'Юный систематик',          hint: 'Пройти все раунды игры' },
-      { id: 'perfectround',icon: '⚡', name: 'Безупречный раунд',        hint: 'Закрыть раунд без ошибок' }
-    ]},
-    { game: 'cross', title: 'Общие', icon: '🌍', openBtn: 'btn-games', achievements: [
+    {
+      game: 'family', title: 'Систематик', icon: '🗂️', openBtn: 'btn-family', achievements: [
+        { id: 'professor', icon: '👑', name: 'Академик систематике', hint: 'Ни одной ошибки за игру' },
+        { id: 'practitioner', icon: '🏆', name: 'Систематик-практик', hint: 'Победа с ≤2 ошибками' },
+        { id: 'systematicist', icon: '🎓', name: 'Юный систематик', hint: 'Пройти все раунды игры' },
+        { id: 'perfectround', icon: '⚡', name: 'Безупречный раунд', hint: 'Закрыть раунд без ошибок' }
+      ]
+    },
+    {
+      game: 'explorer', title: 'Исследователь', icon: '📖', openBtn: null, achievements: [
+        { id: 'first_scroll', icon: '📜', name: 'Первый шаг', hint: 'Открыть первый свиток вида' },
+        { id: 'explorer10', icon: '🔍', name: 'Исследователь', hint: 'Открыть 10 разных свитков' },
+        { id: 'explorer25', icon: '🧭', name: 'Натуралист', hint: 'Открыть 25 разных свитков' },
+        { id: 'explorer50', icon: '🗺️', name: 'Краевед', hint: 'Открыть 50 разных свитков' },
+        { id: 'explorer_all', icon: '🏅', name: 'Полный охват', hint: 'Открыть все свитки видов' },
+        { id: 'first_marker', icon: '📍', name: 'Первый вклад', hint: 'Поставить первый маркер' },
+        { id: 'cartographer', icon: '✏️', name: 'Картограф', hint: 'Нарисовать первую область' },
+        { id: 'first_migration', icon: '⇔', name: 'Мигрант', hint: 'Нарисовать первую линию миграции' },
+        { id: 'diarist', icon: '📔', name: 'Хранитель дневника', hint: 'Первая запись в дневнике' },
+        { id: 'zoologist', icon: '🦅', name: 'Зоолог', hint: 'Открыть свитки всех животных' },
+        { id: 'orinthologist', icon: '🪶', name: 'Орнитолог', hint: 'Открыть свитки всех птиц' },
+        { id: 'botanist', icon: '🌳', name: 'Ботаник', hint: 'Открыть свитки всех растений' },
+        { id: 'lichenologist', icon: '🍃', name: 'Лихенолог', hint: 'Открыть свитки всех лишайников' },
+        { id: 'mycologist', icon: '🍄', name: 'Миколог', hint: 'Открыть свитки всех грибов' },
+        { id: 'all_groups', icon: '🌐', name: 'Все группы', hint: 'Открыть хотя бы по одному виду из каждой категории' }
+      ]
+    },
+    {
+      game: 'cross', title: 'Общие', icon: '🌍', openBtn: 'btn-games', achievements: [
       { id: 'collector',  icon: '🎖️', name: 'Коллекционер',              hint: 'Медали хотя бы в 4 разных играх' },
       { id: 'triplecrown',icon: '👑', name: 'Тройная корона',            hint: 'Все коронные 👑-медали сразу в 3 играх' },
       { id: 'half',       icon: '🥈', name: 'Половина пути',             hint: 'Собрать половину всех медалей' },
@@ -158,6 +408,9 @@ const Achievements = {
       console.warn('Achievements: повреждён прогресс, начинаем заново.', e);
       this.progress = this.defaultProgress();
     }
+    // Счётчики партий/ответов всегда доступны как объект (иначе дашборд
+    // и bumpGameCounter работают с null до первого bumpMeta).
+    this.meta = this.progress._meta || {};
   },
 
   // Строгая проверка структуры перед записью в DOM/href (защита от битого файла)
@@ -221,9 +474,15 @@ const Achievements = {
   // Кросс-игровые медали: проверяются после каждой новой медали
   checkCrossMedals(justUnlockedGame) {
     if (justUnlockedGame !== 'cross') {
-      const gamesWithMedals = this.CATALOG.filter(g => g.game !== 'cross' &&
-        (this.progress.unlocked[g.game] || []).length > 0).length;
-      if (gamesWithMedals >= 4) this.unlock('cross', 'collector');
+      // «Коллекционер»: ≥4 игры, в КАЖДОЙ из которых ≥3 медали.
+      // Раньше порог был «≥4 игры с любой медалью» — пользователь
+      // получал медаль, собрав по 1 медали в 4 играх, что ощущалось
+      // «дешёво». Теперь нужно реально поиграть в каждую.
+      const gamesWithThree = this.CATALOG.filter(g =>
+        g.game !== 'cross' &&
+        (this.progress.unlocked[g.game] || []).length >= 3
+      ).length;
+      if (gamesWithThree >= 4) this.unlock('cross', 'collector');
 
       // «Тройная корона»: все коронные 👑-медали собраны хотя бы в 3 играх сразу
       const crownGames = this.CATALOG.filter(g => g.game !== 'cross').filter(g => {
@@ -371,11 +630,209 @@ const Achievements = {
     this.openGame(nextKey);
   },
 
+  // ---------- Дашборд «Мой прогресс» ----------
+  // Рендерит секции над витриной медалей:
+  //   1) Сводка (N% медалей собрано);
+  //   2) Прогресс по играм (список CATALOG + explorer);
+  //   3) Открыто видов в свитках (N из M);
+  //   4) Ближайшие медали (раскрывающийся список);
+  //   5) Что ещё можно сделать (подсказки).
+  // Заглушка 2G.1: пока только сводка и прогресс по играм.
+  // Ближайшие медали и подсказки — в 2G.3/2G.4.
+  renderDashboard() {
+    const host = document.getElementById('dashboard-block');
+    if (!host) return;
+    host.innerHTML = '';
+
+    if (!this.progress) this.load();
+
+    const totalAch = this.CATALOG.reduce((n, g) => n + g.achievements.length, 0);
+    const gotAch = this.totalUnlocked();
+    const pct = totalAch > 0 ? Math.round((gotAch / totalAch) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'db-card';
+
+    // --- 1. Сводка ---
+    const summary = document.createElement('div');
+    summary.className = 'db-summary';
+    summary.innerHTML =
+      `<div class="db-big">${pct}%</div>` +
+      `<div class="db-big-label">медалей собрано · ${gotAch} из ${totalAch}</div>`;
+    card.appendChild(summary);
+
+    // --- 2. Прогресс по играм ---
+    // cross — не игра, а сводная категория; в списке игр её не показываем
+    // (она и так видна в «Сводке» и «Ближайших медалях»).
+    const rows = document.createElement('div');
+    rows.className = 'db-rows';
+    this.CATALOG.forEach(g => {
+      if (g.game === 'cross') return;
+
+      const ids = (this.progress.unlocked || {})[g.game] || [];
+      const earned = g.achievements.filter(a => ids.includes(a.id)).length;
+      const total = g.achievements.length;
+      const rowPct = total > 0 ? (earned / total) * 100 : 0;
+
+      // explorer — «сыграно» = число увиденных свитков; игры — gamesPlayed.
+      const played = (g.game === 'explorer')
+        ? this.loadScrollsSeen().size
+        : (this.meta && this.meta['gamesPlayed:' + g.game]) || 0;
+      const playedLabel = (g.game === 'explorer')
+        ? `видов в свитках: ${played}`
+        : `сыграно: ${played} парт.`;
+
+      const row = document.createElement('div');
+      row.className = 'db-row';
+      row.innerHTML =
+        `<div class="db-row-icon">${g.icon}</div>` +
+        `<div class="db-row-title">${g.title}</div>` +
+        `<div class="db-row-count">${earned}/${total}</div>` +
+        `<div class="db-bar"><div class="db-bar-fill" style="width:${rowPct}%"></div></div>` +
+        `<div class="db-row-played">${playedLabel}</div>`;
+      rows.appendChild(row);
+    });
+    card.appendChild(rows);
+
+    // --- 3. Открыто видов в свитках ---
+    const seenSize = this.loadScrollsSeen().size;
+    const totalSpecies = this._allSpeciesIds().length;
+    const scrollPct = totalSpecies > 0 ? (seenSize / totalSpecies) * 100 : 0;
+    const scrolls = document.createElement('div');
+    scrolls.className = 'db-scrolls';
+    scrolls.innerHTML =
+      `<div class="db-scrolls-title">Открыто видов в свитках</div>` +
+      `<div class="db-scrolls-count">${seenSize} из ${totalSpecies}` +
+      (totalSpecies > 0 ? ` (${Math.round(scrollPct)}%)` : '') + `</div>` +
+      `<div class="db-bar"><div class="db-bar-fill" style="width:${scrollPct}%"></div></div>`;
+    card.appendChild(scrolls);
+
+    // --- 4. Ближайшие медали ---
+    // Берём по одной недополученной медали из каждой игры, сортируем
+    // игры по проценту собранного (где больше собрано — та «ближе»),
+    // показываем до 12 строк.
+    const closest = [];
+    this.CATALOG.forEach(g => {
+      const ids = (this.progress.unlocked || {})[g.game] || [];
+      const earned = g.achievements.filter(a => ids.includes(a.id)).length;
+      const total = g.achievements.length;
+      if (earned >= total) return; // всё собрано — пропускаем
+      const next = g.achievements.find(a => !ids.includes(a.id));
+      if (!next) return;
+      closest.push({
+        game: g,
+        ach: next,
+        earned,
+        total,
+        ratio: total > 0 ? earned / total : 0
+      });
+    });
+    closest.sort((a, b) => b.ratio - a.ratio);
+    const closestTop = closest.slice(0, 12);
+
+    if (closestTop.length > 0) {
+      const det = document.createElement('details');
+      det.className = 'db-closest';
+      const summary = document.createElement('summary');
+      summary.textContent = `Ближайшие медали · к получению осталось ${closest.length}`;
+      det.appendChild(summary);
+      const list = document.createElement('div');
+      list.className = 'db-closest-list';
+      closestTop.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'db-closest-item';
+        row.innerHTML =
+          `<span class="db-closest-game">${item.game.icon} ${item.game.title}</span>` +
+          `${item.ach.icon} <strong>${item.ach.name}</strong> — ${item.ach.hint}`;
+        list.appendChild(row);
+      });
+      det.appendChild(list);
+      card.appendChild(det);
+    }
+
+    // --- 5. Что ещё можно сделать ---
+    // 3–5 подсказок, только для НЕ выполненных действий. Если всё
+    // выполнено — секция не рендерится вовсе.
+    const suggestions = [];
+    const seen = this.loadScrollsSeen();
+    const seenCount = seen.size;
+    const totalSpeciesAll = this._allSpeciesIds().length;
+    if (totalSpeciesAll > 0 && seenCount < totalSpeciesAll) {
+      const need = Math.min(5, totalSpeciesAll - seenCount);
+      suggestions.push(`📖 Открой ещё ${need} новых свитков видов (сейчас открыто ${seenCount} из ${totalSpeciesAll})`);
+    }
+
+    // Игра с наименьшим числом медалей (среди тех, где ещё не всё собрано)
+    let leastGame = null;
+    let leastEarned = Infinity;
+    this.CATALOG.forEach(g => {
+      if (g.game === 'cross' || g.game === 'explorer') return; // только игры
+      const ids = (this.progress.unlocked || {})[g.game] || [];
+      const earned = g.achievements.filter(a => ids.includes(a.id)).length;
+      if (earned >= g.achievements.length) return; // всё собрано
+      if (earned < leastEarned) {
+        leastEarned = earned;
+        leastGame = g;
+      }
+    });
+    if (leastGame) {
+      suggestions.push(`🎮 Сыграй в «${leastGame.title}» — там меньше всего медалей (${leastEarned} из ${leastGame.achievements.length})`);
+    }
+
+    const App = (typeof window !== 'undefined') ? window.App : null;
+    if (App) {
+      if (!Array.isArray(App.regions) || App.regions.length === 0) {
+        suggestions.push('✏️ Нарисуй первую область в режиме разработчика — медаль «Картограф»');
+      }
+    }
+
+    // Проверяем записи в памяти, а если их нет — смотрим в localStorage.
+    // Это защищает подсказку от ситуации, когда renderDashboard вызывается
+    // раньше, чем Journal.init() успел загрузить данные из хранилища.
+    let hasJournalRecords = false;
+    if (typeof Journal !== 'undefined' && Array.isArray(Journal.records) && Journal.records.length > 0) {
+      hasJournalRecords = true;
+    } else {
+      try {
+        const raw = localStorage.getItem('red_book_journal');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) hasJournalRecords = true;
+        }
+      } catch (e) { /* битый JSON — считаем, что записей нет */ }
+    }
+    if (!hasJournalRecords) {
+      suggestions.push('📔 Заполни полевой дневник первой записью — медаль «Хранитель дневника»');
+    }
+
+    if (App && (!Array.isArray(App.markers) || App.markers.length === 0)) {
+      suggestions.push('📍 Поставь первый маркер на карте — медаль «Первый вклад»');
+    }
+
+    // Показываем не больше 5 подсказок, не больше 5 по счёту
+    const topSuggestions = suggestions.slice(0, 5);
+    if (topSuggestions.length > 0) {
+      const sug = document.createElement('div');
+      sug.className = 'db-suggestions';
+      sug.innerHTML =
+        `<div class="db-suggestions-title">💡 Что ещё можно сделать</div>` +
+        `<ul class="db-suggestions-list">` +
+        topSuggestions.map(s => `<li>${s}</li>`).join('') +
+        `</ul>`;
+      card.appendChild(sug);
+    }
+
+    host.appendChild(card);
+  },
+
   renderShowcase() {
-    // Прогресс мог ещё не загрузиться (init идёт через setTimeout(100)),
+  // Прогресс мог ещё не загрузиться (init идёт через setTimeout(100)),
     // а restoreSessionState вызывает enterGamesMode() сразу после App.init.
     // Без этого список медалей остаётся пустым до выхода/возврата в режим.
     if (!this.progress) this.load();
+
+    // Дашборд «Мой прогресс» — над витриной медалей.
+    this.renderDashboard();
 
     const list = document.getElementById('medals-list');
     if (!list) return;

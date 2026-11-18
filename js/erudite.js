@@ -103,6 +103,8 @@ const EruditeGame = {
     this.streak = 0;
     this.bestStreak = 0;
     this.solvedCount = 0;
+    this.usedHints = false;  // «Академик-экономист»: ни одной подсказки за игру
+    this.totalLetters = 0;   // «Скрабблист»: буквы за текущую игру
     document.getElementById('erudite-total').textContent = this.ROUNDS;
 
     const all = App.collectAllSpecies().filter(sp => sp && sp.id && sp.name);
@@ -630,6 +632,7 @@ const EruditeGame = {
       this.showHintMessage(`Недостаточно баллов: нужно ${extra}, есть ${this.balance}. Угадывай буквами!`, 'bad');
       return;
     }
+    this.usedHints = true; // с этого момента «Академик-экономист» не выдаётся
 
     switch (key) {
       case 'firstLetter': {
@@ -765,6 +768,8 @@ const EruditeGame = {
       this.streak += 1;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
       this.solvedCount += 1;
+      this.totalLetters += letters;
+      if (this.streak >= 6) this.unlockAch('poet');
       const multInfo = mult > 1 ? ` (×${mult} за длину)` : '';
       const streakInfo = this.streak > 1 ? `, серия ×${this.streak}` : '';
       this.showHintMessage(`Верно! Это — ${this.current.name}. +${earned} баллов${multInfo}${streakInfo}`, 'good');
@@ -852,6 +857,22 @@ const EruditeGame = {
 
     const titleEl = document.getElementById('erudite-end-title');
     const achieveEl = document.getElementById('erudite-end-achieve');
+
+    // «Полиглот»: решены все 10 слов за игру.
+    // «Академик-экономист»: пройдена игра без единой подсказки.
+    // «Скрабблист»: 100 букв суммарно за все партии (накопительный счётчик).
+    if (this.solvedCount === this.queue.length) this.unlockAch('polyglot');
+    if (!this.usedHints) this.unlockAch('frugal');
+    try {
+      if (typeof Achievements !== 'undefined' && Achievements.bumpMeta && this.totalLetters > 0) {
+        // «Скрабблист»: 100 букв суммарно за все завершённые партии.
+        // this.totalLetters — сколько букв собрано за ЭТУ игру.
+        // bumpMeta добавляет их к накопительному счётчику.
+        const totalLetters = Achievements.bumpMeta('eruditeLettersTotal', this.totalLetters);
+        if (totalLetters >= 100) Achievements.unlock('erudite', 'scrabble');
+      }
+    } catch (e) { /* noop */ }
+
     if (this.solvedCount === this.queue.length && this.bestStreak >= 4) {
       titleEl.textContent = '👑 Великий Эрудит!';
       achieveEl.textContent = 'Достижение получено: «Лингвист Красной книги»';
@@ -869,6 +890,14 @@ const EruditeGame = {
       achieveEl.textContent = 'Достижение получено: «Первые буквы»';
     }
     this.unlockAch('letters');
+
+    // Счётчик партий (для кросс-медали «Игроман»)
+    try {
+      if (typeof Achievements !== 'undefined' && Achievements.bumpGameCounter) {
+        Achievements.bumpGameCounter('erudite');
+      }
+    } catch (e) { /* noop */ }
+
     document.getElementById('erudite-end-screen').classList.remove('hidden');
     GameEnd.enter('erudite'); // скрыть поле игры и ↺/✕
   },

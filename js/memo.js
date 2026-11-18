@@ -96,6 +96,7 @@ const MemoGame = {
         this.flippedCards = [];
         this.matchedPairs = 0;
         this.lockBoard = false;
+        this.perfectChain = 0; // серия угаданных пар без ошибок (для «Дедукции»)
 
         // Выбираем уникальные виды для пар
         const all = App.collectAllSpecies();
@@ -165,6 +166,9 @@ const MemoGame = {
                 second.classList.add('matched');
                 this.flippedCards = [];
                 this.matchedPairs++;
+                this.perfectChain++;
+                // «Дедукция»: 5 найденных пар подряд с первой попытки.
+                if (this.perfectChain >= 5) this.unlockAch('deduction');
 
                 // НЕ вычёркиваем сразу — сделаем это после полёта карточки.
                 // Передаём speciesId в showMatchedSpecies, он сам найдёт строку.
@@ -181,25 +185,62 @@ const MemoGame = {
                         const titleEl = document.getElementById('memo-end-title');
                         const achieveEl = document.getElementById('memo-end-achieve');
 
-                        // Идеальное количество ходов для 12 пар — это 12.
-                        // 15 и меньше — очень хорошо. 20 и меньше — нормально.
-                        if (this.moves <= 14) {
+                        // Минимум ходов для 12 пар — 24 переворота = 12 ходов,
+                        // но это возможно только при идеальном запоминании
+                        // каждой карточки. Реалистичные пороги:
+                        //   • ≤18 — «Повелитель удачи» (феноменальная память + удача);
+                        //   • ≤22 — «Фотографическая память» (главная 👑);
+                        //   • ≤24 — «Знаток Красной книги»;
+                        //   • ≤26 — «Внимательный натуралист».
+                        // «Повелитель удачи» — независимая медаль: выдаётся
+                        // даже если игрок получил «Фотографическую память».
+                        // Выдаём все медали, условия которых выполнены.
+                        // Раньше стоял else-if, и при 22 ходах выдавалась только
+                        // «Фотографическая память», а «Знаток» (≤24) пропускался.
+                        if (this.moves <= 18) this.unlockAch('memoryking');
+                        if (this.moves <= 22) this.unlockAch('photo');
+                        if (this.moves <= 24) this.unlockAch('expert');
+                        if (this.moves <= 26) this.unlockAch('attentive');
+                        this.unlockAch('firststep');
+
+                        // Визуальный титул на экране победы — по самому строгому
+                        // выполненному условию (для красоты, на медали не влияет).
+                        if (this.moves <= 22) {
                             titleEl.textContent = '👑 Идеальная память!';
                             achieveEl.textContent = 'Достижение получено: «Фотографическая память»';
-                            this.unlockAch('photo');
-                        } else if (this.moves <= 20) {
+                        } else if (this.moves <= 24) {
                             titleEl.textContent = '🏆 Отличный результат!';
                             achieveEl.textContent = 'Достижение получено: «Знаток Красной книги»';
-                            this.unlockAch('expert');
-                        } else if (this.moves <= 28) {
+                        } else if (this.moves <= 26) {
                             titleEl.textContent = '🌟 Хорошая работа!';
                             achieveEl.textContent = 'Достижение получено: «Внимательный натуралист»';
-                            this.unlockAch('attentive');
                         } else {
                             titleEl.textContent = '🌱 Победа!';
                             achieveEl.textContent = 'Достижение получено: «Первый шаг в науке»';
                         }
-                        this.unlockAch('firststep');
+
+                        // Счётчик партий (для кросс-медали «Игроман»)
+                        // и побед (для «Десяти раундов»: 10 побед).
+                        try {
+                            if (typeof Achievements !== 'undefined') {
+                                // bumpGameCounter вызывается ТОЛЬКО при победе,
+                                // поэтому gamesPlayed:memo == число побед.
+                                if (Achievements.bumpGameCounter) {
+                                    Achievements.bumpGameCounter('memo');
+                                }
+                                if (Achievements.bumpMeta) {
+                                    const wins = Achievements.bumpMeta('memoWins');
+                                    // «Десять раундов»: 10 побед. Проверяем и
+                                    // memoWins (новый счётчик), и gamesPlayed:memo
+                                    // (старые сохранения) — чтобы медаль не
+                                    // терялась у тех, кто уже выиграл 10 раз.
+                                    const played = Achievements.meta['gamesPlayed:memo'] || 0;
+                                    if (wins >= 10 || played >= 10) {
+                                        Achievements.unlock('memo', 'tenrounds');
+                                    }
+                                }
+                            }
+                        } catch (e) { /* noop */ }
 
                         document.getElementById('memo-end-screen').classList.remove('hidden');
                         try { GameEnd.enter('memo'); } catch (e) { /* noop */ }
@@ -210,6 +251,7 @@ const MemoGame = {
                 }
             } else {
                 // Не совпало
+                this.perfectChain = 0; // серия «с первой попытки» прервана
                 this.lockBoard = true;
                 setTimeout(() => {
                     first.classList.remove('flipped');

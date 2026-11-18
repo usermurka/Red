@@ -306,6 +306,11 @@ const Quiz = {
             document.getElementById('quiz-score-streak').textContent = this.currentStreak;
             this.updateStreakUI();
 
+            // «Пять в ряд»: серия из 5 верных ответов подряд.
+            if (this.currentStreak >= 5) this.unlockAch('streak5');
+            // «Метеор»: верный ответ быстрее 3 секунд (maxTime - timeLeft).
+            if (this.maxTime - this.timeLeft <= 3) this.unlockAch('speed');
+
             resultContainer.innerHTML = `<p style="color: #2E7D32;">Верно! Это <strong>${escHtml(this.currentSpecies.name)}</strong>.</p>`;
         } else {
             btnElement.classList.add('wrong');
@@ -398,6 +403,29 @@ const Quiz = {
             desc.textContent = `Верных ответов: ${this.scoreRight} из ${this.totalQuestions}. Загляните в справочник видов, чтобы узнать больше!`;
         }
         this.unlockAch('first_win');
+
+        // «Энциклопедия»: финиш без единой ошибки (30 из 30).
+        if (this.scoreWrong === 0 && this.scoreRight === this.totalQuestions) {
+            this.unlockAch('noswipes');
+        }
+
+        // Счётчик партий (для кросс-медали «Игроман») и сумма верных ответов
+        // (для «Сотника знаний»: 100 верных ответов за все партии).
+        try {
+            if (typeof Achievements !== 'undefined') {
+                if (Achievements.bumpGameCounter) Achievements.bumpGameCounter('quiz');
+                if (Achievements.bumpMeta) {
+                    const totalRight = Achievements.bumpMeta('quizRightTotal', this.scoreRight);
+                    if (totalRight >= 100) Achievements.unlock('quiz', 'centurion');
+
+                    // «Марафонец викторин»: сыграть 10 викторин.
+                    // bumpGameCounter('quiz') уже увеличил gamesPlayed:quiz на 1,
+                    // поэтому читаем актуальное значение из meta.
+                    const played = Achievements.meta['gamesPlayed:quiz'] || 0;
+                    if (played >= 10) Achievements.unlock('quiz', 'marathon');
+                }
+            }
+        } catch (e) { /* noop */ }
     },
 
     // Выдача медали через общий реестр достижений (если тот загружен)

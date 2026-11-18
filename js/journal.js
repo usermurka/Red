@@ -26,6 +26,22 @@ const Journal = {
             else console.warn(`Элемент #${id} не найден в HTML!`);
         };
 
+        // Загружаем записи из localStorage СРАЗУ при инициализации,
+        // не дожидаясь open(): иначе Journal.records в памяти пуст
+        // (а записи в localStorage есть), и:
+        //   • подсказка «Заполни дневник» висит в дашборде;
+        //   • медаль «Хранитель дневника» не выдаётся до первого open().
+        // open() тоже перезагружает записи — это не мешает: данные те же.
+        try {
+            const saved = localStorage.getItem('red_book_journal');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                this.records = Array.isArray(parsed) ? this.sanitizeRecords(parsed) : [];
+            }
+        } catch (e) {
+            console.warn('Journal: не удалось загрузить записи из localStorage:', e);
+        }
+
         bind('btn-journal', 'click', () => {
             const modal = document.getElementById('journal-modal');
             if (modal && !modal.classList.contains('hidden')) this.close();
@@ -91,6 +107,15 @@ const Journal = {
             const input = document.getElementById('journal-load-input');
             if (input) input.click();
         });
+
+        // После загрузки записей из localStorage перерисовываем дашборд
+        // «Мой прогресс» (если режим «Игры» активен): подсказка «Заполни
+        // полевой дневник» и медаль «Хранитель дневника» зависят от
+        // Journal.records, а на момент первого renderDashboard() записи
+        // могли быть ещё не загружены.
+        if (typeof Achievements !== 'undefined' && Achievements.renderShowcase) {
+            try { Achievements.renderShowcase(); } catch (e) { /* noop */ }
+        }
 
         bind('journal-form-cancel', 'click', () => this.closeForm());
         bind('journal-form-save', 'click', () => this.saveRecord());
@@ -220,6 +245,15 @@ const Journal = {
                 }
             }, 150);
         });
+
+        // После загрузки записей из localStorage перерисовываем дашборд
+        // «Мой прогресс» (если режим «Игры» активен): подсказка «Заполни
+        // полевой дневник» и медаль «Хранитель дневника» зависят от
+        // Journal.records, а на момент первого renderDashboard() записи
+        // могли быть ещё не загружены.
+        if (typeof Achievements !== 'undefined' && Achievements.renderShowcase) {
+            try { Achievements.renderShowcase(); } catch (e) { /* noop */ }
+        }
     },
 
     // Подсветка кнопки «Дневник» в меню как активной, пока дневник открыт.
@@ -466,6 +500,13 @@ const Journal = {
 
         this.records.push(record);
         this.saveToLocalStorage();
+
+        // Первая запись в дневнике — медаль «Хранитель дневника».
+        // saveToLocalStorage() мог вернуть false при QuotaExceededError —
+        // тогда медаль не выдаём (запись фактически не сохранена).
+        if (typeof Achievements !== 'undefined' && Achievements.checkExplorerMedals) {
+            try { Achievements.checkExplorerMedals(); } catch (e) { /* noop */ }
+        }
 
         // Очищаем всё
         this.pendingPins = [];

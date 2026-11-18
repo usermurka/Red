@@ -388,6 +388,13 @@ Object.assign(App, {
     this.render();
     this.closeModal();
 
+    // Поставлен первый маркер — медаль «Первый вклад».
+    // Ветка isSettingSerial сюда не доходит (она делает return раньше),
+    // так что медаль не выдастся при простом выборе вида для серии.
+    if (typeof Achievements !== 'undefined' && Achievements.checkExplorerMedals) {
+      try { Achievements.checkExplorerMedals(); } catch (e) { /* noop */ }
+    }
+
     if (this.serialMode) {
       this.setSerialMode(true);
     }

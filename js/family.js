@@ -611,7 +611,11 @@ const FamilyGame = {
         this.stopTimer();
         this.lockedAfterCheck = true;
         this.setCheckEnabled(false);
-        if (this.mistakes === 0) this.unlockAch('perfectround');
+        // «Безупречный раунд»: раунд закрыт без единой ошибки.
+        // Проверяем ошибки именно этого раунда, а не всей игры —
+        // иначе одна ошибка в первом раунде блокировала бы медаль
+        // даже за идеальные последующие.
+        if (this.roundMistakes === 0) this.unlockAch('perfectround');
         resultEl.className = 'family-check-result hidden';
         this.showBanner(`🎉 Раунд ${this.round} пройден! Все ${items.length} карточек в правильных группах.`);
         this.showNextRoundBtn(this.round >= this.TOTAL_ROUNDS ? 'Итоги игры →' : 'Продолжить →');

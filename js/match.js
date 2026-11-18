@@ -70,6 +70,7 @@ const MatchGame = {
 
         this.selectedCard = null;
         this.matchedCount = 0;
+        this.chain = 0; // серия угаданных пар подряд (для «Тройной цепи»)
 
         cards.forEach(c => {
             const el = document.createElement('div');
@@ -126,6 +127,9 @@ const MatchGame = {
                 first.classList.remove('selected');
                 this.selectedCard = null;
                 this.matchedCount++;
+                this.chain++;
+                // «Тройная цепь»: 3 пары подряд без ошибок.
+                if (this.chain >= 3) this.unlockAch('chain3');
                 if (this.matchedCount === this.TOTAL_PAIRS) { // все пары найдены
                     setTimeout(() => {
                         document.getElementById('match-final-moves').textContent = this.mistakes;
@@ -152,6 +156,23 @@ const MatchGame = {
                         }
                         this.unlockAch('persistent');
 
+                        // «Меткий систематик»: победа ровно с 1 ошибкой.
+                        if (this.mistakes === 1) this.unlockAch('sharpshooter');
+
+                        // Счётчик партий (для кросс-медали «Игроман»)
+                        // и побед (для «Коллекционера пар»: 10 побед).
+                        try {
+                            if (typeof Achievements !== 'undefined') {
+                                if (Achievements.bumpGameCounter) {
+                                    Achievements.bumpGameCounter('match');
+                                }
+                                if (Achievements.bumpMeta) {
+                                    const wins = Achievements.bumpMeta('matchWins');
+                                    if (wins >= 10) Achievements.unlock('match', 'tenwins');
+                                }
+                            }
+                        } catch (e) { /* noop */ }
+
                         document.getElementById('match-end-screen').classList.remove('hidden');
                         try { GameEnd.enter('match'); } catch (e) { /* noop */ }
                         // Прячем игровые ↺/✕ на финале — см. responsive.css
@@ -164,6 +185,7 @@ const MatchGame = {
             } else {
                 // Не совпало
                 this.mistakes++;
+                this.chain = 0; // серия прервана
                 second.classList.add('selected');
                 document.getElementById('match-grid').style.pointerEvents = 'none';
                 setTimeout(() => {

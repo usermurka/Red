@@ -430,3 +430,274 @@ body.games-mode #hint {
     border-top: 2px solid rgba(176, 141, 47, 0.55);
     margin: 14px 4px 10px;
 }
+
+/* ============================================================
+   ДАШБОРД «МОЙ ПРОГРЕСС» (Блок 4)
+   Секции: .db-card > .db-summary / .db-row / .db-closest /
+   .db-suggestions. Все — в едином стиле витрины медалей.
+   ============================================================ */
+
+#dashboard-block {
+    margin-bottom: 18px;
+}
+
+.db-card {
+    border: 2px solid var(--gold-deep, #8a6a1e);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 16px 18px 18px;
+    box-shadow: 0 2px 8px rgba(36, 53, 42, 0.12);
+}
+
+.db-title {
+    font-family: Georgia, serif;
+    font-size: 20px;
+    color: var(--dark-green, #24352a);
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(138, 106, 30, 0.35);
+}
+
+/* --- Секция «Сводка» --- */
+.db-summary {
+    text-align: center;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(138, 106, 30, 0.35);
+}
+
+.db-big {
+    font-family: Georgia, serif;
+    font-size: 42px;
+    font-weight: bold;
+    color: var(--gold-deep, #8a6a1e);
+    line-height: 1.1;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.db-big-label {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green, #24352a);
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* --- Прогресс-бар --- */
+.db-bar {
+    position: relative;
+    height: 8px;
+    background: rgba(138, 106, 30, 0.18);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.db-bar-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, var(--gold-soft, #d4b45a), var(--gold-deep, #8a6a1e));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* --- Секция «Прогресс по играм» --- */
+.db-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.db-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 6px 4px;
+}
+
+.db-row-icon {
+    grid-row: 1 / span 2;
+    font-size: 22px;
+    line-height: 1;
+    text-align: center;
+}
+
+.db-row-title {
+    grid-column: 2;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: var(--dark-green, #24352a);
+    font-weight: bold;
+}
+
+.db-row-count {
+    grid-column: 3;
+    font-family: Georgia, serif;
+    font-size: 12px;
+    color: var(--gold-deep, #8a6a1e);
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.db-row .db-bar {
+    grid-column: 2 / span 2;
+    margin-top: 0;
+}
+
+.db-row-played {
+    grid-column: 2 / span 2;
+    font-family: Georgia, serif;
+    font-size: 10.5px;
+    color: #6b5a34;
+    font-style: italic;
+}
+
+/* --- Секция «Открыто видов в свитках» --- */
+.db-scrolls {
+    padding: 10px 0 4px;
+    margin-bottom: 16px;
+    border-top: 1px dashed rgba(138, 106, 30, 0.35);
+}
+
+.db-scrolls-title {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green, #24352a);
+    margin-bottom: 4px;
+}
+
+.db-scrolls-count {
+    font-family: Georgia, serif;
+    font-size: 12px;
+    color: var(--gold-deep, #8a6a1e);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+/* --- Секция «Ближайшие медали» --- */
+.db-closest {
+    margin-bottom: 14px;
+}
+
+.db-closest>summary {
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--dark-green, #24352a);
+    font-weight: bold;
+    padding: 8px 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px dashed rgba(138, 106, 30, 0.35);
+}
+
+.db-closest>summary::-webkit-details-marker {
+    display: none;
+}
+
+.db-closest>summary::before {
+    content: '▶';
+    font-size: 10px;
+    color: var(--gold-deep, #8a6a1e);
+    transition: transform 0.15s;
+    display: inline-block;
+}
+
+.db-closest[open]>summary::before {
+    transform: rotate(90deg);
+}
+
+.db-closest-list {
+    padding: 6px 0 0 18px;
+    font-family: Georgia, serif;
+    font-size: 12px;
+    color: var(--text-mid, #5c4b38);
+    line-height: 1.6;
+}
+
+.db-closest-item {
+    padding: 3px 0;
+    border-bottom: 1px dotted rgba(138, 106, 30, 0.2);
+}
+
+.db-closest-item:last-child {
+    border-bottom: none;
+}
+
+.db-closest-game {
+    font-size: 10.5px;
+    color: var(--gold-deep, #8a6a1e);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 6px;
+}
+
+/* --- Секция «Что ещё можно сделать» --- */
+.db-suggestions {
+    border-top: 2px solid var(--gold-deep, #8a6a1e);
+    padding-top: 14px;
+}
+
+.db-suggestions-title {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: var(--dark-green, #24352a);
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.db-suggestions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.db-suggestions-list li {
+    font-family: Georgia, serif;
+    font-size: 12.5px;
+    color: var(--text-mid, #5c4b38);
+    line-height: 1.5;
+    padding: 6px 0 6px 22px;
+    position: relative;
+    border-bottom: 1px dotted rgba(138, 106, 30, 0.2);
+}
+
+.db-suggestions-list li:last-child {
+    border-bottom: none;
+}
+
+.db-suggestions-list li::before {
+    content: '◆';
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    color: var(--gold-deep, #8a6a1e);
+    font-size: 11px;
+}
+
+/* --- Адаптив --- */
+@media (max-width: 700px) {
+    .db-big {
+        font-size: 34px;
+    }
+
+    .db-card {
+        padding: 12px 12px 14px;
+    }
+
+    .db-row {
+        grid-template-columns: 24px 1fr auto;
+    }
+
+    .db-row-icon {
+        font-size: 18px;
+    }
+}

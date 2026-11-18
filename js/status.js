@@ -442,12 +442,10 @@ const StatusGame = {
             if (typeof Achievements !== 'undefined') {
                 if (Achievements.bumpGameCounter) Achievements.bumpGameCounter('status');
                 // Суммарная медаль «Сотник категорий»: 100 верных ответов за все партии.
-                // bumpMeta увеличивает счётчик на this.score и возвращает новое значение.
+                // bumpMeta(key, delta) увеличивает счётчик на delta и возвращает
+                // новое значение — без временного обнуления this.score.
                 if (Achievements.bumpMeta) {
-                    const add = this.score;
-                    this.score = 0; // передаём в bumpMeta только «прибавку»
-                    const totalRight = Achievements.bumpMeta('statusRightTotal');
-                    this.score = add;
+                    const totalRight = Achievements.bumpMeta('statusRightTotal', this.score);
                     if (totalRight >= 100) Achievements.unlock('status', 'centurion');
                 }
             }

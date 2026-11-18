@@ -49,6 +49,13 @@ Object.assign(App, {
     const body = document.getElementById('scroll-body');
     if (!scroll || !body) return;
 
+    // Свиток открыт — засчитываем вид как «увиденный» (медали «Исследователя»).
+    // Вызываем ДО асинхронной загрузки JSON: если игрок закроет свиток
+    // раньше, чем придёт ответ, вид всё равно засчитается.
+    if (typeof Achievements !== 'undefined' && Achievements.bumpScrollsSeen) {
+      try { Achievements.bumpScrollsSeen(speciesId); } catch (e) { /* noop */ }
+    }
+
     // Показываем окно сразу — с индикатором загрузки
     body.innerHTML = '<div class="scroll-loading">Загрузка данных…</div>';
     scroll.classList.remove('hidden');
@@ -1224,6 +1231,11 @@ Object.assign(App, {
 
     LocalStore.saveMigrations(this.migrations);
 
+    // Нарисована первая линия миграции — медаль «Мигрант».
+    if (typeof Achievements !== 'undefined' && Achievements.checkExplorerMedals) {
+      try { Achievements.checkExplorerMedals(); } catch (e) { /* noop */ }
+    }
+
     // Автоматически подсвечиваем этот вид
     this.highlightedSpeciesMigrations.add(speciesId);
 
@@ -1295,6 +1307,12 @@ Object.assign(App, {
     });
 
     LocalStore.saveRegions(this.regions);
+
+    // Нарисована первая область — медаль «Картограф» (checkExplorerMedals
+    // повторные вызовы ничего не выдают).
+    if (typeof Achievements !== 'undefined' && Achievements.checkExplorerMedals) {
+      try { Achievements.checkExplorerMedals(); } catch (e) { /* noop */ }
+    }
 
     this.activeRegionSpeciesId = speciesId;
 

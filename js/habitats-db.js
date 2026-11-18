@@ -1,5 +1,5 @@
 // ============================================================
-// БАЗА БИОМОВ ПО ВИДАМ (сгенерировано из «Места обитания.xlsx»)
+// БАЗА БИОМОВ ПО ВИДАМ (биомы определены исходя из данных ККОО вручную)
 // Ключ — ID вида, значение — массив биомов из {bog, forest,
 // meadow, riparian, rock, saline, steppe, water}.
 // ============================================================
@@ -68,7 +68,7 @@ window.HABITATS_DB = {
     ranunculus_radicans: ['riparian', 'water', 'bog'],
     ranunculus_reptans: ['riparian', 'meadow', 'bog'],
     recurvirostra_avosetta: ['meadow', 'riparian', 'saline'],
-    ricciocarpos_natans: ['riparian', 'water', 'meadow'],
+    ricciocarpos_natans: ['riparian', 'water'],
     sterna_albifrons: ['water', 'riparian'],
     tringa_nebularia: ['bog', 'meadow', 'riparian'],
     triturus_vulgaris: ['forest', 'water', 'riparian'],
