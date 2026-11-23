@@ -226,13 +226,18 @@
 │   ├── markers-data.js     # «Зашитые» данные карты (генерируется скриптом)
 │   ├── storage.js          # Работа с localStorage (маркеры, области, миграции)
 │   ├── journal.js          # Полевой дневник наблюдений
+│   ├── session-state.js    # Сохранение состояния приложения между перезагрузками
+│   ├── habitats-db.js      # Базовые данные об областях обитания
 │   ├── achievements.js     # Реестр медалей и прогресса игр
 │   ├── quiz.js, match.js, memo.js, erudite.js, latin.js,          # Мини-игры
 │   ├── habitat.js, status.js, family.js, mini-scroll.js           # «Среда обитания»,
 │   │                                                              # «Статус», «Систематик», свиток
 ├── data/
 │   ├── red-book-omsk.json      # Экспортированные данные карты (маркеры, области, миграции)
-│   └── field-journal-omsk.json # Пример экспорта дневника
+│   ├── red-book-omsk.geojson   # Тот же набор данных в формате GeoJSON
+│   ├── all_species_data.json   # Данные видов в JSON (для загрузки по HTTP)
+│   ├── field-journal-omsk.json # Пример экспорта дневника
+│   └── list.txt                # Список видов (служебный)
 ├── img/
 │   ├── map.png … map4.png  # Фоны карт (5 вариантов)
 │   └── species/            # Фотографии видов ({species_id}.png)
@@ -240,7 +245,9 @@
     ├── import.py           # Циклический импорт видов из inbox/
     ├── species_store.py    # Обслуживающий модуль для import.py
     ├── generate_markers_data.py  # Генерация js/markers-data.js из data/
-    └── fill_status_text.py # Полуручное заполнение status_text
+    ├── fill_status_text.py # Полуручное заполнение status_text
+    ├── make_screenshots.py # Пакетная съёмка скриншотов интерфейса
+    └── tree.py             # Генерация дерева структуры проекта
 ```
 
 ## Запуск
