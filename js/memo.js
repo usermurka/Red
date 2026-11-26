@@ -10,6 +10,19 @@ const MemoGame = {
         // Крестик на финальном экране — закрыть игру
         document.querySelector('#memo-end-screen .game-close-x')?.addEventListener('click', () => this.close());
         document.getElementById('memo-restart-btn').addEventListener('click', () => this.startGame());
+
+        // --- НОВОЕ: Пересчет сетки при ресайзе окна ---
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const modal = document.getElementById('memo-modal');
+                // Перестраиваем только если модалка открыта и игра идет
+                if (modal && !modal.classList.contains('hidden')) {
+                    this.resizeGrid();
+                }
+            }, 150);
+        });
     },
     open() {
         document.getElementById('memo-modal').classList.remove('hidden');
@@ -28,6 +41,38 @@ const MemoGame = {
         GameEnd.leave('memo');
         document.getElementById('app').style.pointerEvents = '';
     },
+
+    // =========================================================
+    // НОВЫЙ МЕТОД: пересчет размеров сетки без сброса игры
+    // =========================================================
+    resizeGrid() {
+        const grid = document.getElementById('memo-grid');
+        if (!grid || grid.children.length === 0) return;
+
+        const isMobile = window.matchMedia('(max-width: 820px)').matches;
+        const cols = isMobile ? 5 : 6;
+        const rows = isMobile ? 5 : 4;
+
+        const containerWidth = grid.clientWidth || window.innerWidth;
+        const gap = isMobile ? 5 : (window.innerWidth <= 1100 ? 8 : 10);
+        const padding = isMobile ? 16 : 30;
+
+        const availableWidth = containerWidth - padding;
+        const cardSizeW = Math.floor((availableWidth - (cols - 1) * gap) / cols);
+
+        const availableHeight = window.innerHeight * (isMobile ? 0.60 : 0.65);
+        const cardSizeH = Math.floor((availableHeight - (rows - 1) * gap) / rows);
+
+        let cardSize = Math.min(cardSizeW, cardSizeH);
+        let maxCardLimit = isMobile ? 90 : (window.innerWidth <= 1100 ? 100 : 130);
+        cardSize = Math.max(30, Math.min(cardSize, maxCardLimit));
+
+        grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
+        grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
+        grid.style.gap = gap + 'px';
+    },
+    // =========================================================
+
     startGame() {
         document.getElementById('memo-end-screen').classList.add('hidden');
         GameEnd.leave('memo');
@@ -50,46 +95,31 @@ const MemoGame = {
         const emptyCellIndex = isMobile ? Math.floor(totalCells / 2) : -1; // индекс центра (12)
         const pairs = (totalCells - (isMobile ? 1 : 0)) / 2;   // всегда 12 пар
 
-        // Надежный расчет размеров
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const isTablet = vw > 820 && vw <= 1100;
+        // =========================================================
+        // АДАПТИВНЫЙ РАСЧЕТ (берет актуальную ширину, не выпирает)
+        // =========================================================
+        const containerWidth = grid.clientWidth || window.innerWidth;
+        const gap = isMobile ? 5 : (window.innerWidth <= 1100 ? 8 : 10);
+        const padding = isMobile ? 16 : 30; // Суммарные отступы сетки
 
-        // Ждем малейшего тика, чтобы DOM успел применить CSS
-        // Если grid.clientWidth равен 0, высчитываем ширину вручную
-        let availableWidth;
-        if (grid.clientWidth > 0) {
-            availableWidth = grid.clientWidth - 20; // минус паддинги
-        } else {
-            // На планшете и мобилке панель уходит вниз, ширина = 100vw
-            availableWidth = vw - 24; 
-        }
-
-        // Увеличиваем доступную высоту, чтобы карточки были крупнее (дыры снизу больше не будет)
-        const availableHeight = vh * (isMobile ? 0.65 : 0.60); 
-
-        const gap = isMobile ? 5 : (isTablet ? 8 : 10);
-
-        // Считаем идеальный размер карточки
+        const availableWidth = containerWidth - padding;
         const cardSizeW = Math.floor((availableWidth - (cols - 1) * gap) / cols);
+
+        const availableHeight = window.innerHeight * (isMobile ? 0.60 : 0.65);
         const cardSizeH = Math.floor((availableHeight - (rows - 1) * gap) / rows);
-        
+
         let cardSize = Math.min(cardSizeW, cardSizeH);
-        
-        let maxCardLimit = 130;
-        if (isMobile) maxCardLimit = 92;
-        else if (isTablet) maxCardLimit = 100; // Для планшета делаем чуть меньше, чтобы не выпирало
+        let maxCardLimit = isMobile ? 90 : (window.innerWidth <= 1100 ? 100 : 130);
+        cardSize = Math.max(30, Math.min(cardSize, maxCardLimit));
 
-        cardSize = Math.max(36, Math.min(cardSize, maxCardLimit));
-
-        // Сетка ровно по размеру карточек, без лишних растяжений
         grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
         grid.style.gridTemplateRows = `repeat(${rows}, ${cardSize}px)`;
         grid.style.gap = gap + 'px';
         grid.style.justifyContent = 'center';
-        grid.style.alignContent = 'center';
-        grid.style.width = '100%'; 
-        grid.style.margin = '0';
+        grid.style.alignContent = 'start'; /* Прижимаем к верху */
+        grid.style.width = '100%';
+        grid.style.margin = '0 auto';
+        // =========================================================
 
         this.moves = 0;
         document.getElementById('memo-moves').textContent = '0';

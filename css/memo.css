@@ -36,18 +36,15 @@
 
 #memo-grid {
     display: grid;
-    /* На десктопе карточки не сжимаются меньше 90px: при узком окне
-       сетка переносится в меньшее число колонок (JS пересчитывает
-       rows/cols для мобильных), а на десктопе 6 колонок остаются
-       читаемыми. */
     grid-template-columns: repeat(6, minmax(90px, 1fr));
-    /* 6 колонок */
     gap: 10px;
     padding: 15px;
     overflow: hidden;
     justify-content: center;
-    align-content: center;
-    flex: 1 1 auto;
+    align-content: start;
+    /* Прижимаем к верху */
+    flex: 0 0 auto;
+    /* Убираем растягивание */
     min-height: 0;
     perspective: 1000px;
 }
@@ -251,4 +248,93 @@
         background: rgba(212, 180, 90, 0);
         color: var(--ink);
     }
+}
+
+/* ============================================================
+   АДАПТИВНОСТЬ ИГРЫ «МЕМО» НА МОБИЛЬНЫХ И ПЛАНШЕТАХ (≤900px)
+   ============================================================ */
+@media (max-width: 900px) {
+
+    /* 1. Модалка — колонка, прижатая к верху */
+    #memo-modal {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        padding: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+  /* 2. Окно игры (свиток) — на всю ширину, БЕЗ min-height */
+  #memo-modal .memo-scroll {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: auto !important;
+      min-height: auto !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      border-left: none !important;
+      border-right: none !important;
+      clip-path: none !important;
+      padding-top: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      flex: none !important;
+      /* Убираем растягивание контейнера */
+  }
+
+    /* 3. Шапка — делаем безопасный отступ сверху, чтобы не залезала под чёлку */
+    #memo-modal .quiz-header {
+        padding-top: calc(16px + env(safe-area-inset-top)) !important;
+        margin-top: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+  /* 4. Сетка — без центрирования, прижата к шапке */
+  #memo-modal #memo-grid {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 8px !important;
+      justify-content: center !important;
+      align-content: start !important;
+      flex: none !important;
+      /* Отключаем растягивание */
+      min-height: auto !important;
+      /* Убираем лишнюю высоту */
+  }
+
+    /* 5. Инфо-панель (виды) — под сеткой, на всю ширину */
+    #memo-modal #memo-info-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        position: static !important;
+        margin: 0 !important;
+        margin-left: 0 !important;
+        border-radius: 0 !important;
+        clip-path: none !important;
+        padding: 15px !important;
+    }
+
+          /* Сетка видов: 3 колонки на планшете/широком мобильном */
+          #memo-modal #memo-species-list {
+              display: grid !important;
+              grid-template-columns: repeat(3, 1fr) !important;
+              gap: 4px 10px !important;
+              line-height: 1.4 !important;
+              width: 100% !important;
+          }
+    
+          /* На узких мобильных (< 420px) — переключаем на 2 колонки */
+          @media (max-width: 420px) {
+              #memo-modal #memo-species-list {
+                  grid-template-columns: repeat(2, 1fr) !important;
+                  gap: 4px 8px !important;
+              }
+          }
+
 }

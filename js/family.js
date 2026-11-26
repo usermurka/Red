@@ -33,8 +33,8 @@
 // автоматически.
 
 const FamilyGame = {
-    CARDS_PER_ROUND: 12,
-    TOTAL_ROUNDS: 5,
+    CARDS_PER_ROUND: 12, //12
+    TOTAL_ROUNDS: 5, //5
     ROUND_TIME: 150, // секунд на раунд (12 карточек)
 
     // Мобильные/тач-устройства: перетаскивание HTML5-drag&drop на них
