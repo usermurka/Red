@@ -264,80 +264,22 @@ const MemoGame = {
     },
 
     showMatchedSpecies(speciesId) {
-        // Находим вид в базе, чтобы взять название
-        const sp = (typeof App !== 'undefined' && App.findSpeciesById)
-            ? App.findSpeciesById(speciesId)
-            : null;
-        const name = sp ? sp.name : '';
-
-        // Строка вида в свитке слева
+        // Оверлей с фото убран по замечанию игрока (слишком долго «горел»).
+        // Теперь: строка названия в списке подсвечивается (just-found),
+        // затем вместо зачёркивания рядом появляется галочка (found → ✔).
         const foundLi = document.querySelector(
             `.memo-species-item[data-species-id="${speciesId}"]`
         );
+        if (!foundLi) return;
 
-        // Создаём оверлей
-        const overlay = document.createElement('div');
-        overlay.className = 'memo-match-overlay';
-        overlay.innerHTML = `
-            <div class="memo-match-card">
-                <img src="img/species/${speciesId}.png"
-                     onerror="this.src='img/species/placeholder.png'">
-                <div class="memo-match-name">${escHtml(name)}</div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
+        // 1) Подсветка названия (вспышка) — сразу при совпадении.
+        foundLi.classList.add('just-found');
 
-        const card = overlay.querySelector('.memo-match-card');
-
-        // Появление
-        requestAnimationFrame(() => {
-            overlay.classList.add('visible');
-        });
-
-        // Через 2 секунды — полёт к строке
+        // 2) Через 350 мс — галочка «✔» рядом (found), вспышку снимаем.
         setTimeout(() => {
-            if (!foundLi) {
-                // Если строку не нашли — просто затухаем
-                overlay.classList.remove('visible');
-                setTimeout(() => {
-                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                }, 500);
-                return;
-            }
-
-            // Считаем геометрию: куда лететь и до какого размера уменьшаться
-            const r = foundLi.getBoundingClientRect();
-            const cardRect = card.getBoundingClientRect();
-
-            const targetCx = r.left + r.width / 2;
-            const targetCy = r.top + r.height / 2;
-            const cardCx = cardRect.left + cardRect.width / 2;
-            const cardCy = cardRect.top + cardRect.height / 2;
-
-            const dx = targetCx - cardCx;
-            const dy = targetCy - cardCy;
-            // Уменьшаем до ширины строки (но не меньше 0.05)
-            const scale = Math.max(0.05, Math.min(1, r.width / cardRect.width));
-
-            // Включаем «полётный» режим (transition на transform/opacity)
-            overlay.classList.add('flying-out');
-            // Летим
-            card.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-
-            // Резкое затухание в самом начале полёта
-            overlay.style.opacity = '0';
-
-            // В момент прилёта — зачёркиваем и подсвечиваем строку
-            setTimeout(() => {
-                foundLi.classList.add('found');       // зачёркивание
-                foundLi.classList.add('just-found');  // вспышка
-                setTimeout(() => foundLi.classList.remove('just-found'), 1200);
-
-                setTimeout(() => {
-                    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                }, 250);
-            }, 550);
-        }, 2000);
+            foundLi.classList.remove('just-found');
+            foundLi.classList.add('found'); // CSS: ::after { content: '✔' }
+        }, 500);
     },
 
     // Выдача медали через общий реестр достижений (если тот загружен)

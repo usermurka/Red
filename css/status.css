@@ -424,3 +424,726 @@
 @media (max-width: 760px) and (min-width: 481px) {
     .status-card .latin-photo-card { width: min(42vw, 220px); height: min(42vw, 220px); }
 }
+
+/* ============================================================
+   Игра «Статус»: чтение + банк очков (ТЗ 2026-11)
+   ============================================================ */
+
+/* Блок «Лимитирующие факторы» — заметный, но вторичный к названию */
+.st-factors {
+    width: 100%;
+    max-width: 620px;
+    margin: 8px auto 4px;
+    padding: 8px 12px;
+    background: rgba(36, 53, 42, 0.06);
+    border: 1px solid rgba(36, 53, 42, 0.14);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.st-factors-title {
+    font-family: Georgia, serif;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--dark-green, #2e6b3e);
+    opacity: 0.75;
+    margin-bottom: 4px;
+}
+
+.st-factors-body {
+    font-family: Georgia, serif;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--dark-green, #2e6b3e);
+    /* Без ограничения высоты и внутренней прокрутки: текст всегда
+       показан полностью (и до, и после ответа). */
+}
+
+/* Строка-замок «Формулировка категории» — кликабельная (пунктир) */
+.st-lock-row {
+    display: block;
+    width: 100%;
+    max-width: 620px;
+    margin: 6px auto;
+    padding: 8px 12px;
+    font-family: Georgia, serif;
+    font-size: 13.5px;
+    text-align: center;
+    color: var(--gold-deep, #8a6d1f);
+    background: rgba(212, 175, 55, 0.08);
+    border: 1.5px dashed rgba(138, 109, 31, 0.55);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.st-lock-row:hover {
+    background: rgba(212, 175, 55, 0.18);
+}
+
+.st-lock-row:active {
+    opacity: 0.75;
+}
+
+/* Состояние отказа: не хватает очков — красноватый оттенок */
+.st-lock-row.st-lock-denied {
+    color: #a33;
+    border-color: rgba(170, 51, 51, 0.6);
+    background: rgba(170, 51, 51, 0.08);
+}
+
+/* Полный status_text после оплаты/ответа (в DOM появляется только тогда) */
+.st-status-text {
+    width: 100%;
+    max-width: 620px;
+    margin: 6px auto;
+    padding: 8px 12px;
+    font-family: Georgia, serif;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--dark-green, #2e6b3e);
+    background: rgba(46, 107, 62, 0.07);
+    border: 1px solid rgba(46, 107, 62, 0.25);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.st-status-text-label {
+    font-weight: bold;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* Элемент банка в шапке модалки */
+.st-bank {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: var(--gold-deep, #8a6d1f);
+    white-space: nowrap;
+}
+
+.st-bank b {
+    color: var(--gold-deep, #8a6d1f);
+}
+
+/* Нейтральный («почти») стиль результата: ни успех, ни ошибка — охристый */
+.status-result.near {
+    color: #a8842c;
+}
+
+.status-result.near {
+    color: #a8842c;
+}
+
+/* ============================================================
+   ДЕСКТОПНАЯ КОМПОНОВКА «СТАТУСА» (ТЗ визуал 2026-11)
+   Две колонки:
+     • левая  — варианты ответов + строка результата;
+     • правая — фото, свиток, замок, факторы, «Читать в свитке».
+   Кнопка «Дальше →» — под колонками (существующая, вне сетки).
+   Мобильные правила (≤900px / ≤760px) НЕ затрагиваются: все
+   изменения — внутри @media (min-width: 1025px).
+   ============================================================ */
+@media (min-width: 1025px) {
+
+    /* Сетка: левая колонка по ширине самой длинной подписи
+       («6 Редкий с нерегулярным пребыванием»), правая — резиновая. */
+    .status-main {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    /* «Растворяем» .status-play, чтобы его дети стали прямыми
+       grid-элементами и разъехались по колонкам. */
+    .status-play {
+        display: contents;
+    }
+
+           /* Две колонки: слева — варианты (opts) и результат (res),
+           справа — ОДНА ячейка right (#status-right-col) на обе строки.
+           Внутри right — flex-column: фото → название → замок → факторы →
+           «Читать в свитке». Так после ответа правая колонка НЕ прыгает
+           вниз: результат появляется слева, а фото+тексты остаются справа. */
+           .status-main {
+               grid-template-columns: max-content minmax(0, 1fr);
+               grid-template-areas:
+                   "opts  right"
+                   "res   right";
+           }
+    
+           .status-play {
+               display: contents;
+           }
+    
+           #status-options {
+               grid-area: opts;
+               width: auto;
+           }
+    
+           #status-result {
+               grid-area: res;
+               margin-top: 10px;
+           }
+    
+           #status-right-col {
+               grid-area: right;
+           }
+
+        /* Старая панель мини-свитка на десктопе не показывается:
+           название+латынь — в #status-head-slot, факторы — в
+           #status-factors-slot, полный свиток — по кнопке «Читать в свитке».
+           На мобильном правило не действует — там свиток как раньше. */
+        #status-info-panel {
+            display: none !important;
+        }
+
+        /* Слоты правой колонки — общие стили */
+        .status-head-slot,
+        .status-lock-slot,
+        .status-factors-slot,
+        .status-read-full-slot {
+            width: 100%;
+            max-width: 620px;
+        }
+    
+        .status-head-slot:empty,
+        .status-lock-slot:empty,
+        .status-factors-slot:empty,
+        .status-read-full-slot:empty {
+            display: none;
+        }
+    
+        /* Название + латынь в правой колонке (вместо мини-свитка) */
+        .status-head-slot {
+            text-align: center;
+        }
+    
+        .status-head-slot .st-name {
+            font-family: Georgia, serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--dark-green, #2e6b3e);
+            text-align: center;
+        }
+    
+        .status-head-slot .st-latin {
+            font-family: Georgia, serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--gold-deep, #8a6d1f);
+            text-align: center;
+            margin-top: 2px;
+        }
+
+    /* Замок в отдельном слоте — на всю ширину колонки */
+    .status-lock-slot .st-lock-row {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    /* Факторы в отдельном слоте: заметно выше прежних 180px
+       (по замечанию «увеличить раза в два»). */
+    .status-factors-slot .st-factors {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+        /* (ограничение высоты снято: блок всегда развёрнут полностью) */
+
+        /* Фото по центру правой колонки, как и раньше */
+        #status-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    
+        /* Правая колонка — вертикальный стек с отступами между блоками */
+        .status-right-col {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            width: 100%;
+        }
+
+    /* Кнопка «Читать в свитке»: аккуратная ширина, по центру слота */
+    .status-read-full-slot {
+        display: flex;
+        justify-content: center;
+    }
+
+    .status-read-full-slot .quiz-next-btn {
+        margin-top: 6px;
+    }
+}
+
+/* ============================================================
+   МОБИЛЬНО-ПЛАНШЕТНАЯ КОМПОНОВКА «СТАТУСА» (≤1024px)
+   Одна колонка, порядок:
+     1) правая колонка с десктопа (фото → название → латынь →
+        замок → факторы → «Читать в свитке»);
+     2) варианты ответов;
+     3) строка результата.
+   Свиток #status-info-panel скрыт — данные не дублируются,
+   полный свиток открывается кнопкой «Читать в свитке».
+   Кнопка «Дальше →» — под колонками (вне .status-play).
+   Десктопные правила (min-width: 1025px) не затрагиваются.
+   ============================================================ */
+@media (max-width: 1024px) {
+
+    /* .status-main — вертикальная колонка на всю ширину (чтобы
+       .status-play не «плавал» по центру из базового flex-row). */
+    .status-main {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        gap: 10px !important;
+    }
+
+    /* .status-play — вертикальная колонка; порядок задаётся order. */
+    .status-play {
+            display: flex !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            gap: 12px;
+            flex: 1 1 auto !important;
+            /* ← ключевая строка */
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box;
+            margin: 0 auto !important;
+        }
+
+        /* 1) Правая колонка (фото + тексты) — первой. */
+        #status-right-col {
+            order: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+    
+        /* Слоты и их содержимое — на всю ширину, без фиксированных
+           max-width: 620px (из базовых .st-factors/.st-lock-row/
+           .status-options). Иначе на 760–900px игровая область
+           «упиралась» в 620px и не сжималась с окном. */
+        #status-head-slot,
+        #status-lock-slot,
+        #status-factors-slot,
+        #status-read-full-slot {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+    
+        .st-factors,
+        .st-lock-row,
+        .st-status-text,
+        .status-options {
+            max-width: 100% !important;
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+    
+        .st-factors-body,
+        .st-name,
+        .st-latin {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+    /* 2) Варианты — вторыми. */
+    #status-options {
+        order: 2;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    /* 3) Результат — третьим. */
+    #status-result {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Свиток под колонками больше не нужен: всё есть в правой
+       колонке, полный свиток — по кнопке «Читать в свитке». */
+    #status-info-panel {
+        display: none !important;
+    }
+
+    /* Слоты внутри правой колонки — показываем все, кроме пустых
+       (пустые скрываются правилом :empty из десктопного блока,
+       но здесь дублируем на случай иного каскада). */
+    #status-head-slot:empty,
+    #status-lock-slot:empty,
+    #status-factors-slot:empty,
+    #status-read-full-slot:empty {
+        display: none;
+    }
+
+    /* Кнопка «Читать в свитке» — по центру слота. */
+    .status-read-full-slot {
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Кнопка «Дальше →» — под колонками, с учётом safe-area. */
+    #status-next-btn {
+        margin-bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+
+    /* Фото по центру правой колонки (как на десктопе). */
+    #status-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+        /* (ограничение высоты снято: блок всегда развёрнут полностью) */
+}
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН «СТАТУСА» (десктоп): без лифта, поверх поля,
+   игровое содержимое скрыто.
+   ============================================================ */
+@media (min-width: 901px) {
+
+    /* Финальный экран — нормальный блок колонки, непрозрачный,
+       без внутренней прокрутки. */
+    #status-modal #status-end-screen:not(.hidden) {
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 60vh;
+        background: var(--parchment-light, #f7efdc) !important;
+        padding: 32px 16px 40px !important;
+        margin: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: center;
+        box-sizing: border-box;
+        overflow: visible !important;
+    }
+
+    /* Игровое содержимое «Статуса» скрыто на финале. */
+    body.game-end-active #status-modal .quiz-header,
+    body.game-end-active #status-modal #status-timer-track,
+    body.game-end-active #status-modal .latin-scoreboard,
+    body.game-end-active #status-modal .latin-body,
+    body.game-end-active #status-modal .status-main,
+    body.game-end-active #status-modal #status-next-btn,
+    body.game-end-active #status-modal .quiz-top-controls {
+        display: none !important;
+    }
+
+    /* Круглый крестик финала — в правом верхнем углу. */
+    #status-modal #status-end-screen .game-close-x {
+        position: absolute !important;
+        top: 10px !important;
+        right: 12px !important;
+        z-index: 95 !important;
+        display: flex !important;
+    }
+
+    /* Экран итогов — relative, чтобы крестик привязался к нему. */
+    #status-modal #status-end-screen {
+        position: relative !important;
+    }
+}
+/* Промежуточный диапазон 761–1024px: ведём себя как на <760px */
+@media (min-width: 761px) and (max-width: 1024px) {
+    .status-play {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+        margin: 0 auto !important;
+    }
+
+    #status-card {
+        flex: none;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto 5px auto !important;
+    }
+
+    #status-options,
+    #status-result {
+        flex: none;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0;
+    }
+
+    .status-info-pane {
+        flex: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 14px;
+    }
+
+    .status-scroll,
+    #status-modal {
+        overflow-x: hidden !important;
+    }
+
+    #status-next-btn {
+        margin-bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+
+    /* Фото — как на планшете, не 150px */
+    .status-card .latin-photo-card {
+        width: min(42vw, 220px);
+        height: min(42vw, 220px);
+    }
+}
+/* ============================================================
+   ПРИНУДИТЕЛЬНАЯ СТРАХОВКА ДЛЯ 760–900px (и вообще ≤900px)
+   ------------------------------------------------------------
+   Требование: на ≤900px вести себя ровно как на ≤760px
+   (одна колонка, всё на всю ширину, фото через clamp, никаких
+   фикс. 560px/150px/380px). Идёт ПОСЛЕДНИМ в файле, поэтому
+   перебивает все правила выше, включая @media (max-width:1024px)
+   и базовые стили.
+   ============================================================ */
+@media (max-width: 900px) {
+
+    /* Модалка — колонка, скролл у самой модалки, без гориз. скролла */
+    #status-modal {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        padding: 0 !important;
+        align-items: stretch !important;
+    }
+
+    #status-modal .status-scroll {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 auto !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Главный контейнер — вертикальная колонка на всю ширину */
+    #status-modal .status-main {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding: 0 10px !important;
+    }
+
+    /* Игровая зона — на всю ширину, без фикс. 560px */
+    #status-modal .status-play {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        margin: 0 auto !important;
+    }
+
+    /* Карточка вида — на всю ширину, фото по clamp */
+    #status-modal #status-card {
+        flex: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto 5px auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    #status-modal .status-card .latin-photo-card {
+        width: clamp(120px, 44vw, 220px) !important;
+        height: clamp(120px, 44vw, 220px) !important;
+    }
+
+    /* Опции, результат, факторы, замок, полный текст — на всю ширину */
+    #status-modal #status-options,
+    #status-modal #status-result,
+    #status-modal .st-factors,
+    #status-modal .st-lock-row,
+    #status-modal .st-status-text,
+    #status-modal .status-options {
+        flex: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Правая колонка (обёртка) — на всю ширину, свиток не 380px */
+    #status-modal .status-info-pane {
+        flex: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin-top: 14px !important;
+    }
+
+    /* Внутренняя панель мини-свитка — скрыта (как на ≤760px) */
+    #status-modal #status-info-panel {
+        display: none !important;
+    }
+
+    #status-modal #status-next-btn {
+        margin-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* ============================================================
+   ПРИНУДИТЕЛЬНАЯ СТРАХОВКА ДЛЯ >900px
+   ------------------------------------------------------------
+   Требование: на >900px вести себя ровно как на ≥1025px
+   (две колонки: opts/res слева, right-col справа). Перебивает
+   правила из @media (max-width:1024px), которые цепляют
+   диапазон 901–1024px и оставляют row/flex-остатки.
+   ============================================================ */
+@media (min-width: 901px) {
+
+    /* Сетка как в десктопном блоке ≥1025px */
+    #status-modal .status-main {
+        display: grid !important;
+        grid-template-columns: max-content minmax(0, 1fr) !important;
+        grid-template-areas:
+            "opts  right"
+            "res   right" !important;
+        gap: 18px !important;
+        align-items: start !important;
+        max-width: 980px !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+    /* Растворяем .status-play — дети становятся grid-элементами */
+    #status-modal .status-play {
+        display: contents !important;
+    }
+
+    #status-modal #status-options {
+        grid-area: opts !important;
+        width: auto !important;
+    }
+
+    #status-modal #status-result {
+        grid-area: res !important;
+        margin-top: 10px !important;
+    }
+
+    #status-modal #status-right-col {
+        grid-area: right !important;
+    }
+
+    /* Свиток-панель на >900px не нужна (есть слоты right-col) */
+    #status-modal #status-info-panel {
+        display: none !important;
+    }
+
+    /* Правая колонка — вертикальный стек */
+    #status-modal .status-right-col {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    /* Слоты — на всю ширину колонки, без 620px-ограничений */
+    #status-modal .status-head-slot,
+    #status-modal .status-lock-slot,
+    #status-modal .status-factors-slot,
+    #status-modal .status-read-full-slot {
+        width: 100% !important;
+        max-width: 620px !important;
+    }
+
+    #status-modal .status-head-slot:empty,
+    #status-modal .status-lock-slot:empty,
+    #status-modal .status-factors-slot:empty,
+    #status-modal .status-read-full-slot:empty {
+        display: none !important;
+    }
+
+    #status-modal .status-head-slot {
+        text-align: center !important;
+    }
+
+    #status-modal .status-head-slot .st-name {
+        font-family: Georgia, serif;
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--dark-green, #2e6b3e);
+        text-align: center;
+    }
+
+    #status-modal .status-head-slot .st-latin {
+        font-family: Georgia, serif;
+        font-size: 13px;
+        font-style: italic;
+        color: var(--gold-deep, #8a6d1f);
+        text-align: center;
+        margin-top: 2px;
+    }
+
+    #status-modal .status-lock-slot .st-lock-row {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    #status-modal .status-factors-slot .st-factors {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    #status-modal #status-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    #status-modal .status-read-full-slot {
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    #status-modal .status-read-full-slot .quiz-next-btn {
+        margin-top: 6px;
+    }
+}

@@ -20,8 +20,8 @@
 // ============================================================
 
 const HabitatGame = {
-    ROUND_SIZE: 10,          // видов в раунде
-    TOTAL_ROUNDS: 3,        // раундов в игре
+    ROUND_SIZE: 10,          // видов в раунде 10
+    TOTAL_ROUNDS: 3,        // раундов в игре 3
     ROUND_TIME: 180,         // секунд на раунд
 
     // Восемь биомов (ключи совпадают с HABITATS_DB и Лист4 «биомы»).
@@ -81,6 +81,7 @@ const HabitatGame = {
 
     close() {
         document.getElementById('habitat-modal').classList.add('hidden');
+        document.getElementById('habitat-modal').classList.remove('habitat-end-open');
         GameEnd.leave('habitat');
         this.stopTimer();
         document.getElementById('app').style.pointerEvents = '';
@@ -107,6 +108,8 @@ const HabitatGame = {
         this._nextEnabled = false;
         this.hideNextRoundBtn();
         document.getElementById('habitat-round-banner').classList.add('hidden');
+        // Снимаем класс финала (если остался с прошлой партии).
+        document.getElementById('habitat-modal').classList.remove('habitat-end-open');
         // Свиток активен всегда: класс «пусто» мог остаться с прошлой игры.
         const modal = document.getElementById('habitat-modal');
         if (modal) modal.classList.remove('habitat-info-empty');
@@ -926,6 +929,10 @@ const HabitatGame = {
         // Финал: прячем игровые ↺/✕ (было «двоение крестиков») и всё
         // игровое поле под полупрозрачной подложкой экрана итогов.
         GameEnd.enter('habitat');
+        // Явный класс на модалке — надёжнее :has(): снимает overflow/
+        // padding у модалки, чтобы fixed-финал привязывался к вьюпорту
+        // и был на весь экран (без отступов от края).
+        document.getElementById('habitat-modal').classList.add('habitat-end-open');
     },
 
     unlockAch(achId) {

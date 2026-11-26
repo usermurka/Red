@@ -795,24 +795,35 @@
         <div class="quiz-progress">Вопрос <strong id="status-q-num">1</strong> из 10</div>
       </div>
       <div id="status-timer-track" class="st-timer-track">
-        <span id="status-timer-count" class="st-timer-count">⏳ 15 с</span>
+        <span id="status-timer-count" class="st-timer-count">⏳ 30 с</span>
         <div class="latin-timer-track st-timer-bar-track"><div id="status-timer-bar" class="latin-timer-bar"></div></div>
       </div>
       <div class="latin-scoreboard">
         <span class="latin-sb latin-sb-right">✓ <strong id="status-score-right">0</strong></span>
         <span class="latin-sb latin-sb-wrong">✗ <strong id="status-score-wrong">0</strong></span>
         <span class="latin-sb" id="status-streak-block">🔥 <strong id="status-score-streak">0</strong></span>
+        <span class="st-bank">Банк: <b id="status-bank">10</b> 🪙</span>
       </div>
       <div class="latin-body">
         <!-- Компоновка по замечаниям: на мобильных два столбца —
              слева изображение, справа список статусов; мини-свиток —
              ниже на всю ширину (css/status.css + responsive.css) -->
         <div class="status-main">
-          <div class="status-play">
-            <div id="status-card" class="status-card"></div>
-            <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
-            <div id="status-result" class="status-result hidden"></div>
-          </div>
+                    <div class="status-play">
+                      <div id="status-options" class="status-options" role="group" aria-label="Категории редкости"></div>
+                      <div id="status-result" class="status-result hidden"></div>
+                      <!-- Правая колонка (десктоп): ОДНА grid-ячейка. Внутри —
+                                     фото и тексты друг под другом, независимо от высоты
+                                     вариантов слева. На мобильном #status-right-col скрыт
+                                     целиком (CSS), а фото/свиток живут в прежних местах. -->
+                      <div id="status-right-col" class="status-right-col">
+                        <div id="status-card" class="status-card"></div>
+                        <div id="status-head-slot" class="status-head-slot"></div>
+                        <div id="status-lock-slot" class="status-lock-slot"></div>
+                        <div id="status-factors-slot" class="status-factors-slot"></div>
+                        <div id="status-read-full-slot" class="status-read-full-slot"></div>
+                      </div>
+                    </div>
           <div id="status-info-panel" class="status-info-pane" aria-live="polite"></div>
         </div>
         <!-- Баннер между вопросами: итог вопроса остаётся видимым до явного «Дальше» -->
@@ -826,8 +837,10 @@
           🏆 Игра окончена!</h2>
         <p id="status-end-achieve"
           style="font-family:Georgia; font-size: 16px; color: var(--gold-deep); font-weight: bold; margin-bottom: 15px;"></p>
-        <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Верных ответов: <strong
-            id="status-final-score">0</strong>. Ошибок: <strong id="status-final-mistakes">0</strong>.</p>
+        <p style="margin: 6px 0; font-family:Georgia; font-size: 26px; font-weight: bold; color: var(--dark-green);">Итог:
+          <strong id="status-final-bank">10</strong> 🪙</p>
+        <p style="margin: 10px 0; font-family:Georgia; font-size: 16px;">Точных попаданий: <strong
+            id="status-final-score">0</strong>. Промахов: <strong id="status-final-mistakes">0</strong>.</p>
         <button id="status-restart" class="quiz-next-btn" style="margin-top:15px; padding: 10px 25px; font-size: 15px;">Играть
           снова</button>
       </div>

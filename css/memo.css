@@ -74,19 +74,53 @@
 }
 
 .memo-species-item {
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, opacity 0.3s ease, background 0.3s ease;
     font-family: 'Georgia', serif;
     font-size: 13px;
-    padding: 4px 0;
+    /* Слева 0, справа 22px — место под галочку зарезервировано
+       ВСЕГДА, чтобы строка не «скакала» при её появлении. */
+    padding: 4px 22px 4px 0;
     border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
+    /* До угадывания — бледные. */
+    color: var(--ink-ghost);
+    opacity: 0.9;
+    position: relative;
+    border-radius: 3px;
 }
 
+/* Совпавшая пара: НЕ зачёркиваем — строка становится ЯРКОЙ,
+   рядом появляется галочка «✔», фон остаётся золотистым до
+   конца партии. Место под галочку уже зарезервировано в
+   базовом .memo-species-item (padding-right: 22px). */
 .memo-species-item.found {
-    color: var(--ink-ghost);
-    text-decoration: line-through;
-    text-decoration-thickness: 2px;
-    text-decoration-color: var(--red-dark);
-    opacity: 0.5;
+    color: var(--ink);
+    text-decoration: none;
+    opacity: 1;
+    background: rgba(212, 180, 90, 0.15);
+}
+
+.memo-species-item.found::after {
+    content: '✔';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #2E7D32;
+    font-weight: bold;
+    font-size: 14px;
+    animation: memoCheckPop 0.25s ease;
+}
+
+@keyframes memoCheckPop {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
 }
 
 /* Кнопки режимов */
@@ -195,88 +229,26 @@
 }
 
 
-/* ============================================================
-   Всплывающее фото найденного вида (Мемо)
-   ============================================================ */
-
-.memo-match-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none; /* не мешает кликам по игре */
-    z-index: 2500;         /* выше модалки мемо (2000) */
-    opacity: 0;
-    transform: scale(0.7);
-    transition: opacity 0.35s ease, transform 0.35s ease;
-}
-
-.memo-match-overlay.visible {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.memo-match-card {
-    background: var(--parchment-light);
-    border: 3px solid var(--gold-deep);
-    border-radius: 6px;
-    box-shadow: 0 0 40px rgba(212, 180, 90, 0.8), var(--shadow-deep);
-    padding: 15px;
-    text-align: center;
-    max-width: 320px;
-    max-height: 70vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    clip-path: var(--torn-edge);
-}
-
-.memo-match-card img {
-    max-width: 280px;
-    max-height: 40vh;
-    object-fit: contain;
-    border: 1px solid var(--parchment-deep);
-    background: #fff;
-    border-radius: 2px;
-}
-
-.memo-match-name {
-    margin-top: 12px;
-    font-family: 'Georgia', serif;
-    font-size: 17px;
-    font-weight: bold;
-    color: var(--dark-green);
-    letter-spacing: 0.5px;
-    line-height: 1.3;
-    padding: 0 10px;
-}
-
-
-/* Полёт карточки: transform — плавно, opacity — резко */
-.memo-match-overlay.flying-out {
-    transition: opacity 0.18s ease;
-}
-
-.memo-match-overlay.flying-out .memo-match-card {
-    transition:
-        transform 0.55s cubic-bezier(0.3, 0.0, 0.15, 1),
-        opacity 0.18s ease;
-    transform-origin: center center;
-}
-
-/* Вспышка строки в момент прилёта карточки */
+/* Вспышка названия перед галочкой (350 мс; без scale, чтобы
+   строка не «дёргалась» по высоте). */
 .memo-species-item.just-found {
-    animation: memoFoundFlash 1.2s ease;
+    animation: memoFoundFlash 3s ease;
     border-radius: 3px;
 }
 
 @keyframes memoFoundFlash {
-    0%   { background: rgba(212, 180, 90, 0);    color: var(--ink); }
-    15%  { background: rgba(212, 180, 90, 0.95); color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.9); transform: scale(1.04); }
-    60%  { background: rgba(212, 180, 90, 0.55); color: #fff; }
-    100% { background: rgba(212, 180, 90, 0);    color: var(--ink-ghost); transform: scale(1); }
+    0% {
+        background: rgba(212, 180, 90, 0);
+        color: var(--ink);
+    }
+
+    10% {
+        background: rgba(78, 243, 78, 0.85);
+        color: #016109;
+    }
+
+    100% {
+        background: rgba(212, 180, 90, 0);
+        color: var(--ink);
+    }
 }

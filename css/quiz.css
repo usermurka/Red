@@ -438,3 +438,152 @@
     color: #E65100;
     font-weight: bold;
 }
+
+/* ============================================================
+   ДЕСКТОПНАЯ КОМПОНОВКА «ВИКТОРИНЫ» (≥901px)
+   Как в игре «Статус»: две колонки.
+     • левая  — фото, варианты, результат ответа (#quiz-play);
+     • правая — мини-свиток #quiz-info-panel как ЧАСТЬ окна
+                (без строгой рамки/clip-path, на всю колонку).
+   До ответа в правой колонке — «закрытый» плейсхолдер (V2),
+   окно не «прыгает». Кнопка «Дальше →» — под колонками.
+   Мобильные (≤900px) не затрагиваются.
+   ============================================================ */
+@media (min-width: 901px) {
+
+    /* .quiz-scroll — вертикальная колонка: шапка → сетка → кнопка. */
+    #quiz-modal .quiz-scroll {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Сетка двух колонок: левая — по содержимому, правая — резиновая. */
+    .status-main.quiz-main {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 0 20px 10px;
+    }
+
+    /* «Растворяем» .quiz-play, чтобы его дети стали прямыми
+       grid-элементами (как .status-play в «Статусе»). */
+    .quiz-play {
+        display: contents !important;
+    }
+
+    /* Левая колонка: фото, варианты, результат — во всю ширину
+       своей grid-ячейки. */
+    #quiz-content {
+        grid-column: 1;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+    }
+
+    /* Правая колонка: мини-свиток — часть окна, без строгой рамки
+       и «рваного края». Тянется на всю правую колонку. */
+    #quiz-info-panel {
+        grid-column: 2;
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        clip-path: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        animation: none !important;
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    /* Сам мини-свиток внутри панели — без «панельной» рамки,
+       аккуратный блок в стиле свитка. */
+    #quiz-info-panel .mini-scroll {
+        background: var(--parchment-light);
+        border: 1.5px dashed var(--gold-deep);
+        border-radius: 8px;
+        padding: 14px 16px;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    /* Плейсхолдер до ответа — та же рамка, серый текст. */
+    #quiz-info-panel .ms-placeholder .ms-latin {
+        color: var(--ink-faded);
+        font-style: normal;
+    }
+
+    /* Кнопка «Дальше →» — под колонками, по центру. */
+    #quiz-next-btn {
+        align-self: center;
+        margin: 10px auto 20px;
+    }
+
+        /* Заголовок шапки не «уезжает» под ↺/✕. */
+        #quiz-modal .quiz-header {
+            padding-right: 96px;
+            box-sizing: border-box;
+        }
+        }
+    
+        /* ============================================================
+       ФИНАЛЬНЫЙ ЭКРАН «ВИКТОРИНЫ» (≥901px): игровое поле скрыто,
+       финал — без лифта, один крестик.
+       ============================================================ */
+        @media (min-width: 901px) {
+    
+            /* Прячем игровое поле на финале (шапка, сетка, кнопка «Дальше»).
+           Используем .quiz-end-open (его навешивает finishGame() и снимает
+           startGame()/close()), плюс body.game-end-active — на случай,
+           если класс game-end ставится. */
+            body.quiz-end-open #quiz-modal .quiz-header,
+            body.quiz-end-open #quiz-modal .status-main.quiz-main,
+            body.quiz-end-open #quiz-modal #quiz-next-btn,
+            body.game-end-active #quiz-modal .quiz-header,
+            body.game-end-active #quiz-modal .status-main.quiz-main,
+            body.game-end-active #quiz-modal #quiz-next-btn {
+                display: none !important;
+            }
+    
+            /* Финальный экран — нормальный блок колонки, непрозрачный,
+           без внутренней прокрутки. */
+            #quiz-modal #quiz-end-screen:not(.hidden) {
+                position: static !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                min-height: 60vh;
+                background: var(--parchment-light, #f7efdc) !important;
+                padding: 32px 16px 40px !important;
+                margin: 0 !important;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                text-align: center;
+                box-sizing: border-box;
+                overflow: visible !important;
+            }
+    
+            #quiz-modal #quiz-end-screen {
+                position: relative !important;
+            }
+    
+            /* Круглый крестик финала — в правом верхнем углу. */
+            #quiz-modal #quiz-end-screen .game-close-x {
+                position: absolute !important;
+                top: 10px !important;
+                right: 12px !important;
+                z-index: 95 !important;
+                display: flex !important;
+            }
+        }

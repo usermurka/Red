@@ -157,11 +157,39 @@
 }
 
 @media (max-width: 480px) {
+
+    /* Карточка фото: КВАДРАТ, адаптивная ширина, без «flex: 0 0 120px»
+       из latin.css (иначе ширина 120px при высоте 200px → прямоугольник
+       и обрезка). Сброс flex + min-width + aspect-ratio: 1/1. */
     .habitat-card .latin-photo-card {
-        width: 200px !important;
-        height: 200px !important;
-        min-height: 200px !important;
-        max-height: 200px !important;
+        width: min(200px, 70vw) !important;
+        height: min(200px, 70vw) !important;
+        min-width: 0 !important;
+        /* сброс 120px из latin.css */
+        min-height: 0 !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        flex: 0 0 auto !important;
+        /* сброс flex: 0 0 120px */
+        aspect-ratio: 1 / 1 !important;
+        /* строгий квадрат */
+    }
+
+    .habitat-card .latin-photo-card .latin-photo-inner {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .habitat-card .latin-photo-front img {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        object-fit: contain !important;
+    }
+
+    /* Сама карточка-контейнер — не шире экрана. */
+    .habitat-card {
+        max-width: 100% !important;
     }
 
     .habitat-biomes {
@@ -183,6 +211,41 @@
 
     .habitat-name {
         font-size: 16px;
+    }
+}
+
+/* Очень узкие экраны (<380px): карточка ещё меньше, биомы — 2×4. */
+@media (max-width: 380px) {
+    .habitat-card .latin-photo-card {
+        width: min(150px, 64vw) !important;
+        height: min(150px, 64vw) !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        aspect-ratio: 1 / 1 !important;
+    }
+
+    .habitat-card .latin-photo-front img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    .habitat-biomes {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 4px !important;
+    }
+
+    .habitat-biom {
+        min-height: 44px;
+        padding: 4px 2px;
+    }
+
+    .hb-icon {
+        font-size: 16px;
+    }
+
+    .hb-label {
+        font-size: 8px;
     }
 }
 
@@ -522,12 +585,15 @@ body.game-end-habitat #habitat-modal #habitat-restart {
     display: none !important;
 }
 
-/* Принудительно фиксируем крестик финального экрана в правом верхнем углу */
+/* Крестик финального экрана — в правом верхнем углу, с небольшим
+   отступом (как в «Статусе»/Викторине/Эрудите). Раньше стоял
+   top/right: 60px — на узких экранах и в зоне 901–1100px крестик
+   «соскакивал» далеко от угла окна игры. */
 #habitat-end-screen .game-close-x {
-    position: fixed !important; /* Жесткая привязка к окну браузера */
-    top: 60px !important;
-    right: 60px !important;
-    z-index: 10000 !important; /* Выше самого финального экрана */
+    position: fixed !important;
+    top: 10px !important;
+    right: 12px !important;
+    z-index: 10000 !important;
     margin: 0 !important;
 }
 
@@ -541,8 +607,12 @@ body.game-end-habitat #habitat-modal #habitat-restart {
 
 /* ============================================================
    ДЕСКТОП: УБИРАЕМ «ЛИФТ ВСЕГО ОКНА» (ВНУТРЕННИЙ СКРОЛЛ)
+   ВАЖНО: порог 1101px (а не 821px) — чтобы не пересекаться с
+   мобильным блоком @media (max-width: 1100px) выше. Раньше в зоне
+   821–1100 оба блока применялись одновременно (flex-start + column +
+   overflow-y), из-за чего окно «лагало» и не отображалось.
    ============================================================ */
-@media (min-width: 821px) {
+@media (min-width: 1101px) {
 
     /* 1. Снимаем внутренний скролл с самой карточки игры */
     .habitat-scroll {
@@ -597,12 +667,7 @@ body.game-end-habitat #habitat-modal #habitat-restart {
        скроллится как раньше. Мобильные правила (≤900px в
        responsive.css) не затрагиваются: этот блок — только ≥821px.
        ============================================================ */
-    #habitat-modal:has(#habitat-end-screen:not(.hidden)) {
-        overflow: hidden !important;
-        padding: 0 !important;
-        align-items: stretch !important;
-        justify-content: stretch !important;
-    }
+                /* (правила финала — в общем блоке в конце файла) */
 
     /* Страховка от «дыр» по краям: финальный fixed считает top/left
        от padding-box — снимаем возможные внешние отступы у него
@@ -810,5 +875,134 @@ body.game-end-habitat #habitat-modal #habitat-restart {
     to {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН «СРЕДЫ ОБИТАНИЯ» В ЗОНЕ 901–1100px
+   ------------------------------------------------------------
+   Причина проблемы: на ≥1101px финал перекрывает всё (fixed +
+   правило :has() снимает overflow у модалки). В зоне 901–1100px
+   (после сужения десктопного блока до ≥1101px) модалка остаётся
+   скролл-контейнером (overflow-y: auto из базовых правил), и
+   position:fixed у финала привязывается к ней, а не к вьюпорту —
+   финал «уезжает» вместе со скроллом и не виден. Здесь явно
+   снимаем overflow у модалки на финале и фиксируем экран к окну.
+   ============================================================ */
+@media (min-width: 901px) and (max-width: 1100px) {
+
+    /* (правила финала — в общем блоке в конце файла) */
+
+    /* Игровые ↺/✕ и поле — скрыты. */
+    body.game-end-habitat #habitat-modal .quiz-top-controls,
+    body.game-end-active #habitat-modal .quiz-top-controls {
+        display: none !important;
+    }
+
+        /* Крестик финала — наследует базовое правило (top:10; right:12). */
+        }
+    
+        /* ============================================================
+       ШАПКА «СРЕДЫ ОБИТАНИЯ» К ВЕРХУ ОКНА (≤820px)
+       ------------------------------------------------------------
+       Причина зазора: в responsive.css у .habitat-scroll задан
+       padding-top: calc(20px + env(safe-area-inset-top)) — шапка
+       «СРЕДА ОБИТАНИЯ» сдвигалась вниз на 20px, а кнопки ↺/✕
+       (position:absolute; top:6px) оставались у верха — визуально
+       «верхняя панель не растянута до верха». Убираем padding-top
+       у .habitat-scroll, а safe-area учитываем у шапки.
+       ============================================================ */
+        @media (max-width: 820px) {
+    
+            /* Убираем 20px-зазор сверху у окна игры. */
+            #habitat-modal .habitat-scroll {
+                padding-top: 0 !important;
+            }
+    
+            /* Шапка — от самого верха, с учётом «чёлки». */
+            #habitat-modal .quiz-header {
+                padding-top: calc(8px + env(safe-area-inset-top)) !important;
+                padding-right: 70px !important;
+                /* место под ↺/✕ */
+                box-sizing: border-box;
+            }
+        }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН «СРЕДЫ ОБИТАНИЯ» — НА ВЕСЬ ЭКРАН (все ширины)
+   ------------------------------------------------------------
+   Класс habitat-end-open ставит JS (showEndScreen), снимает —
+   startGame()/close().
+
+   ПОЧЕМУ БЫЛИ ОТСТУПЫ: у #habitat-modal стоит backdrop-filter:
+   blur(4px) — он создаёт containing block для position:fixed.
+   Финал «привязывался» к модалке (у неё padding:10px), а 100vw
+   включал ширину скроллбара. Здесь:
+     • снимаем backdrop-filter у модалки на финале — fixed снова
+       привязывается к вьюпорту;
+     • финал — inset:0 + width/height:100% (не 100vw/100vh — без
+       скроллбара), на весь экран, непрозрачный;
+     • крестик — fixed в углу вьюпорта (top:10; right:12).
+   ============================================================ */
+#habitat-modal.habitat-end-open {
+    overflow: hidden !important;
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    /* КЛЮЧ: без backdrop-filter fixed-финал привязывается к вьюпорту. */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+#habitat-modal.habitat-end-open #habitat-end-screen:not(.hidden) {
+    position: fixed !important;
+    inset: 0 !important;
+    /* top/right/bottom/left: 0 */
+    width: 100% !important;
+    /* не 100vw — без скроллбара */
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    background: var(--parchment-light, #f7efdc) !important;
+    z-index: 10000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+}
+
+/* Крестик финала — в правом верхнем углу вьюпорта. */
+#habitat-modal.habitat-end-open #habitat-end-screen .game-close-x {
+    position: fixed !important;
+    top: 10px !important;
+    right: 12px !important;
+    z-index: 10001 !important;
+    margin: 0 !important;
+}
+
+/* ============================================================
+   КРЕСТИК ФИНАЛА «СРЕДЫ ОБИТАНИЯ» ДЛЯ >900px
+   ------------------------------------------------------------
+   position: absolute — относительно #habitat-end-screen (у него
+   position: fixed), а не вьюпорта. Крестик всегда ВНУТРИ фона
+   финала, у его правого верхнего угла, даже если сам фон уже
+   экрана (были «отступы» из-за backdrop-filter/скроллбара).
+   Мобильные (≤900px) не затрагиваются — там свой крестик из
+   responsive.css.
+   ============================================================ */
+@media (min-width: 901px) {
+
+    #habitat-modal #habitat-end-screen .game-close-x,
+    #habitat-modal.habitat-end-open #habitat-end-screen .game-close-x {
+        position: absolute !important;
+        /* от края ФОНА, не экрана */
+        top: 16px !important;
+        right: 4% !important;
+        z-index: 10001 !important;
+        margin: 0 !important;
     }
 }

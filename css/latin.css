@@ -340,3 +340,119 @@
     box-shadow: 0 3px 8px rgba(36, 53, 42, 0.3);
     pointer-events: auto;
 }
+
+/* ============================================================
+   ФИНАЛЬНЫЙ ЭКРАН «ЛАТЫНИ» (≥901px): без лифта, игровое поле
+   скрыто, один крестик. Закрывает «мёртвую зону» 901–1024px,
+   где раньше финал был не виден (инлайн-стили position:absolute +
+   height:100% обрезали его внутри .latin-scroll).
+   ============================================================ */
+@media (min-width: 901px) {
+
+    /* Прячем игровое поле на финале: шапка, таймер, счёт, тело,
+       кнопки ↺/✕ и «Продолжить». */
+    body.game-end-active #latin-modal .quiz-header,
+    body.game-end-active #latin-modal .latin-timer-track,
+    body.game-end-active #latin-modal .latin-scoreboard,
+    body.game-end-active #latin-modal .latin-body,
+    body.game-end-active #latin-modal .quiz-top-controls,
+    body.game-end-active #latin-modal #latin-next-round-btn {
+        display: none !important;
+    }
+
+    /* Финальный экран — нормальный блок колонки, непрозрачный,
+       без внутренней прокрутки. */
+    #latin-modal #latin-end-screen:not(.hidden) {
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 60vh;
+        background: var(--parchment-light, #f7efdc) !important;
+        padding: 32px 16px 40px !important;
+        margin: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: center;
+        box-sizing: border-box;
+        overflow: visible !important;
+    }
+
+    #latin-modal #latin-end-screen {
+        position: relative !important;
+    }
+
+    /* Круглый крестик финала — в правом верхнем углу. */
+    #latin-modal #latin-end-screen .game-close-x {
+        position: absolute !important;
+        top: 10px !important;
+        right: 12px !important;
+        z-index: 95 !important;
+        display: flex !important;
+    }
+
+        /* .latin-scroll на финале не должен обрезать контент. */
+        #latin-modal .latin-scroll {
+            max-height: none !important;
+            overflow-y: visible !important;
+        }
+        }
+    
+        /* ============================================================
+       МОБИЛЬНАЯ ШИРИНА ОКНА «ЛАТЫНИ» И КНОПКИ ↺/✕ У КРАЯ ОКНА (≤900px)
+       Причина: .latin-scroll имел width:96vw + max-width:720px, а
+       #latin-modal — padding:10px. Окно было уже экрана, и absolute-
+       кнопки ↺/✕ визуально «прилипали к краю экрана» отдельно от окна.
+       Теперь: модалка без паддинга, .latin-scroll — на всю ширину,
+       кнопки — у края ОКНА (окно = вся ширина экрана).
+       ============================================================ */
+        @media (max-width: 900px) {
+    
+            /* Модалка — на весь экран, без боковых отступов. */
+            #latin-modal {
+                padding: 0 !important;
+            }
+    
+            /* Окно игры — на всю ширину, без «рваного края» и боковых рамок. */
+            #latin-modal .latin-scroll {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-radius: 0 !important;
+                clip-path: none !important;
+                position: relative !important;
+                box-sizing: border-box;
+            }
+    
+            /* Кнопки ↺/✕ — absolute относительно .latin-scroll (окно = экран),
+           у правого верхнего края окна. Размер/шрифт/фон — как на десктопе. */
+            #latin-modal .quiz-top-controls {
+                position: absolute !important;
+                top: 6px !important;
+                right: 8px !important;
+                left: auto !important;
+                bottom: auto !important;
+                z-index: 70 !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 8px !important;
+                background: none !important;
+                pointer-events: auto !important;
+            }
+    
+            #latin-modal .quiz-top-controls button {
+                -webkit-tap-highlight-color: transparent !important;
+                touch-action: manipulation !important;
+            }
+    
+            /* Шапка — отступ справа, чтобы заголовок не залезал под кнопки. */
+            #latin-modal .quiz-header {
+                padding-right: 70px !important;
+                box-sizing: border-box;
+            }
+        }

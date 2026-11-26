@@ -82,13 +82,13 @@ const Quiz = {
     },
 
     hideNextBtn() {
-        // Неотвеченный вопрос: кнопка полностью скрыта (не «бледная
-        // неактивная»). Появляется только после ответа — как новая активная.
+        // До ответа кнопка «Дальше →» — бледная неактивная (как в
+        // «Статусе»), чтобы окно не «прыгало» при её появлении.
         const btn = document.getElementById('quiz-next-btn');
         if (!btn) return;
         btn.textContent = 'Дальше →';
-        btn.classList.remove('is-active');
-        btn.classList.add('hidden');
+        btn.classList.remove('hidden', 'is-active');
+        btn.classList.add('is-idle');
         btn.disabled = true;
     },
 
@@ -181,8 +181,9 @@ const Quiz = {
         const resultContainer = document.getElementById('quiz-result');
         optionsContainer.innerHTML = '';
         resultContainer.classList.add('hidden');
-        // Свиток скрыт до ответа + возврат экрана к окну игры (лифт наверх)
-        MiniScroll.hide('quiz-info-panel');
+        // Правая колонка ДО ответа — «закрытый» плейсхолдер свитка:
+        // данные появятся после ответа, окно не «прыгает».
+        this.showInfoPlaceholder();
         this.scrollToGameTop();
         this.hideNextBtn();
 
@@ -337,6 +338,20 @@ const Quiz = {
         // после ответа она активна; на последнем вопросе — «Итоги игры 🏆».
         const last = this.currentQuestionNum >= this.totalQuestions;
         this.showNextBtn(last ? 'Показать результаты 🏆' : 'Следующий вопрос →');
+    },
+
+    // Плейсхолдер правой колонки ДО ответа: пустая «закрытая» панель
+    // с заголовком и серым текстом. Данные появятся после ответа —
+    // окно не «прыгает», правая колонка сразу на своём месте.
+    showInfoPlaceholder() {
+        const panel = document.getElementById('quiz-info-panel');
+        if (!panel) return;
+        panel.classList.remove('hidden');
+        panel.innerHTML =
+            `<div class="mini-scroll ms-placeholder">
+                <h3>📖 Данные из Красной книги</h3>
+                <div class="ms-latin" style="border-bottom:none;margin-bottom:0;">Появятся после ответа</div>
+            </div>`;
     },
 
     showInfoPanel() {
