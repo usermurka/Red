@@ -55,7 +55,7 @@ Object.assign(App, {
 
     // --- Гостевой режим ---
     if (!this.developerMode) {
-      hint.innerHTML = '<p>Режим просмотра. Кликните по маркеру, чтобы увидеть описание.</p>';
+      hint.innerHTML = '<p>Активен режим гостя</p>';
       return;
     }
 
