@@ -55,7 +55,7 @@ Object.assign(App, {
 
     // 5. Стандартные подсказки
     if (!this.developerMode) {
-      hintText.innerHTML = 'Режим просмотра. Кликните по маркеру, чтобы увидеть описание.';
+      hintText.innerHTML = 'Активен режим гостя.';
       hintBtn.classList.add('hidden');
     } else {
       hintText.innerHTML = 'Выберите инструмент, чтобы начать работу.';
