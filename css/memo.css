@@ -255,16 +255,22 @@
    ============================================================ */
 @media (max-width: 900px) {
 
-    /* 1. Модалка — колонка, прижатая к верху */
-    #memo-modal {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        justify-content: flex-start !important;
-        padding: 0 !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-    }
+
+        /* 0. ЖЕСТКОЕ СКРЫТИЕ: Если модалка закрыта, её не должно быть видно вообще */
+        #memo-modal.hidden {
+            display: none !important;
+        }
+
+        /* 1. Модалка — колонка, прижатая к верху (ТОЛЬКО когда она открыта) */
+        #memo-modal:not(.hidden) {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            padding: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
 
   /* 2. Окно игры (свиток) — на всю ширину, БЕЗ min-height */
   #memo-modal .memo-scroll {
