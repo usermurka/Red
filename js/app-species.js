@@ -66,18 +66,12 @@ Object.assign(App, {
       this.updateSpeciesBrowseCounter();
     }
 
-    // Заголовок панели — с учётом фильтра по категориям
+    // Заголовок панели — всегда «Справочник видов».
+    // Справочник никогда не фильтруется панелью, поэтому категории
+    // из listFilter в заголовке не перечисляются.
     const title = document.querySelector('#species-header h3');
     if (title) {
-      const labels = [];
-      if (mode === 'browse' && this.listFilter.size > 0) {
-        CONFIG.categories.forEach(c => {
-          if (this.listFilter.has(c.key)) labels.push(c.label);
-        });
-      }
-      title.textContent = labels.length > 0
-        ? 'Справочник видов · ' + labels.join(', ')
-        : 'Справочник видов';
+      title.textContent = 'Справочник видов';
     }
 
     // Синхронизируем подсветку строк слоёв и кнопок статусов
@@ -157,24 +151,13 @@ Object.assign(App, {
     const container = document.getElementById('species-tree');
     container.innerHTML = '';
 
-    // Фильтры работают только в режиме browse
-    const isBrowse = this.speciesPanelMode === 'browse';
-    const activeFilter = isBrowse ? this.listFilter : null;
-    const hasFilter = activeFilter && activeFilter.size > 0;
+    // Справочник НИКОГДА не фильтруется панелями (listFilter,
+    // listStatuses, listSpeciesIds). Единственный фильтр — поисковая
+    // строка query.
 
-    // Алфавитный режим — плоский список
+    // Алфавитный режим — плоский список всех видов
     if (this.speciesView === 'alpha' || query) {
       let allSpecies = this.collectAllSpecies();
-
-      // Фильтр по категориям
-      if (hasFilter) {
-        allSpecies = allSpecies.filter(s => activeFilter.has(this.detectCategory(s.id)));
-      }
-
-      // Фильтр по статусам
-      if (isBrowse) {
-        allSpecies = allSpecies.filter(s => this.passesStatusFilter(s));
-      }
 
       let filtered;
       if (query) {
@@ -205,11 +188,8 @@ this.updateIsAllHighlightedFlag();  // ← добавить
 return;
     }
 
-    // Иерархический режим
+    // Иерархический режим — все группы/классы/отряды/виды без фильтрации
     Object.entries(SPECIES).forEach(([groupKey, group]) => {
-      // Если фильтр по категориям задан и текущей группы в нём нет — пропускаем
-      if (hasFilter && !activeFilter.has(groupKey)) return;
-
       const groupEl = this.createGroupNode(this.shortNodeLabel(group.label), () => {
         return group.classes.map(cls => this.createClassNode(cls)).filter(Boolean);
       });
@@ -361,17 +341,8 @@ return;
       return el;
     }
 
-    // В режиме просмотра применяем фильтр по статусам.
-    // Если вид не проходит — возвращаем null, чтобы родитель его не добавлял.
-    if (!this.passesStatusFilter(species)) return null;
-
-    // Фильтр по конкретным видам (из выпадающего подменю слоёв).
-    // Если listSpeciesIds задан — оставляем только виды из него.
-    if (this.listSpeciesIds && this.listSpeciesIds.size > 0) {
-      if (!this.listSpeciesIds.has(species.id)) return null;
-    }
-
-    // Раскрываемая строка с инфо о маркерах
+    // В режиме просмотра справочник всегда полный — фильтры панели
+    // (статусы, конкретные виды) к нему НЕ применяются.
     return this.createSpeciesBrowseRow(species);
   },
 
@@ -468,6 +439,9 @@ return;
 
         icon.addEventListener('click', (e) => {
           e.stopPropagation();
+          // Ручное выделение из справочника: сначала сбрасываем фильтры
+          // панели, затем toggle маркеров этого формата.
+          this.resetPanelFilters();
           const allHi = items.every(m => this.highlightedIds.has(m.id));
           if (allHi) {
             items.forEach(m => this.highlightedIds.delete(m.id));
@@ -477,6 +451,7 @@ return;
           this.render();
           this.updateSpeciesTreeHighlightState();
           this.updateSpeciesBrowseCounter();
+          this.updateIsAllHighlightedFlag();
         });
 
         iconsRow.appendChild(icon);
@@ -497,6 +472,8 @@ return;
 
       icon.addEventListener('click', (e) => {
         e.stopPropagation();
+        // Сначала сбрасываем фильтры панели, затем toggle областей вида.
+        this.resetPanelFilters();
         if (this.highlightedSpeciesRegions.has(speciesId)) {
           this.highlightedSpeciesRegions.delete(speciesId);
         } else {
@@ -505,6 +482,7 @@ return;
         this.render();
         this.updateSpeciesTreeHighlightState();
         this.updateSpeciesBrowseCounter();
+        this.updateIsAllHighlightedFlag();
       });
 
       iconsRow.appendChild(icon);
@@ -524,6 +502,8 @@ return;
 
       icon.addEventListener('click', (e) => {
         e.stopPropagation();
+        // Сначала сбрасываем фильтры панели, затем toggle миграций вида.
+        this.resetPanelFilters();
         if (this.highlightedSpeciesMigrations.has(speciesId)) {
           this.highlightedSpeciesMigrations.delete(speciesId);
         } else {
@@ -532,6 +512,7 @@ return;
         this.render();
         this.updateSpeciesTreeHighlightState();
         this.updateSpeciesBrowseCounter();
+        this.updateIsAllHighlightedFlag();
       });
 
       iconsRow.appendChild(icon);
@@ -691,20 +672,23 @@ return;
     return this.listStatuses.has(species.status);
   },  
 
-  // Возвращает массив видов, которые сейчас отображаются в справочнике
-// с учётом активных фильтров по категориям (listFilter) и статусам (listStatuses).
+  // Сбрасывает фильтры боковой панели (слои / статусы / конкретные виды)
+  // и обновляет подсветку соответствующих кнопок. Используется при ручном
+  // выделении в справочнике: ручное выделение несовместимо с фильтрами.
+  resetPanelFilters() {
+    this.listFilter = new Set();
+    this.listSpeciesIds = null;
+    this.listStatuses = new Set();
+    this.updateLayerFilterHighlight();
+    this.updateStatusLayerHighlight();
+    this.updateLayerSubmenuHighlight();
+  },
+
+  // Возвращает ВСЕ виды, у которых есть хоть какие-то данные
+  // (маркеры, области или миграции). Фильтры панели НЕ применяются —
+  // справочник всегда полный, и «Выделить всех» работает по всем видам с данными.
 getVisibleSpecies() {
   let allSpecies = this.collectAllSpecies();
-
-  // Фильтр по категориям (слоям) — работает только если задан
-  if (this.listFilter.size > 0) {
-    allSpecies = allSpecies.filter(s => this.listFilter.has(this.detectCategory(s.id)));
-  }
-
-  // Фильтр по статусам — работает только если задан
-  if (this.listStatuses.size > 0) {
-    allSpecies = allSpecies.filter(s => this.listStatuses.has(s.status));
-  }
 
   // Оставляем только виды, у которых есть хоть какие-то данные
   // (маркеры, области или миграции) — иначе «Выделить всех» будет
@@ -717,11 +701,6 @@ getVisibleSpecies() {
     const hasMigration = this.migrations.some(m => this.migrationBelongsToSpecies(m, sp.id));
     return hasMarker || hasRegion || hasMigration;
   });
-
-  // Фильтр по конкретным видам (из выпадающего подменю слоёв)
-  if (this.listSpeciesIds && this.listSpeciesIds.size > 0) {
-    allSpecies = allSpecies.filter(s => this.listSpeciesIds.has(s.id));
-  }
 
   return allSpecies;
 },

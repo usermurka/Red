@@ -74,11 +74,8 @@ Object.assign(App, {
         this.listSpeciesIds = null;
         this.updateStatusLayerHighlight();
 
-        // Обновляем выделение на карте
+        // Обновляем выделение только на карте (справочник не трогаем)
         this.syncHighlightedFromFilters();
-
-        // Открываем справочник
-        this.openSpeciesPanel('browse', { autoOpen: false });
       });
 
       container.appendChild(btn);
@@ -356,11 +353,8 @@ Object.assign(App, {
     this.updateLayerSubmenuHighlight();
     this.updateLayerFilterHighlight();
 
-    // Пересобираем выделение на карте
+    // Пересобираем выделение на карте (справочник не открываем и не пересобираем)
     this.syncHighlightedFromFilters();
-
-    // Обновляем справочник
-    this.openSpeciesPanel('browse', { autoOpen: false });
   },
 
   // Заглушка (чекбоксы удалены, управление только через подменю)
@@ -434,9 +428,12 @@ Object.assign(App, {
       });
     });
 
-    // Перерисовка карты и справочника
+    // Перерисовка только карты. Справочник не пересобирается:
+    // он всегда полный и не зависит от фильтров панели.
     this.render();
-    this.renderSpeciesTree(document.getElementById('species-search').value.trim().toLowerCase());
+    // Обновляем классы .highlighted у существующих DOM-элементов дерева
+    // (без пересборки — раскрытые группы и поиск сохраняются).
+    this.updateSpeciesTreeHighlightState();
     this.updateSpeciesBrowseCounter();
   },
 
