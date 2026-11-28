@@ -133,68 +133,21 @@ Object.assign(App, {
       item.addEventListener('click', (ev) => {
         ev.stopPropagation();
         ev.preventDefault();
-        
+
         const speciesId = item.dataset.speciesId;
         if (!speciesId) return;
 
-        // 1. Сбрасываем ВСЕ предыдущие выделения
-        this.highlightedIds.clear();
-        this.highlightedSpeciesRegions.clear();
-        this.highlightedSpeciesMigrations.clear();
-        this.highlightedRegionId = null;
-
-        // 2. Выделяем только этот вид и запоминаем его
-        this.lastUsed = {
-          name: this.findSpeciesById(speciesId)?.name || '',
-          speciesId: speciesId,
-          speciesName: this.findSpeciesById(speciesId)?.name || '',
-          category: this.detectCategory(speciesId),
-          status: this.findSpeciesById(speciesId)?.status || 0
-        };
-        this.highlightedSpeciesRegions.add(speciesId);
-        this.highlightedSpeciesMigrations.add(speciesId);
-        
-        // 3. Выделяем все маркеры этого вида
-        this.markers.forEach(m => {
-          if (m.speciesId === speciesId) {
-            this.highlightedIds.add(m.id);
-          }
-        });
-
-        // 4. Перерисовываем карту
-        this.render();
-        
-        // 5. Визуальный отклик: подсвечиваем выбранный элемент в тултипе
-        document.querySelectorAll('.region-link-item').forEach(el => el.style.background = 'transparent');
-        item.style.background = 'rgba(212, 180, 90, 0.3)';
-
-        // 6. Мигаем маркерами этого вида
-        const markersToFlash = this.markers.filter(m => m.speciesId === speciesId).map(m => m.id);
-        if (markersToFlash.length > 0) {
-          this.flashMarkers(markersToFlash);
-        }
-
-        // 7. Обновляем справочник и фокусируемся на виде
-        this.updateSpeciesBrowseCounter();
-        this.updateSpeciesTreeHighlightState();
-        this.updateIsAllHighlightedFlag();
-        this.updateHintUI(); // <-- Обновляем плашку
-
-        // Открываем справочник и скроллим к виду
+        // Только навигация в справочник — без изменения выделений на карте.
         this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
       });
-      
+
       // Эффект наведения
       item.addEventListener('mouseenter', () => {
-        if (item.style.background !== 'rgba(212, 180, 90, 0.3)') {
-          item.style.background = 'rgba(212, 180, 90, 0.15)';
-        }
+        item.style.background = 'rgba(212, 180, 90, 0.15)';
       });
       item.addEventListener('mouseleave', () => {
-        if (item.style.background !== 'rgba(212, 180, 90, 0.3)') {
-          item.style.background = 'transparent';
-        }
+        item.style.background = 'transparent';
       });
     });
 
@@ -630,45 +583,14 @@ Object.assign(App, {
       });
     });
 
-    // Обработчик клика по виду (в списке миграций и в карточках областей)
+    // Обработчик клика по виду (в списке миграций и в карточках областей):
+    // только навигация в справочник — без изменения выделений на карте.
     document.querySelectorAll('.species-link-item, .tooltip-species-item').forEach(item => {
       item.addEventListener('click', (ev) => {
         ev.stopPropagation();
         const speciesId = item.dataset.speciesId;
         if (!speciesId) return;
 
-        // 1. Сбрасываем ВСЕ предыдущие выделения
-        this.highlightedIds.clear();
-        this.highlightedSpeciesRegions.clear();
-        this.highlightedSpeciesMigrations.clear();
-        this.highlightedRegionId = null;
-
-        // 2. Выделяем только этот вид
-        this.highlightedSpeciesRegions.add(speciesId);
-        this.highlightedSpeciesMigrations.add(speciesId);
-
-        // 3. Выделяем все маркеры этого вида
-        this.markers.forEach(m => {
-          if (m.speciesId === speciesId) {
-            this.highlightedIds.add(m.id);
-          }
-        });
-
-        // 4. Перерисовываем карту
-        this.render();
-
-        // 5. Мигаем маркерами этого вида
-        const markersToFlash = this.markers.filter(m => m.speciesId === speciesId).map(m => m.id);
-        if (markersToFlash.length > 0) {
-          this.flashMarkers(markersToFlash);
-        }
-
-        // 6. Обновляем справочник и фокусируемся на виде
-        this.updateSpeciesBrowseCounter();
-        this.updateSpeciesTreeHighlightState();
-        this.updateIsAllHighlightedFlag();
-
-        // Открываем справочник и скроллим к виду
         this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
       });
@@ -876,58 +798,16 @@ Object.assign(App, {
       });
     });
 
-    // --- Клик по конкретному виду внутри области ---
+    // --- Клик по конкретному виду внутри области:
+    // только навигация в справочник — без изменения выделений на карте ---
     document.querySelectorAll('.tooltip-species-item').forEach(item => {
       item.addEventListener('click', (ev) => {
         ev.stopPropagation();
         ev.preventDefault();
-        
+
         const speciesId = item.dataset.speciesId;
-        const targetRegionId = Number(item.dataset.regionId);
-        
-        if (!speciesId || !targetRegionId) return;
+        if (!speciesId) return;
 
-        // 1. Сбрасываем ВСЕ предыдущие выделения
-        this.highlightedIds.clear();
-        this.highlightedSpeciesRegions.clear();
-        this.highlightedSpeciesMigrations.clear();
-        this.highlightedRegionId = null;
-
-        // 2. Подсвечиваем именно эту область
-        this.highlightedRegionId = targetRegionId;
-
-        // 3. Выделяем только этот вид (и его объекты)
-        this.highlightedSpeciesRegions.add(speciesId);
-        this.highlightedSpeciesMigrations.add(speciesId);
-        
-        // 4. Выделяем все маркеры этого вида
-        const speciesMarkers = this.markers.filter(m => m.speciesId === speciesId);
-        speciesMarkers.forEach(m => this.highlightedIds.add(m.id));
-
-        // 5. Перерисовываем карту
-        this.render();
-        
-        // 6. Делаем визуальный акцент в тултипе
-        document.querySelectorAll('.tooltip-species-item').forEach(el => el.style.background = 'transparent');
-        item.style.background = 'rgba(212, 180, 90, 0.3)';
-        
-        // 7. Подсвечиваем область в списке
-        document.querySelectorAll('.region-list-item').forEach(el => {
-            el.classList.toggle('current', Number(el.dataset.regionId) === targetRegionId);
-        });
-
-        // 8. Мигаем маркерами этого вида (чтобы вы точно увидели, где они)
-        if (speciesMarkers.length > 0) {
-          this.flashMarkers(speciesMarkers.map(m => m.id), { hideTooltip: false });
-        }
-
-        // 9. Обновляем справочник и фокусируемся на виде
-        this.updateSpeciesBrowseCounter();
-        this.updateSpeciesTreeHighlightState();
-        this.updateIsAllHighlightedFlag();
-        this.updateHintUI(); // <-- Обновляем плашку
-
-        // Открываем справочник и скроллим к виду
         this.openSpeciesPanel('browse', { userGesture: true });
         setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
 
@@ -973,47 +853,24 @@ Object.assign(App, {
       });
     });
 
-    // Клик по маркеру внутри области (в блоке "Маркеры внутри области")
+    // Клик по маркеру внутри области (в блоке "Маркеры внутри области"):
+    // только навигация в справочник — без изменения выделений на карте.
     document.querySelectorAll('.region-marker-item').forEach(mi => {
       mi.addEventListener('click', (mev) => {
         mev.stopPropagation();
         const idsStr = mi.dataset.markerIds || '';
         const ids = idsStr.split(',').map(s => Number(s)).filter(Boolean);
-        
+
         if (ids.length === 0) return;
 
-        // 1. Сбрасываем всё старое
-        this.highlightedIds.clear();
-        this.highlightedSpeciesRegions.clear();
-        this.highlightedSpeciesMigrations.clear();
-        this.highlightedRegionId = null;
-
-        // 2. Находим вид по первому маркеру из списка
+        // Находим вид по первому маркеру из списка
         const firstMarker = this.markers.find(m => m.id === ids[0]);
         if (!firstMarker) return;
         const speciesId = firstMarker.speciesId;
+        if (!speciesId) return;
 
-        // 3. Выделяем все маркеры этого вида
-        this.markers.forEach(m => {
-          if (m.speciesId === speciesId) {
-            this.highlightedIds.add(m.id);
-          }
-        });
-
-        // 4. Включаем его области и миграции
-        this.highlightedSpeciesRegions.add(speciesId);
-        this.highlightedSpeciesMigrations.add(speciesId);
-
-        // 5. Перерисовываем
-        this.render();
-
-        // 6. Мигаем найденными маркерами
-        this.flashMarkers(ids, { hideTooltip: true });
-
-        // 7. Обновляем справочник
-        this.updateSpeciesBrowseCounter();
-        this.updateSpeciesTreeHighlightState();
-        this.updateIsAllHighlightedFlag();
+        this.openSpeciesPanel('browse', { userGesture: true });
+        setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
       });
     });
 
