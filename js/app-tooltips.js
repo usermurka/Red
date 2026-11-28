@@ -151,7 +151,8 @@ Object.assign(App, {
       });
     });
 
-    // Обработчики клика по соседям
+    // Обработчики клика по соседям:
+    // только навигация в справочник — без изменения выделений на карте.
     document.querySelectorAll('.nearby-item').forEach(item => {
       item.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -159,41 +160,11 @@ Object.assign(App, {
         const target = this.markers.find(m => m.id === id);
         if (!target) return;
 
-        // 1. Сбрасываем ВСЕ предыдущие выделения
-        this.highlightedIds.clear();
-        this.highlightedSpeciesRegions.clear();
-        this.highlightedSpeciesMigrations.clear();
-        this.highlightedRegionId = null;
+        const speciesId = target.speciesId;
+        if (!speciesId) return;
 
-        // 2. Выделяем ВСЕ маркеры этого вида (соседа)
-        this.markers.forEach(m => {
-          if (m.speciesId === target.speciesId) {
-            this.highlightedIds.add(m.id);
-          }
-        });
-
-        // 3. Включаем его области и миграции
-        if (target.speciesId) {
-          this.highlightedSpeciesRegions.add(target.speciesId);
-          this.highlightedSpeciesMigrations.add(target.speciesId);
-        }
-
-        // 4. Перерисовываем карту
-        this.render();
-
-        // 5. Мигаем (теперь мигаем всеми маркерами этого вида)
-        const markersToFlash = this.markers.filter(m => m.speciesId === target.speciesId).map(m => m.id);
-        this.flashMarkers(markersToFlash);
-
-        // 6. Обновляем справочник и фокусируемся на виде
-        this.updateSpeciesBrowseCounter();
-        this.updateSpeciesTreeHighlightState();
-        this.updateIsAllHighlightedFlag();
-        this.updateHintUI(); // <-- Обновляем плашку
-
-        // Открываем справочник и скроллим к виду
         this.openSpeciesPanel('browse', { userGesture: true });
-        setTimeout(() => this.focusSpeciesInTree(target.speciesId), 50);
+        setTimeout(() => this.focusSpeciesInTree(speciesId), 50);
       });
     });
 
@@ -719,19 +690,30 @@ Object.assign(App, {
       );
 
       if (intersectingMigrations.length > 0) {
+        // Одна строка на вид (объединяем дубликаты), с id маркеров его миграций,
+        // чтобы строка была активной (открывала вид в справочнике)
         const migGroups = new Map();
         intersectingMigrations.forEach(mig => {
-          const key = mig.speciesId || mig.speciesName;
-          if (!migGroups.has(key)) {
-            migGroups.set(key, { name: mig.speciesName || mig.speciesId, count: 1 });
-          } else {
-            migGroups.get(key).count++;
-          }
+          const migs = (mig.speciesList && mig.speciesList.length)
+            ? mig.speciesList.map(sp => ({ id: sp.speciesId, name: sp.speciesName || sp.speciesId }))
+            : [{ id: mig.speciesId, name: mig.speciesName || mig.speciesId }];
+          migs.forEach(s => {
+            if (!s.id) return;
+            if (!migGroups.has(s.id)) {
+              migGroups.set(s.id, { speciesId: s.id, name: s.name, markerIds: [], count: 0 });
+            }
+            const g = migGroups.get(s.id);
+            g.count++;
+            (mig.points || []).forEach(p => {
+              if (p.markerId !== undefined && p.markerId !== null) g.markerIds.push(p.markerId);
+            });
+          });
         });
 
         const migItems = [...migGroups.values()].map(g => {
           const countLabel = g.count > 1 ? ` <span style="color:#7a2d2d;font-weight:600;">×${g.count}</span>` : '';
-          return `<div class="region-marker-item" style="padding:3px 8px;">
+          const idsAttr = [...new Set(g.markerIds)].join(',');
+          return `<div class="region-marker-item" data-species-id="${esc(g.speciesId)}" data-marker-ids="${esc(idsAttr)}" style="cursor:pointer; padding:3px 8px; display:flex; align-items:center; gap:6px;">
                     <span class="nearby-icon">⇔</span>
                     <span class="nearby-name" style="flex:1;">${esc(g.name)}${countLabel}</span>
                   </div>`;
@@ -853,20 +835,25 @@ Object.assign(App, {
       });
     });
 
-    // Клик по маркеру внутри области (в блоке "Маркеры внутри области"):
-    // только навигация в справочник — без изменения выделений на карте.
+    // Клик по строке внутри тултипа области (маркеры внутри области,
+    // пересекающие миграции): только навигация в справочник —
+    // без изменения выделений на карте.
     document.querySelectorAll('.region-marker-item').forEach(mi => {
       mi.addEventListener('click', (mev) => {
         mev.stopPropagation();
-        const idsStr = mi.dataset.markerIds || '';
-        const ids = idsStr.split(',').map(s => Number(s)).filter(Boolean);
 
-        if (ids.length === 0) return;
+        let speciesId = mi.dataset.speciesId || '';
 
-        // Находим вид по первому маркеру из списка
-        const firstMarker = this.markers.find(m => m.id === ids[0]);
-        if (!firstMarker) return;
-        const speciesId = firstMarker.speciesId;
+        if (!speciesId) {
+          const idsStr = mi.dataset.markerIds || '';
+          const ids = idsStr.split(',').map(s => Number(s)).filter(Boolean);
+          if (ids.length === 0) return;
+
+          // Находим вид по первому маркеру из списка
+          const firstMarker = this.markers.find(m => m.id === ids[0]);
+          if (!firstMarker) return;
+          speciesId = firstMarker.speciesId;
+        }
         if (!speciesId) return;
 
         this.openSpeciesPanel('browse', { userGesture: true });
